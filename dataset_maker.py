@@ -75,7 +75,7 @@ def create_seq2seq_tense_dataset(
 		raise ValueError(f'Unable to load dataset {dataset} on huggingface!')
 	
 	nlp	= spacy.load('en_core_web_trf')
-	exs	= [None for _ in range(sum(splits.values()))] # so we don't repeat sentences
+	exs	= [None for _ in range(sum(splits.values()))] # so we don't repeat sentences, even across datasets
 	
 	for split, n in splits.items():
 		# preallocate
@@ -102,13 +102,13 @@ def create_seq2seq_tense_dataset(
 		print(f'Writing out dataset {name} ({split}).')
 		with gzip.open(os.path.join('data', name, f'{name}_{split}.json.gz'), 'wt', encoding='utf-8') as out_file:
 			for ex in tqdm(new_dataset):
-				json.dump(ex, f, ensure_ascii=False)
+				json.dump(ex, out_file, ensure_ascii=False)
 				f.write('\n')
 		
 		print(f'Writing out metadata for {name} ({split}).')
 		with gzip.open(os.path.join('data', name, f'{name}_{split}_metadata.json.gz'), 'wt', encoding='utf-8') as out_file:
 			for m in tqdm(metadata):
-				json.dump(m, f, ensure_ascii=False)
+				json.dump(m, out_file, ensure_ascii=False)
 				f.write('\n')
 
 def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
