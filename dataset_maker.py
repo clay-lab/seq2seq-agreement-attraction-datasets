@@ -135,8 +135,8 @@ def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
 		
 		return ss
 	
-	ex = ''
-	while not ex:
+	e = ''
+	while not e:
 		# pick a random example
 		# np.random.choice is sloooow with big lists
 		r 	= int(round(random() * (len(dataset)-1),0))
@@ -149,7 +149,7 @@ def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
 			r = int(round(random() * (len(ex)-1),0))
 			e = ex[r]
 	breakpoint()
-	return ex
+	return e
 	
 if __name__ == '__main__':
 	
