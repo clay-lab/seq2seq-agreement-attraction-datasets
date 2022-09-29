@@ -148,7 +148,7 @@ def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
 			# get a random example from the retained sentences
 			r = int(round(random() * (len(ex)-1),0))
 			e = ex[r]
-	
+	breakpoint()
 	return ex
 	
 if __name__ == '__main__':
