@@ -9,12 +9,10 @@ import json
 import gzip
 import spacy
 
-import pandas as pd
-
 from tqdm import tqdm
 from typing import *
 from random import random
-from datasets import load_dataset, DatasetDict, Dataset
+from datasets import load_dataset, Dataset
 from itertools import zip_longest
 from collections import defaultdict
 from grammar_funs import *
