@@ -22,7 +22,7 @@ from metadata_funs import *
 # good defaults for conditions for English:
 nlp = spacy.load('en_core_web_trf')
 
-def has_inflected_main_verb_with_non_expletive_subject(s: str) -> bool:
+def has_inflected_main_verb_with_acceptable_subject(s: str) -> bool:
 	'''Is there a main verb in the sentence, and is it inflected?'''
 	main_verb = [t for t in nlp(s) if t.dep_ == 'ROOT']
 	if main_verb:
@@ -30,9 +30,14 @@ def has_inflected_main_verb_with_non_expletive_subject(s: str) -> bool:
 			main_verb[0].tag_ in ['VBZ', 'VBP', 'VBD'] and not
 			main_verb[0].lemma_ == 'be'
 		):
+			# no expletive subjects!
 			if any([t.dep_ == 'expl' for t in main_verb[0].children]):
 				return False
+			# no acronym subjects!
 			elif [t for t in main_verb[0].children if t.dep_ == 'nsubj'][0].text.isupper():
+				return False
+			# no proper noun subjects!
+			elif [t for t in main_verb[0].children if t.dep_ == 'nsubj'][0].tag_ == 'NNP':
 				return False
 			else:
 				return True
@@ -95,7 +100,7 @@ def en_conditions(s: str) -> bool:
 	if re.search(r'\w:\w', s):
 		return False
 	
-	if not has_inflected_main_verb_with_non_expletive_non_acronym_subject(s):
+	if not has_inflected_main_verb_with_acceptable_subject(s):
 		return False
 	
 	return True
