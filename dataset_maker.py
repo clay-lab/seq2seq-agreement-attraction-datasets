@@ -32,6 +32,8 @@ def has_inflected_main_verb_with_non_expletive_subject(s: str) -> bool:
 		):
 			if any([t.dep_ == 'expl' for t in main_verb[0].children]):
 				return False
+			elif [t for t in main_verb[0].children if t.dep_ == 'nsubj'][0].text.isupper():
+				return False
 			else:
 				return True
 	else:
@@ -57,7 +59,7 @@ def en_conditions(s: str) -> bool:
 	# commas and periods must not be preceded by spaces
 	if ' ,' in s or ' .' in s:
 		return False
-		
+	
 	# if the number of quotation marks is not even
 	if s.count('"') % 2 == 1:
 		return False
@@ -93,7 +95,7 @@ def en_conditions(s: str) -> bool:
 	if re.search(r'\w:\w', s):
 		return False
 	
-	if not has_inflected_main_verb_with_non_expletive_subject(s):
+	if not has_inflected_main_verb_with_non_expletive_non_acronym_subject(s):
 		return False
 	
 	return True
