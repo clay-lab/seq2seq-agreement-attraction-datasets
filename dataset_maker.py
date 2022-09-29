@@ -45,6 +45,22 @@ def en_conditions(s: str) -> bool:
 	# must be longer than a single character
 	if len(s) <= 1:
 		return False
+		
+	# must start with a capital letter
+	if not s[0].isupper():
+		return False
+		
+	# must not contain a semicolon (i.e., two sentences)
+	if ';' in s:
+		return False
+		
+	# commas and periods must not be preceded by spaces
+	if ' ,' in s or ' .' in s:
+		return False
+		
+	# if the number of quotation marks is not even
+	if s.count('"') % 2 == 1:
+		return False
 	
 	# no sentences with any finite form of 'be'
 	if ' was ' in s or ' were ' in s or ' is ' in s or ' are ' in s:
@@ -63,14 +79,14 @@ def en_conditions(s: str) -> bool:
 		if s[-2].isupper():
 			return False
 		
-		# must not end with a . preceded by a title
-		if s[-4:] == 'Mrs.'
+		# must not end with a . preceded by an abbreviation
+		if s[-4:] in ['Mrs.', 'Ave.', 'Ltd.', 'Inc.']:
 			return False
 		
-		if s[-3:] in ['Mr.', 'Dr.', 'Ms.']
+		if s[-3:] in ['Mr.', 'Dr.', 'Ms.', 'St.', 'Av.']:
 			return False
 		
-		if s[-5:] == 'Prof.'
+		if s[-5:] in ['Prof.', 'Blvd.']:
 			return False
 		
 	# must not contain a colon separating two word characters (occurs in references lists)
@@ -200,8 +216,12 @@ def get_random_sentence(
 	'''
 	conditions = [conditions] if not isinstance(conditions,list) else conditions
 	
-	def split_sentences(s: str, d: List[str] = r'[\.!\?]') -> str:
+	def split_sentences(s: str, d: str = r'[\.!\?]') -> str:
 		'''Splits string s into sentences, delimited by regex d.'''
+		# deals with a problematic abbreviation
+		if ' c. ' in s:
+			return [''] 
+		
 		ss = re.split(f'({d} )', s)
 		
 		# merge adjacent delimeters back into the sentence
