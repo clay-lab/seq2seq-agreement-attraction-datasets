@@ -45,13 +45,17 @@ def en_conditions(s: str) -> bool:
 	# must be less than 50 words
 	if not len(s.split()) <= 50:
 		return False
-		
+	
 	# must consistent only of punctuation and english letters
 	if not s.translate(str.maketrans('', '', string.punctuation)).isascii():
 		return False
 	
 	# must not end with a . preceded by a capital letter (happens when splitting on middle names)
 	if s[-1] == '.' and s[-2].isupper():
+		return False
+		
+	# must not contain a colon separating two word characters (in references lists)
+	if re.search(r'\w:\w', s):
 		return False
 		
 	if not has_inflected_main_verb(s):
