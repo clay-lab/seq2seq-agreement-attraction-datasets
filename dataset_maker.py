@@ -19,97 +19,7 @@ from collections import defaultdict
 from grammar_funs import *
 from metadata_funs import *
 
-# good defaults for conditions for English:
-nlp = spacy.load('en_core_web_trf')
-
-def en_has_inflected_main_verb_with_acceptable_subject(s: str) -> bool:
-	'''Is there a main verb in the sentence, and is it inflected?'''
-	main_verb = [t for t in nlp(s) if t.dep_ == 'ROOT']
-	if main_verb:
-		if (
-			main_verb[0].tag_ in ['VBZ', 'VBP', 'VBD'] and not
-			main_verb[0].lemma_ == 'be'
-		):
-			# must have a subject!
-			if not [t for t in main_verb[0].children if t.dep_ == 'nsubj']:
-				return False
-			
-			# no expletive subjects!
-			if any([t.dep_ == 'expl' for t in main_verb[0].children]):
-				return False
-			# no acronym subjects!
-			elif [t for t in main_verb[0].children if t.dep_ == 'nsubj'][0].text.isupper():
-				return False
-			# no proper noun subjects!
-			elif [t for t in main_verb[0].children if t.dep_ == 'nsubj'][0].tag_ == 'NNP':
-				return False
-			else:
-				return True
-	else:
-		return False
-
-def en_conditions(s: str) -> bool:
-	'''
-	Applies conditions to en sentence all at once. 
-	This should be faster, since we can return false early rather than evaluate each condition.
-	'''
-	# must be longer than a single character
-	if len(s) <= 1:
-		return False
-		
-	# must start with a capital letter
-	if not s[0].isupper():
-		return False
-		
-	# must not contain a semicolon (i.e., two sentences)
-	if ';' in s:
-		return False
-		
-	# commas and periods must not be preceded by spaces
-	if ' ,' in s or ' .' in s:
-		return False
-	
-	# if the number of quotation marks is not even
-	if s.count('"') % 2 == 1:
-		return False
-	
-	# no sentences with any finite form of 'be'
-	if ' was ' in s or ' were ' in s or ' is ' in s or ' are ' in s:
-		return False
-	
-	# must be less than 50 words
-	if not len(s.split()) <= 50:
-		return False
-	
-	# must consistent only of punctuation and english letters
-	if not s.translate(str.maketrans('', '', string.punctuation)).isascii():
-		return False
-	
-	if s[-1] == '.':
-		# must not end with a . preceded by a capital letter (happens when splitting on middle names)
-		if s[-2].isupper():
-			return False
-		
-		# must not end with a . preceded by an abbreviation
-		if s[-4:] in ['Mrs.', 'Ave.', 'Ltd.', 'Inc.']:
-			return False
-		
-		if s[-3:] in ['Mr.', 'Dr.', 'Ms.', 'St.', 'Av.']:
-			return False
-		
-		if s[-5:] in ['Prof.', 'Blvd.']:
-			return False
-		
-	# must not contain a colon separating two word characters (occurs in references lists)
-	if re.search(r'\w:\w', s):
-		return False
-	
-	if not en_has_inflected_main_verb_with_acceptable_subject(s):
-		return False
-	
-	return True
-
-def create_seq2seq_tense_dataset(
+def create_seq2seq_dataset(
 	dataset: str,
 	dataset_args: tuple = None,
 	dataset_kwargs: tuple = None,
@@ -128,7 +38,7 @@ def create_seq2seq_tense_dataset(
 	metadata_fun_kwargs: Dict = None,
 ) -> None:
 	'''
-	Create a dataset of sentences in pres to past and past to past pairs
+	Create a dataset for seq2seq models
 	randomly pulled from huggingface datasets.
 	Parsed using spaCy's core_en_web_trf parser
 	The dataset is saved in a text file with one sentence per line.
@@ -187,8 +97,9 @@ def create_seq2seq_tense_dataset(
 			while n_chosen < n:
 				ex 						=  get_random_sentence(dataset['train'], exclude=exs, conditions=conditions)
 				parsed 					=  nlp(ex)
-				new_dataset[n_chosen] 	=  {'translation': splits_funs[split](parsed, **splits_funs_kwargs[split])}
-				new_metadata[n_chosen] 	=  metadata_fun(parsed, *metadata_fun_args, **metadata_fun_kwargs)	
+				pair 					=  splits_funs[split](parsed, **splits_funs_kwargs[split])
+				new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair}}
+				new_metadata[n_chosen] 	=  metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)	
 				exs[n_chosen] 			=  ex
 				n_chosen 				+= 1
 				pbar.set_postfix(split=split)
@@ -265,7 +176,194 @@ def get_random_sentence(
 			e = ex[r]
 	
 	return e
+
+def create_datasets_from_config(
+	config: Dict[str,List] = None, 
+	**kwargs
+) -> None:
+	'''
+	Create and then combine tense datasets for each combination of languages in config.keys().
 	
+	:param config: Dict[str,List]: passed to create_datasets
+	:param kwargs: passed to create_tense_datasets, 
+				   combine_language_datasets_for_tense,
+				   and create_mt5_scripts
+	 			   (useful to set overwrite=True)
+	
+	:outputs: see outputs of create_tense_datasets and combine_language_datasets_for_tense.
+	'''
+	config = load_config(config) if config is None or isinstance(config,str) else config
+	
+	for dataset in config['sources']:
+		dataset_args = config['sources']['dataset_args']
+		dataset_kwargs = config['sources']['dataset_kwargs']
+		
+		for name in config['sources']['names']:
+			for name in config['sources']['names']:
+				print(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
+				
+				# unpack the config
+				conditions 			= config['sources']['names'][name]['conditions']
+				conditions 			= list(conditions) if isinstance(conditions, str) else conditions
+				splits 				= config['sources']['names'][name]['splits']
+				splits_funs 		= config['sources']['names'][name]['splits_funs']
+				splits_funs_args 	= config['sources']['names'][name]['splits_funs_kwargs']
+				metadata_fun 		= config['sources']['names'][name]['metadata_fun']
+				metadata_fun_args 	= config['sources']['names'][name]['metadata_fun_args']
+				metadata_fun_kwargs = config['sources']['names'][name]['metadata_fun_kwargs']
+								
+				# if we're loading from a file, we have to store these as strings,
+				# so we need to import the actual objects
+				for i, f in enumerate(conditions):
+					if isinstance(f, str):
+						module = f.split('.')[0]
+						exec(f'import {module}')
+						conditions[i] = eval(f)
+				
+				for split in splits_funs:
+					if isinstance(splits_funs[split], str):
+						module = f.split('.')[0]
+						exec(f'import {module}')
+						splits_funs[split] = eval(splits_funs[split])
+				
+				if isinstance(metadata_fun, str):
+					module = metadata_fun.split('.')[0]
+					exec(f'import {module}')
+					metadata_fun = eval(metadata_fun)	
+				
+				create_seq2seq_dataset(
+					dataset=dataset,
+					dataset_args=dataset_args,
+					dataset_kwargs=dataset_kwargs,
+					name=name,
+					conditions=conditions,
+					splits=splits,
+					splits_funs=splits_funs,
+					splits_funs_args=splits_funs_args,
+					splits_funs_kwargs=splits_funs_kwargs,
+					metadata_fun=metadata_fun,
+					metadata_fun_args=metadata_fun_args,
+					metadata_fun_kwargs=metadata_fun_kwargs
+				)
+				
+				print('')
+	
+	create_t5_scripts(config, **kwargs)
+
+def create_t5_scripts(
+	config: Dict = None, 
+	overwrite: bool = False
+) -> None:
+	'''
+	Creates finetuning and eval scripts for the passed config for t5.
+	
+	:params config: (List[str]): a config
+	:params overwrite: bool: whether to overwrite existing scripts
+	
+	If no argument is passed, attempt to load the language ids from a file ./data/config.json
+	'''	
+	script = '\n'.join([
+		'#!/bin/bash\n',
+		'#SBATCH --job-name=T5-base-finetune-tense-[TRAIN_LANG]',
+		'#SBATCH --output=joblogs/%x_%j.txt',
+		'#SBATCH --nodes=1',
+		'#SBATCH --cpus-per-task=1',
+		'#SBATCH --mem=30GB',
+		'#SBATCH --time=10:00:00',
+		'#SBATCH --gpus=v100:1',
+		'#SBATCH --partition=gpu',
+		'#SBATCH --mail-type=END,FAIL,INVALID_DEPEND',
+		'',
+		'module load CUDA',
+		'module load cuDNN',
+		'module load miniconda',
+		'',
+		'source activate /gpfs/gibbs/project/frank/ref4/conda_envs/py38-agratt',
+		'',
+		'python core/run_seq2seq.py \\',
+		"	--model_name_or_path 't5-base' \\",
+		'	--do_train \\',
+		'	--task translation_src_to_tgt \\',
+		'	--train_file data/[TRAIN_LANG]/[TRAIN_LANG]_train.json.gz \\',
+		'	--validation_file data/[DEV_LANG]/[DEV_LANG]_dev.json.gz \\',
+		'	--output_dir outputs/t5-finetuning-[TRAIN_LANG]-bs128/ \\',
+		'	--per_device_train_batch_size=4 \\',
+		'	--gradient_accumulation_steps=32 \\',
+		'	--per_device_eval_batch_size=16 \\',
+		'	--overwrite_output_dir \\',
+		'	--predict_with_generate \\',
+		'	--num_train_epochs 10.0'
+	]) + '\n'
+	
+	eval_script = script.replace('finetune', 'eval')
+	eval_script = eval_script.replace('--do_train \\', '--do_learning_curve \\')
+	eval_script = eval_script.replace('[DEV_LANG]', '[TEST_LANG]')
+	eval_script = re.sub(r'_dev(\.|_)', '_test\\1', eval_script)
+	eval_script = eval_script.replace('--per_device_train_batch_size=4', '--per_device_train_batch_size=8')
+	eval_script = eval_script.replace('	--gradient_accumulation_steps=32 \\\n', '')
+	eval_script = eval_script.replace(
+		'	--predict_with_generate \\\n	--num_train_epochs 10.0', 
+		'	--predict_with_generate \\'
+	)
+	
+	config 		= load_config() if config is None else config
+	all_pairs 	= [tuple(pair) for pair in config['pairs']] if 'pairs' in config else []
+	langs 		= [(f'{name}',f'{name}') for dataset in config['sources'] for name in config['sources'][dataset]['names']] + all_pairs
+	
+	# create directories if not existant
+	os.makedirs(os.path.join('scripts', 'finetune'), exist_ok=True)
+	os.makedirs(os.path.join('scripts', 'eval'), exist_ok=True)
+	
+	# create the scripts for each language and pair of languages
+	for lang in langs:
+		lang_ft_script = script
+		lang_ev_script = eval_script
+		
+		train_lang 		= lang[0]
+		dev_lang 		= lang[0]
+		# train_dash_lang = lang[0].replace('_', '-')
+		test_lang 		= lang[1]
+		
+		file_name 		= '_'.join(lang) if lang[0] != lang[1] else lang[0]
+		
+		if os.path.isfile(os.path.join('data', train_lang, f'{train_lang}_train.json.gz')):
+			print(f'Creating scripts for {" -> ".join(lang)}')
+			# if the langs are not the same, we do not need to create a separate tuning script, only a separate eval script
+			if (
+				lang[0] == lang[1] and 
+				os.path.isfile(os.path.join('data', dev_lang, f'{dev_lang}_dev.json.gz'))
+			):
+				lang_ft_script = lang_ft_script.replace('[TRAIN_LANG]', train_lang)
+				lang_ft_script = lang_ft_script.replace('[DEV_LANG]', dev_lang)
+				# lang_ft_script = lang_ft_script.replace('[TRAIN-LANG]', train_dash_lang)
+				if not os.path.exists(os.path.join('scripts', 'finetune', f'finetune_t5_{file_name}_bs128.sh')) or overwrite:
+					with open(os.path.join('scripts', 'finetune', f'finetune_t5_{file_name}_bs128.sh'), 'wt') as out_file:
+						out_file.write(lang_ft_script)
+			
+			if os.path.isfile(os.path.join('data', test_lang, f'{test_lang}_test.json.gz')):
+				lang_ev_script = lang_ev_script.replace('[TRAIN_LANG]', train_lang)
+				lang_ev_script = lang_ev_script.replace('[TEST_LANG]', test_lang)
+				# lang_ev_script = lang_ev_script.replace('[TRAIN-LANG]', train_dash_lang)
+				if not os.path.exists(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh')) or overwrite:
+					with open(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh'), 'wt') as out_file:
+						out_file.write(lang_ev_script)
+
+def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
+	'''
+	Loads a dataset creation config file from disk.
+	
+	:param path: str or Pathlike: the path to the config file.
+						   If no path is provided, attempt to load
+						   ./data/config.json as the config.
+	'''
+	if path is None:
+		path = os.path.join('data', 'config.json')
+	
+	with open(path, 'rt', encoding='utf-8') as in_file:
+		config = json.load(in_file)
+	
+	return config
+
 if __name__ == '__main__':
 	
-	create_seq2seq_tense_dataset()
+	create_datasets_from_config()

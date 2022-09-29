@@ -1,0 +1,27 @@
+{
+	"sources": {
+		"wikipedia": {
+			"dataset_args": ["20200501.en"],
+			"dataset_kwargs": {},
+			"names": {
+				"wiki-en-nodist-pres-and-past": {
+					"conditions": ["en_grammar_funs.conditions"],
+					"splits": {
+						"test": 100
+					},
+					"splits_funs": {
+						"test": "en_grammar_funs.pres_or_past"
+					},
+					"splits_funs_args": [],
+					"splits_funs_kwargs": {
+						"pres_p": 0.5
+					},
+					"metadata_fun": "en_metadata_funs.get_metadata",
+					"metadata_fun_args": [],
+					"metadata_fun_kwargs": {}
+				}
+			}
+		}
+	},
+	"pairs": []
+}
