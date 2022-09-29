@@ -6,3 +6,4 @@ dependencies:
   - tqdm=4.62.3
   - spacy
   - pattern
+  - cudatoolkit=11.3
