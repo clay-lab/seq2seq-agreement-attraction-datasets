@@ -29,6 +29,7 @@ def create_seq2seq_tense_dataset(
 	dataset_kwargs: tuple = None,
 	name: str = None,
 	metadata_fun: Callable = None,
+	metadata_fun_args: Tuple = None,
 	metadata_fun_kwargs: Dict = None,
 	splits: Dict[str,int] = dict(
 		'train': 100000,
@@ -36,7 +37,8 @@ def create_seq2seq_tense_dataset(
 		'test' : 10000,
 	),
 	splits_funs: Dict[str,Callable] = None,
-	splits_funs_kwargs: Dict = None,
+	splits_funs_args: Dict[str,Tuple] = None,
+	splits_funs_kwargs: Dict[str,Dict] = None,
 ) -> None:
 	'''
 	Create a dataset of sentences in pres to past and past to past pairs
@@ -50,18 +52,26 @@ def create_seq2seq_tense_dataset(
 			dataset_kwargs (dict)		: additional arguments to pass to load_dataset for each dataset
 			name (str)					: what to name the dataset. if not specified, a default name based
 										  on the huggingface name will be used
-			metadata_fun (callable)
+			metadata_fun (callable)		: used to get metadata for a sentences parsed with spaCy
+			metadata_fun_args (Tuple)	: args for metadata_fun
+			metadata_fun_kwargs (Dict)	: kwargs for metadata_fun
 			splits (dict)				: mapping between split names and n_examples for that split
 			splits_funs (dict)			: mapping between split names and additional functions to perform on the
 										  sentence (parsed with core_en_web_trf)
-			splits_funs_kwargs (Dict)	: additional arguments to pass to the function used on each example
+			splits_funs_args (dict)		: mapping between split names and additional args to for splits_funs[split]
+			splits_funs_kwargs (dict)	: additional arguments to pass to the function used on each example
 										
 	'''
 	name 				= name if not name == None else dataset
+	dataset_args 		= () if dataset_args is None else dataset_args
+	dataset_kwargs 		= {} if dataset_kwargs is None else dataset_kwargs
+	
 	metadata_fun 		= lambda: {} if metadata_fun is None else metadata_fun
+	metadata_fun_args 	= () if metadata_fun_args is None else metadata_fun_args
 	metadata_fun_kwargs = {} if metadata_fun_kwargs is None else metadata_fun_kwargs
 	
 	splits_funs 		= defaultdict(lambda: lambda *args, **kwargs: None) if splits_funs is None else splits_funs
+	splits_funs_args 	= defaultdict(lambda: ()) if splits_funs_args is None else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if splits_funs_kwargs is None else splits_funs_kwargs
 	
 	try:
