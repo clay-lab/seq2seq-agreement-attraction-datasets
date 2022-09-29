@@ -8,7 +8,6 @@ import re
 import json
 import gzip
 import spacy
-import logging
 
 import pandas as pd
 
@@ -20,8 +19,6 @@ from itertools import zip_longest
 from collections import defaultdict
 from grammar_funs import *
 from metadata_funs import *
-
-log = logging.getLogger(__name__)
 
 def create_seq2seq_tense_dataset(
 	dataset: str,
@@ -114,9 +111,6 @@ def create_seq2seq_tense_dataset(
 			for m in tqdm(metadata):
 				json.dump(m, f, ensure_ascii=False)
 				f.write('\n')
-	
-	new_dataset.save_to_disk(name)
-	log.info(f'Dataset saved in directory {name} in "{os.getcwd()}".')
 
 def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
 	'''
