@@ -8,7 +8,6 @@ import re
 import json
 import gzip
 import spacy
-import string
 
 from tqdm import tqdm
 from typing import *
@@ -18,6 +17,32 @@ from itertools import zip_longest
 from collections import defaultdict
 from grammar_funs import *
 from metadata_funs import *
+
+# good defaults for conditions for English:
+nlp = spacy.load('en_core_web_trf')
+
+def has_inflected_main_verb(s: str) -> bool:
+	'''Is there a main verb in the sentence, and is it inflected?'''
+	main_verb = [t for t in nlp(s) if t.dep_ == 'ROOT']
+	if main_verb:
+		return (
+			main_verb[0].tag_ in ['VBZ', 'VBP', 'VBD'] and not
+			main_verb[0].lemma_ == 'be'
+		)
+	else:
+		return False
+
+EN_CONDITIONS = [
+	# number of words is <= 50
+	lambda s: len(s.split()) <= 50,
+	# all native English alphabet + punctuation
+	lambda s: s.translate(str.maketrans('', '', string.punctuation)).isascii(),
+	# deals with middle initials
+	lambda s: not (s[-1] == '.' and s[-2].isupper()),
+	# there is a main verb, and it's in present or past tense
+	# this is sloow, but it rules out sentence fragments and sentences headed by an aux
+	has_inflected_main_verb 
+]
 
 def create_seq2seq_tense_dataset(
 	dataset: str,
