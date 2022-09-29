@@ -103,13 +103,13 @@ def create_seq2seq_tense_dataset(
 		with gzip.open(os.path.join('data', name, f'{name}_{split}.json.gz'), 'wt', encoding='utf-8') as out_file:
 			for ex in tqdm(new_dataset):
 				json.dump(ex, out_file, ensure_ascii=False)
-				f.write('\n')
+				out_file.write('\n')
 		
 		print(f'Writing out metadata for {name} ({split}).')
 		with gzip.open(os.path.join('data', name, f'{name}_{split}_metadata.json.gz'), 'wt', encoding='utf-8') as out_file:
 			for m in tqdm(metadata):
 				json.dump(m, out_file, ensure_ascii=False)
-				f.write('\n')
+				out_file.write('\n')
 
 def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
 	'''
