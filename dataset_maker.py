@@ -24,9 +24,9 @@ def create_seq2seq_tense_dataset(
 	dataset_kwargs: tuple = None,
 	name: str = None,
 	splits: Dict[str,int] = dict(
-		'train': 100000,
-		'dev'  : 1000,
-		'test' : 10000,
+		train 	= 100000,
+		dev 	= 1000,
+		test 	= 10000,
 	),
 	splits_funs: Dict[str,Callable] = None,
 	splits_funs_args: Dict[str,Tuple] = None,
