@@ -157,7 +157,7 @@ def create_seq2seq_tense_dataset(
 	
 	conditions 			= [] if conditions is None else conditions
 	
-	splits_funs 		= defaultdict(lambda: lambda *args, **kwargs: None) if splits_funs is None else splits_funs
+	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: str(s)) if splits_funs is None else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if splits_funs_args is None else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if splits_funs_kwargs is None else splits_funs_kwargs
 	
