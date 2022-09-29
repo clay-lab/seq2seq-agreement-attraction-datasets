@@ -150,7 +150,7 @@ def get_random_sentence(
 		r 	= int(round(random() * (len(dataset)-1),0))
 		ex 	= split_sentences(dataset[r]['text'])
 		# also exclude sentences with newlines, since it's not clear what to do about those
-		ex 	= [s for s in ex if not s in exclude and not '\n' in s len(s.split()) <= 50]
+		ex 	= [s for s in ex if not s in exclude and not '\n' in s and len(s.split()) <= 50]
 		
 		# if there's anything left, save a sentence
 		if ex:
