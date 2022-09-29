@@ -65,7 +65,7 @@ def create_seq2seq_tense_dataset(
 	splits_funs_args 	= defaultdict(lambda: ()) if splits_funs_args is None else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if splits_funs_kwargs is None else splits_funs_kwargs
 	
-	metadata_fun 		= lambda: {} if metadata_fun is None else metadata_fun
+	metadata_fun 		= lambda *args, **kwargs: {} if metadata_fun is None else metadata_fun
 	metadata_fun_args 	= () if metadata_fun_args is None else metadata_fun_args
 	metadata_fun_kwargs = {} if metadata_fun_kwargs is None else metadata_fun_kwargs
 	
