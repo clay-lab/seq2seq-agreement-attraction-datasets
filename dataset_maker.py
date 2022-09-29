@@ -33,17 +33,31 @@ def has_inflected_main_verb(s: str) -> bool:
 	else:
 		return False
 
-EN_CONDITIONS = [
-	# number of words is <= 50
-	lambda s: len(s.split()) <= 50,
-	# all native English alphabet + punctuation
-	lambda s: s.translate(str.maketrans('', '', string.punctuation)).isascii(),
-	# deals with middle initials
-	lambda s: not (s[-1] == '.' and s[-2].isupper()),
-	# there is a main verb, and it's in present or past tense
-	# this is sloow, but it rules out sentence fragments and sentences headed by an aux
-	has_inflected_main_verb 
-]
+def en_conditions(s: str) -> bool:
+	'''
+	Applies conditions to en sentence all at once. 
+	This should be faster, since we can return false early rather than evaluation each condition.
+	'''
+	# must be longer than a single character
+	if len(s) <= 1:
+		return False
+	
+	# must be less than 50 words
+	if not len(s.split()) <= 50:
+		return False
+		
+	# must consistent only of punctuation and english letters
+	if not s.translate(str.maketrans('', '', string.punctuation)).isascii():
+		return False
+	
+	# must not end with a . preceded by a capital letter (happens when splitting on middle names)
+	if s[-1] == '.' and s[-2].isupper():
+		return False
+		
+	if not has_inflected_main_verb(s):
+		return False
+	
+	return True
 
 def create_seq2seq_tense_dataset(
 	dataset: str,
@@ -161,6 +175,8 @@ def get_random_sentence(
 		returns:
 			str 				: a random sentence pulled from the dataset
 	'''
+	conditions = [conditions] if not isinstance(conditions,list) else conditions
+	
 	def split_sentences(s: str, d: List[str] = r'[\.!\?]') -> str:
 		'''Splits string s into sentences, delimited by regex d.'''
 		ss = re.split(rf'({d} )', s)
