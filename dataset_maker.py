@@ -23,6 +23,7 @@ def create_seq2seq_tense_dataset(
 	dataset_args: tuple = None,
 	dataset_kwargs: tuple = None,
 	name: str = None,
+	max_len: int = 50,
 	splits: Dict[str,int] = dict(
 		train 	= 100000,
 		dev 	= 1000,
@@ -47,6 +48,7 @@ def create_seq2seq_tense_dataset(
 			dataset_kwargs (dict)		: additional arguments to pass to load_dataset for each dataset
 			name (str)					: what to name the dataset. if not specified, a default name based
 										  on the huggingface name will be used
+			max_len (int)				: the maximum number of words in a sentence in the dataset
 			metadata_fun (callable)		: used to get metadata for a sentences parsed with spaCy
 			metadata_fun_args (Tuple)	: args for metadata_fun
 			metadata_fun_kwargs (Dict)	: kwargs for metadata_fun
@@ -89,7 +91,7 @@ def create_seq2seq_tense_dataset(
 		# sentence from that row. we also don't want repeats that are identical except for case
 		with tqdm(total=n) as pbar:
 			while n_chosen < n:
-				ex 						=  get_random_sentence(dataset['train'], exclude=exs)
+				ex 						=  get_random_sentence(dataset['train'], exclude=exs, max_len=max_len)
 				parsed 					=  nlp(ex)
 				new_dataset[n_chosen] 	=  {'translation': splits_funs[split](parsed, **splits_funs_kwargs[split])}
 				new_metadata[n_chosen] 	=  metadata_fun(parsed)	
@@ -111,7 +113,7 @@ def create_seq2seq_tense_dataset(
 				json.dump(m, out_file, ensure_ascii=False)
 				out_file.write('\n')
 
-def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
+def get_random_sentence(dataset: Dataset, exclude: List[str] = None, max_len: int = 50) -> str:
 	'''
 	Returns a random example from the dataset.
 	
@@ -142,7 +144,7 @@ def get_random_sentence(dataset: Dataset, exclude: List[str] = None) -> str:
 		# np.random.choice is sloooow with big lists
 		r 	= int(round(random() * (len(dataset)-1),0))
 		ex 	= split_sentences(dataset[r]['text'])
-		ex 	= [s for s in ex if not s in exclude]
+		ex 	= [s for s in ex if not s in exclude and len(s.split()) <= 50]
 		
 		# if there's anything left, save a sentence
 		if ex:
