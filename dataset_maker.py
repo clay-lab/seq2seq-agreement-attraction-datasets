@@ -22,7 +22,7 @@ from metadata_funs import *
 # good defaults for conditions for English:
 nlp = spacy.load('en_core_web_trf')
 
-def has_inflected_main_verb_with_acceptable_subject(s: str) -> bool:
+def en_has_inflected_main_verb_with_acceptable_subject(s: str) -> bool:
 	'''Is there a main verb in the sentence, and is it inflected?'''
 	main_verb = [t for t in nlp(s) if t.dep_ == 'ROOT']
 	if main_verb:
@@ -104,7 +104,7 @@ def en_conditions(s: str) -> bool:
 	if re.search(r'\w:\w', s):
 		return False
 	
-	if not has_inflected_main_verb_with_acceptable_subject(s):
+	if not en_has_inflected_main_verb_with_acceptable_subject(s):
 		return False
 	
 	return True
