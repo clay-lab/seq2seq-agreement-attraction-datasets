@@ -92,7 +92,7 @@ def create_seq2seq_tense_dataset(
 				ex 						=  get_random_sentence(dataset['train'], exclude=exs)
 				parsed 					=  nlp(ex)
 				new_dataset[n_chosen] 	=  {'translation': splits_funs[split](parsed, **splits_funs_kwargs[split])}
-				metadata[n_chosen] 		=  metadata_fun(parsed)	
+				new_metadata[n_chosen] 	=  metadata_fun(parsed)	
 				exs[n_chosen] 			=  ex
 				n_chosen 				+= 1
 				pbar.set_postfix(split=split)
