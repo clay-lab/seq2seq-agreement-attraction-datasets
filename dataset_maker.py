@@ -36,10 +36,14 @@ def has_inflected_main_verb(s: str) -> bool:
 def en_conditions(s: str) -> bool:
 	'''
 	Applies conditions to en sentence all at once. 
-	This should be faster, since we can return false early rather than evaluation each condition.
+	This should be faster, since we can return false early rather than evaluate each condition.
 	'''
 	# must be longer than a single character
 	if len(s) <= 1:
+		return False
+	
+	# no sentences with any finite form of 'be'
+	if ' was ' in s or ' were ' in s or ' is ' in s or ' are ' in s:
 		return False
 	
 	# must be less than 50 words
@@ -54,7 +58,7 @@ def en_conditions(s: str) -> bool:
 	if s[-1] == '.' and s[-2].isupper():
 		return False
 		
-	# must not contain a colon separating two word characters (in references lists)
+	# must not contain a colon separating two word characters (occurs in references lists)
 	if re.search(r'\w:\w', s):
 		return False
 		
@@ -191,6 +195,8 @@ def get_random_sentence(
 		
 		# remove extra spaces
 		ss = [s.strip() for s in ss if s.strip()]
+		
+		# iterating is way faster than using re.sub
 		for i, _ in enumerate(ss):
 			while '  ' in ss[i]:
 				ss[i] = ss[i].replace('  ', ' ')
