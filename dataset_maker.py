@@ -187,6 +187,7 @@ def get_random_sentence(
 		
 		# remove extra spaces
 		ss = [s.strip() for s in ss if s.strip()]
+		ss = [re.sub(r'\s+', ' ', s) for ss in s]
 		
 		return ss
 	
