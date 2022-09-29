@@ -213,7 +213,7 @@ def get_english_RC_PP_example_metadata(
 	return metadata
 
 def get_example_metadata(
-	grammar: PCFG,
+	grammar,
 	*args, 
 	**kwargs,
 ) -> Dict:
