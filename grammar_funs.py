@@ -31,11 +31,11 @@ def reinflect(t: spacy.tokens.doc.Doc) -> spacy.tokens.doc.Doc:
 	
 	return t_copy
 
-def pres_or_past(grammar: PCFG, pres_p: float = 0.5) -> Tuple:
+def pres_or_past(grammar, pres_p: float = 0.5) -> Tuple:
 	
 	return present_pair(grammar) if random.random() < pres_p else past_pair(grammar)
 
-def pres_or_past_no_pres_dist(grammar: PCFG, pres_p: float = 0.5) -> Tuple:
+def pres_or_past_no_pres_dist(grammar, pres_p: float = 0.5) -> Tuple:
 	
 	source, pfx, target = pres_or_past(grammar, pres_p)
 	
