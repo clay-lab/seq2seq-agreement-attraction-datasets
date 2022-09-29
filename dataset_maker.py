@@ -30,6 +30,10 @@ def has_inflected_main_verb_with_acceptable_subject(s: str) -> bool:
 			main_verb[0].tag_ in ['VBZ', 'VBP', 'VBD'] and not
 			main_verb[0].lemma_ == 'be'
 		):
+			# must have a subject!
+			if not [t for t in main_verb[0].children if t.dep_ == 'nsubj']:
+				return False
+			
 			# no expletive subjects!
 			if any([t.dep_ == 'expl' for t in main_verb[0].children]):
 				return False
