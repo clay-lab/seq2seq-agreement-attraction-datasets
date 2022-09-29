@@ -119,16 +119,17 @@ def create_seq2seq_tense_dataset(
 def get_random_sentence(
 	dataset: Dataset, 
 	exclude: List[str] = None, 
-	conditions: List[Callable]
+	conditions: List[Callable] = None,
 ) -> str:
 	'''
 	Returns a random example from the dataset.
 	
 		params:
-			dataset (Dataset)	: a Dataset to draw a random example from
-			exclude (List(str))	: a list of strings to exclude.
-								  useful if you want distinct examples
-			max_len (int)		: the maximum length of the sentence in words
+			dataset (Dataset)			: a Dataset to draw a random example from
+			exclude (List(str))			: a list of strings to exclude.
+										  useful if you want distinct examples
+			conditions (list[callable])	: a list of functions to apply to a sentence.
+										  all must be true for a sentence to be included
 		
 		returns:
 			str 				: a random sentence pulled from the dataset
