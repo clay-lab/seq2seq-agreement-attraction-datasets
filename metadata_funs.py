@@ -1,8 +1,10 @@
-def get_labels(t: Tree) -> List[str]:
+from typing import *
+
+def get_labels(t) -> List[str]:
 	'''
 	Get the labels of an NLTK tree.
 	
-	:param t: Tree: the tree whose labels to return
+	:param t: the tree whose labels to return
 	:returns labels: a list of the labels of the Tree as strings,
 					 corresponding to the linear order in which they would be printed.
 	'''
@@ -13,12 +15,12 @@ def get_labels(t: Tree) -> List[str]:
 	
 	return labels
 
-def get_pos_labels(t: Tree) -> List[str]:
+def get_pos_labels(t) -> List[str]:
 	'''
 	Get the part-of-speech labels from an NLTK tree.
 	This returns only the labels for the terminal nodes.
 	
-	:param t: Tree: the tree whose labels to return
+	:param t: the tree whose labels to return
 	:returns labels: a list of the labels of the terminal nodes of the tree as strings,
 					 corresponding to the linear order in which they would be printed.
 	'''
@@ -36,13 +38,13 @@ def get_pos_labels(t: Tree) -> List[str]:
 	return labels
 
 def format_tree_string(
-	t: Tree, 
+	t, 
 	lang: str = None, 
 	pfx: str = None
 ) -> str:
 	"""
 	Convert a tree to a string.
-	:param t: Tree: an NLTK Tree
+	:param t: an NLTK Tree
 	:param lang: str: the name of the language that generate the string (currently unused)
 	:param pfx: str: whether the sentence is past or present (currently unused)
 	:return: the flattened version of the tree as a string
@@ -67,13 +69,13 @@ def get_english_RC_PP_pos_seq(pos_seq: List[str]) -> str:
 	return pos_seq
 
 def get_english_RC_PP_example_metadata(
-	source: Tree,
+	source,
 	pfx: str,
-	target: Tree
+	target
 ) -> Dict:
 	"""
 	Gets metadata about the passed example, consisting of a seq2seq mapping with a source, prefix, and target.
-	:param source: Tree: the source Tree
+	:param source: the source Tree
 	:param pfx: str: the task prefix passed to the model
 	:param target: the target Tree
 	:returns metadata: a dictionary recording the following properties for the example:

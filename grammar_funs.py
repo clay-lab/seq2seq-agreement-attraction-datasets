@@ -1,7 +1,8 @@
 import spacy
 
-from pattern.en import singularize, pluralize
+from typing import *
 
+from pattern.en import singularize, pluralize
 from pattern.en import conjugate
 from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
