@@ -22,14 +22,18 @@ from metadata_funs import *
 # good defaults for conditions for English:
 nlp = spacy.load('en_core_web_trf')
 
-def has_inflected_main_verb(s: str) -> bool:
+def has_inflected_main_verb_with_non_expletive_subject(s: str) -> bool:
 	'''Is there a main verb in the sentence, and is it inflected?'''
 	main_verb = [t for t in nlp(s) if t.dep_ == 'ROOT']
 	if main_verb:
-		return (
+		if (
 			main_verb[0].tag_ in ['VBZ', 'VBP', 'VBD'] and not
 			main_verb[0].lemma_ == 'be'
-		)
+		):
+			if any([t.dep_ == 'expl' for t in main_verb[0].children]):
+				return False
+			else:
+				return True
 	else:
 		return False
 
@@ -72,8 +76,8 @@ def en_conditions(s: str) -> bool:
 	# must not contain a colon separating two word characters (occurs in references lists)
 	if re.search(r'\w:\w', s):
 		return False
-		
-	if not has_inflected_main_verb(s):
+	
+	if not has_inflected_main_verb_with_non_expletive_subject(s):
 		return False
 	
 	return True
