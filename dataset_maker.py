@@ -54,9 +54,20 @@ def en_conditions(s: str) -> bool:
 	if not s.translate(str.maketrans('', '', string.punctuation)).isascii():
 		return False
 	
-	# must not end with a . preceded by a capital letter (happens when splitting on middle names)
-	if s[-1] == '.' and s[-2].isupper():
-		return False
+	if s[-1] == '.':
+		# must not end with a . preceded by a capital letter (happens when splitting on middle names)
+		if s[-2].isupper():
+			return False
+		
+		# must not end with a . preceded by a title
+		if s[-4:] == 'Mrs.'
+			return False
+		
+		if s[-3:] in ['Mr.', 'Dr.', 'Ms.']
+			return False
+		
+		if s[-5:] == 'Prof.'
+			return False
 		
 	# must not contain a colon separating two word characters (occurs in references lists)
 	if re.search(r'\w:\w', s):
