@@ -109,7 +109,7 @@ def create_seq2seq_tense_dataset(
 		
 		print(f'Writing out metadata for {name} ({split}).')
 		with gzip.open(os.path.join('data', name, f'{name}_{split}_metadata.json.gz'), 'wt', encoding='utf-8') as out_file:
-			for m in tqdm(metadata):
+			for m in tqdm(new_metadata):
 				json.dump(m, out_file, ensure_ascii=False)
 				out_file.write('\n')
 
