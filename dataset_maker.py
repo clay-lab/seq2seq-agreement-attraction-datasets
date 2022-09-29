@@ -97,7 +97,8 @@ def create_seq2seq_tense_dataset(
 				n_chosen 				+= 1
 				pbar.set_postfix(split=split)
 				pbar.update(1)
-	
+		
+		os.makedirs(os.path.join('data', name), exist_ok=True)
 		print(f'Writing out dataset {name} ({split}).')
 		with gzip.open(os.path.join('data', name, f'{name}_{split}.json.gz'), 'wt', encoding='utf-8') as out_file:
 			for ex in tqdm(new_dataset):
