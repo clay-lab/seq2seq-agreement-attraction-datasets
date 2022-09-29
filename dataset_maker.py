@@ -179,7 +179,7 @@ def get_random_sentence(
 	
 	def split_sentences(s: str, d: List[str] = r'[\.!\?]') -> str:
 		'''Splits string s into sentences, delimited by regex d.'''
-		ss = re.split(rf'({d} )', s)
+		ss = re.split(f'({d} )', s)
 		
 		# merge adjacent delimeters back into the sentence
 		it = iter(ss)
