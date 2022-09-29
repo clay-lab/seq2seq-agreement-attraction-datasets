@@ -23,9 +23,6 @@ def create_seq2seq_tense_dataset(
 	dataset_args: tuple = None,
 	dataset_kwargs: tuple = None,
 	name: str = None,
-	metadata_fun: Callable = None,
-	metadata_fun_args: Tuple = None,
-	metadata_fun_kwargs: Dict = None,
 	splits: Dict[str,int] = dict(
 		'train': 100000,
 		'dev'  : 1000,
@@ -34,6 +31,9 @@ def create_seq2seq_tense_dataset(
 	splits_funs: Dict[str,Callable] = None,
 	splits_funs_args: Dict[str,Tuple] = None,
 	splits_funs_kwargs: Dict[str,Dict] = None,
+	metadata_fun: Callable = None,
+	metadata_fun_args: Tuple = None,
+	metadata_fun_kwargs: Dict = None,
 ) -> None:
 	'''
 	Create a dataset of sentences in pres to past and past to past pairs
@@ -61,13 +61,13 @@ def create_seq2seq_tense_dataset(
 	dataset_args 		= () if dataset_args is None else dataset_args
 	dataset_kwargs 		= {} if dataset_kwargs is None else dataset_kwargs
 	
-	metadata_fun 		= lambda: {} if metadata_fun is None else metadata_fun
-	metadata_fun_args 	= () if metadata_fun_args is None else metadata_fun_args
-	metadata_fun_kwargs = {} if metadata_fun_kwargs is None else metadata_fun_kwargs
-	
 	splits_funs 		= defaultdict(lambda: lambda *args, **kwargs: None) if splits_funs is None else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if splits_funs_args is None else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if splits_funs_kwargs is None else splits_funs_kwargs
+	
+	metadata_fun 		= lambda: {} if metadata_fun is None else metadata_fun
+	metadata_fun_args 	= () if metadata_fun_args is None else metadata_fun_args
+	metadata_fun_kwargs = {} if metadata_fun_kwargs is None else metadata_fun_kwargs
 	
 	try:
 		dataset = load_dataset(dataset, *dataset_args, **dataset_kwargs)
