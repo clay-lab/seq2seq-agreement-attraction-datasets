@@ -19,7 +19,10 @@ from collections import defaultdict
 from grammar_funs import *
 from metadata_funs import *
 
-split_sentences = spacy.load('en_core_web_trf', disable=['transformer', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'])
+split_sentences = spacy.load(
+	'en_core_web_trf', 
+	disable=['transformer', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner']
+)
 split_sentences.add_pipe('sentencizer')
 
 def create_seq2seq_dataset(
@@ -171,7 +174,7 @@ def get_random_sentence(
 		# np.random.choice is sloooow with big lists
 		r 	= int(round(random() * (len(dataset)-1),0))
 		# ex 	= split_sentences(dataset[r]['text'])
-		ex = split_sentences(dataset[r]['text'])
+		ex = [str(s) for s in split_sentences(dataset[r]['text'])]
 		# also exclude sentences with newlines, since it's not clear what to do about those
 		# ex 	= [s for s in ex if not s in exclude and all([c(s) for c in conditions])]
 		ex = [s for s in ex if all([c(s) for c in conditions])]
