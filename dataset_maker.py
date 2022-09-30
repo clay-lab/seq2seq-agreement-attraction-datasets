@@ -73,7 +73,7 @@ def create_seq2seq_dataset(
 	
 	conditions 			= [] if conditions is None else conditions
 	
-	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: str(s)) if splits_funs is None else splits_funs
+	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'ex': str(s)}) if splits_funs is None else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if splits_funs_args is None else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if splits_funs_kwargs is None else splits_funs_kwargs
 	
@@ -174,7 +174,7 @@ def get_random_sentence(
 		# np.random.choice is sloooow with big lists
 		r 	= int(round(random() * (len(dataset)-1),0))
 		# ex 	= split_sentences(dataset[r]['text'])
-		ex = [str(s) for s in split_sentences(dataset[r]['text'])]
+		ex = [str(s) for s in split_sentences(dataset[r]['text']).sents]
 		# also exclude sentences with newlines, since it's not clear what to do about those
 		# ex 	= [s for s in ex if not s in exclude and all([c(s) for c in conditions])]
 		ex = [s for s in ex if all([c(s) for c in conditions])]
