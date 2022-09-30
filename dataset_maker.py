@@ -16,8 +16,8 @@ from random import random
 from datasets import load_dataset, Dataset
 from itertools import zip_longest
 from collections import defaultdict
-from grammar_funs import *
-from metadata_funs import *
+# from grammar_funs import *
+# from metadata_funs import *
 
 split_sentences = spacy.load(
 	'en_core_web_trf', 
