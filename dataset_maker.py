@@ -19,6 +19,9 @@ from collections import defaultdict
 from grammar_funs import *
 from metadata_funs import *
 
+split_sentences = spacy.load('en_core_web_trf', disable=['transformer', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'])
+split_sentences.add_pipe('sentencizer')
+
 def create_seq2seq_dataset(
 	dataset: str,
 	dataset_args: tuple = None,
@@ -81,7 +84,8 @@ def create_seq2seq_dataset(
 		raise ValueError(f'Unable to load dataset {dataset} on huggingface!')
 	
 	nlp	= spacy.load('en_core_web_trf')
-	exs	= [None for _ in range(sum(splits.values()))] # so we don't repeat sentences, even across datasets
+	# exs	= [None for _ in range(sum(splits.values()))] # so we don't repeat sentences, even across datasets
+	exs = []
 	
 	for split, n in splits.items():
 		# preallocate
@@ -138,36 +142,39 @@ def get_random_sentence(
 	'''
 	conditions = [conditions] if not isinstance(conditions,list) else conditions
 	
-	def split_sentences(s: str, d: str = r'[\.!\?]') -> str:
-		'''Splits string s into sentences, delimited by regex d.'''
-		# deals with a problematic abbreviation
-		if ' c. ' in s:
-			return [''] 
+	# def split_sentences(s: str, d: str = r'[\.!\?]') -> str:
+	# 	'''Splits string s into sentences, delimited by regex d.'''
 		
-		ss = re.split(f'({d} )', s)
+	# 	# # deals with a problematic abbreviation
+	# 	# if ' c. ' in s:
+	# 	# 	return [''] 
 		
-		# merge adjacent delimeters back into the sentence
-		it = iter(ss)
-		ss = [f'{s1}{s2}' for s1, s2 in zip_longest(it, it, fillvalue='')]
+	# 	# ss = re.split(f'({d} )', s)
 		
-		# remove extra spaces
-		ss = [s.strip() for s in ss if s.strip()]
+	# 	# # merge adjacent delimeters back into the sentence
+	# 	# it = iter(ss)
+	# 	# ss = [f'{s1}{s2}' for s1, s2 in zip_longest(it, it, fillvalue='')]
 		
-		# iterating is way faster than using re.sub
-		for i, _ in enumerate(ss):
-			while '  ' in ss[i]:
-				ss[i] = ss[i].replace('  ', ' ')
+	# 	# # remove extra spaces
+	# 	# ss = [s.strip() for s in ss if s.strip()]
 		
-		return ss
+	# 	# # iterating is way faster than using re.sub
+	# 	# for i, _ in enumerate(ss):
+	# 	# 	while '  ' in ss[i]:
+	# 	# 		ss[i] = ss[i].replace('  ', ' ')
+		
+	# 	# return ss
 	
 	e = ''
 	while not e:
 		# pick a random example
 		# np.random.choice is sloooow with big lists
 		r 	= int(round(random() * (len(dataset)-1),0))
-		ex 	= split_sentences(dataset[r]['text'])
+		# ex 	= split_sentences(dataset[r]['text'])
+		ex = split_sentences(dataset[r]['text'])
 		# also exclude sentences with newlines, since it's not clear what to do about those
-		ex 	= [s for s in ex if not s in exclude and not '\n' in s and all([c(s) for c in conditions])]
+		# ex 	= [s for s in ex if not s in exclude and all([c(s) for c in conditions])]
+		ex = [s for s in ex if all([c(s) for c in conditions])]
 		
 		# if there's anything left, save a sentence
 		if ex:

@@ -308,3 +308,26 @@ class EDoc():
 	def _get_conjuncts(t: Union[Token,EToken]):
 		'''Returns all conjuncts dependent on the first in a coordinated phrase.'''
 		return [r for r in t.rights if r.dep_ == 'conj']
+	
+	def reinflect_main_verb(self, number, tense) -> EDoc:
+		v = self.main_verb
+		v.reinflect(number, tense)
+		
+		return self.copy_with_replace(tokens=v)
+	
+	def renumber_main_subject(self, number) -> EDoc:
+		s = self.main_subject
+		s.renumber(number)
+		
+		return self.copy_with_replace(tokens=s)
+	
+	def singularize_main_subject(self) -> EDoc:
+		return renumber_main_subject(number=SG)
+	
+	def pluralize_main_subject(self) -> EDoc:
+		return renumber_main_subject(number=PL)
+	
+	def singularize_all_main_subject_verb_distractors(self) -> EDoc:
+		ds = self.main_subject_verb_distractors
+		for t in ds:
+			
