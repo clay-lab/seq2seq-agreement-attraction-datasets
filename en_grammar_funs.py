@@ -3,8 +3,6 @@ import spacy
 import string
 import random
 
-import pandas as pd
-
 from typing import *
 
 from pattern.en import singularize, pluralize
@@ -12,12 +10,12 @@ from pattern.en import conjugate
 from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
 
+from spacyutils import *
+
 NUMBER_MAP = {
 	'Sing': SG,
 	'Plur': PL
 }
-
-nlp = spacy.load('en_core_web_trf')
 
 def has_inflected_main_verb_with_acceptable_subject(s: str) -> bool:
 	'''Is there a main verb in the sentence, and is it inflected?'''

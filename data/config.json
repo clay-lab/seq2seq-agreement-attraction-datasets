@@ -5,7 +5,7 @@
 			"dataset_kwargs": {},
 			"names": {
 				"wiki-en-nodist-pres-and-past": {
-					"conditions": ["en_grammar_funs.conditions"],
+					"conditions": "en_grammar_funs.conditions",
 					"splits": {
 						"test": 100
 					},
