@@ -105,7 +105,7 @@ def create_seq2seq_dataset(
 				ex 						=  get_random_sentence(dataset['train'], exclude=exs, conditions=conditions)
 				parsed 					=  nlp(ex)
 				pair 					=  splits_funs[split](parsed, **splits_funs_kwargs[split])
-				new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair}}
+				new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair.items()}}
 				new_metadata[n_chosen] 	=  metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)	
 				exs[n_chosen] 			=  ex
 				n_chosen 				+= 1
