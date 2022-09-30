@@ -3,6 +3,8 @@ Short useful functions for working with spaCy Docs.
 Some of this is adapted from 
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
+import re
+
 from copy import deepcopy
 from typing import *
 
@@ -11,7 +13,37 @@ import spacy
 from spacy.tokens.doc import Doc
 from spacy.tokens.token import Token
 
+from pattern.en import singularize, pluralize
+from pattern.en import conjugate
+from pattern.en import SG, PL
+from pattern.en import PAST, PRESENT
+
 SUBJ_DEPS: Set[str] = {"csubj", "csubjpass", "expl", "nsubj", "nsubjpass"}
+NUMBER_MAP: Dict[str] = {
+	SG: SG,
+	'Sing': SG,
+	'Sg': SG,
+	'sing': SG,
+	'sg': SG,
+	PL: PL,
+	'Plur': PL,
+	'Pl': PL,
+	'plur': PL,
+	'pl': PL
+}
+
+TENSE_MAP: Dict[str] = {
+	PAST: PAST
+	'Past': PAST,
+	'past': PAST,
+	'Pst': PAST,
+	'pst': PAST,
+	PRESENT: PRESENT,
+	'Present': PRESENT,
+	'present': PRESENT,
+	'Pres': PRESENT,
+	'pres': PRESENT
+}
 
 nlp_ = spacy.load('en_core_web_trf')
 nlp = lambda s: EDoc(nlp_(s))
@@ -58,6 +90,52 @@ class EToken():
 	
 	def __repr__(self) -> str:
 		return self.__str__()
+	
+	def renumber(self, number) -> None:
+		if NUMBER_MAP[number] == SG:
+			singularize()
+		elif NUMBER_MAP[number] == PL:
+			pluralize()
+	
+	def singularize(self) -> None:
+		if not self.pos_ == 'NOUN':
+			raise ValueError(f'"{self.text}" can\'t be singularized; it\'s a {self.pos_}, not a noun!')
+			
+		self.text = singularize(self.text)
+		if 'Number=Plur' in self.morph:
+			self.morph = self.morph.replace('Number=Plur', 'Number=Sing')
+		elif 'Number=' in self.morph:
+			self.morph = re.sub(r'Number=(.*?)(?:\|)', 'Number=Sing', self.morph)
+		else:
+			self.morph += '|Number=Sing'
+	
+	def pluralize(self) -> None:
+		if not self.pos_ == 'NOUN':
+			raise ValueError(f'"{self.text}" can\'t be pluralized; it\'s a {self.pos_}, not a noun!')
+			
+		self.text = pluralize(self.text)
+		if 'Number=Sing' in self.morph:
+			self.morph = self.morph.replace('Number=Sing', 'Number=Plur')
+		elif 'Number=' in self.morph:
+			self.morph = re.sub(r'Number=(.*?)(?:(\||$))', 'Number=Plur', self.morph)
+		else:
+			self.morph += '|Number=Plur'
+	
+	def reinflect(self, number, tense) -> None:
+		if not self.pos_ == 'VERB':
+			raise ValueError(f'"{self.text}" can\'t be reinflected; it\'s a {self.pos_}, not a verb!')
+		
+		self.text = reinflect(self.text, number=NUMBER_MAP[number], tense=TENSE_MAP[tense])
+		n = 'Sing' if NUMBER_MAP[number] == SG else 'Plur'
+		t = 'Past' if TENSE_MAP[tense] == PAST else 'Pres'
+		
+		if 'Number=' in self.morph:
+			self.morph = re.sub(r'Number=(.*?)(?:(\||$))', f'Number={n}', self.morph)
+		else:
+			self.morph += f'|Number={n}'
+		
+		if 'Tense=' in self.morph:
+			self.morph = re.sub(r'Tense=(.*?)(?:(\||$))', f'Tense={t}', self.morph)
 
 class EDoc():
 	'''
