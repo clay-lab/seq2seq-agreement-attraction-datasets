@@ -500,7 +500,7 @@ class EDoc():
 		else:
 			return s.get_morph('Number')
 	
-	def _get_list_subject_number(self) -> str:
+	def _get_list_subject_number(self, s: List[EToken]) -> str:
 		'''
 		We call this to get the number of the subject when
 		there are multiple subject dependencies in a sentence.
