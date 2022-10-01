@@ -414,14 +414,24 @@ class EDoc():
 		return v.get_morph('Tense')
 	
 	@property
+	def has_main_subject(self) -> bool:
+		'''
+		Does the main verb have a subject?
+		Ungrammatical sentences and fragments
+		can fail this.
+		'''
+		try:
+			self.main_subject
+			return True
+		except IndexError:
+			return False
+	
+	@property
 	def main_subject(self) -> Union[EToken,List[EToken]]:
 		'''Gets the main clause subject of the SDoc if one exists.'''
 		v = self.main_verb
-		try:
-			s = [EToken(t) for t in v.children if t.dep_ in SUBJ_DEPS]
-			s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
-		except IndexError:
-			breakpoint()
+		s = [EToken(t) for t in v.children if t.dep_ in SUBJ_DEPS]
+		s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
 		
 		if len(s) == 1:
 			s = s[0]
