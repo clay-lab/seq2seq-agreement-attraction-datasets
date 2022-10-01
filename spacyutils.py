@@ -4,6 +4,7 @@ Some of this is adapted from
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
 from typing import Union, List, Dict, Set
+from collections import Counter
 
 import spacy
 
@@ -480,8 +481,19 @@ class EDoc():
 		s = self.main_subject
 		
 		if isinstance(s,list) and len(s) > 1:
-			# conjoined subjects (i.e., 'and', 'or', etc.)
-			return 'Plur'
+			tag_counts = Counter([t.dep_ for t in s])
+			# happens with some dummy 'it' subject sentences
+			# one subject and one attr
+			if tag_counts['nsubj'] == 1 and tag_counts['attr'] == 1:
+				nums = [t.get_morph('Number') for t in s]
+				if all([n == 'Sing' for n in nums]):
+					return 'Sing'
+				else:
+					print(self.doc)
+					breakpoint()
+			else:
+				# conjoined subjects (i.e., and, or, etc.)
+				return 'Plur'
 		elif self.main_subject.dep_ in ['csubj', 'csubjpass']:
 			# clausal subjects are not correctly associated
 			# with a number feature
@@ -674,3 +686,8 @@ class EDoc():
 		'''Make all distractor nouns match the main subject number.'''
 		n = NUMBER_MAP[self.main_subject_number]
 		return self.renumber_main_subject_verb_distractors(number=n)
+
+if __name__ == '__main__':
+	ss = 'It is an important species caught both in commercial and artisanal fisheries.'
+	s = nlp(ss)
+	breakpoint()
