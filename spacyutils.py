@@ -492,7 +492,7 @@ class EDoc():
 		s = self.main_subject
 		
 		if isinstance(s,list) and len(s) > 1:
-			return self._get_list_subject_number()
+			return self._get_list_subject_number(s)
 		elif self.main_subject.dep_ in ['csubj', 'csubjpass']:
 			# clausal subjects are not correctly associated
 			# with a Singular number feature
