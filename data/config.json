@@ -12,9 +12,11 @@
 					"splits_funs": {
 						"test": "en_grammar_funs.pres_or_past"
 					},
-					"splits_funs_args": [],
+					"splits_funs_args": {},
 					"splits_funs_kwargs": {
-						"pres_p": 0.5
+						"test": {
+							"pres_p": 0.5
+						}
 					},
 					"metadata_fun": "en_metadata_funs.get_en_metadata",
 					"metadata_fun_args": [],
