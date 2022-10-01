@@ -16,7 +16,7 @@ from pattern.en import conjugate
 from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
 
-SUBJ_DEPS: Set[str] = {"csubj", "csubjpass", "expl", "nsubj", "nsubjpass"}
+SUBJ_DEPS: Set[str] = {"csubj", "csubjpass", "attr", "nsubj", "nsubjpass"}
 OBJ_DEPS: Set[str] = {"cobj", "nobj"}
 
 NUMBER_MAP: Dict[str,str] = {
@@ -82,7 +82,7 @@ class EToken():
 		self.is_sent_start 	= token.is_sent_start
 		self.ent_iob_		= token.ent_iob_
 		self.rights 		= token.rights
-		self.children 		= token.children
+		self.children 		= list(token.children)
 		self.i 				= token.i
 	
 	def __len__(self) -> int:
@@ -136,9 +136,14 @@ class EToken():
 		return self.pos_ == 'NOUN'
 	
 	@property
+	def is_determiner(self):
+		'''Is the token a determiner?'''
+		return self.pos_ == 'DET'
+	
+	@property
 	def can_be_numbered(self):
 		'''Can the (NOUN) token be renumbered?'''
-		return self.is_noun or self.is_pronoun
+		return self.is_noun or self.is_pronoun or self.is_determiner
 	
 	@property
 	def is_singular(self) -> bool:
@@ -206,6 +211,9 @@ class EToken():
 	
 	def renumber(self, number: str) -> None:
 		'''Renumber the token (if it is a noun).'''
+		if not self.can_be_numbered:
+			raise ValueError(f"'{self.text}' can't be renumbered; it's a {self.pos_}, not a det/noun!")
+		
 		if NUMBER_MAP[number] == SG:
 			self.singularize()
 		elif NUMBER_MAP[number] == PL:
@@ -213,20 +221,15 @@ class EToken():
 	
 	def singularize(self) -> None:
 		'''Make a (NOUN) token singular.'''
-		if not self.can_be_numbered:
-			raise ValueError(f'"{self.text}" can\'t be singularized; it\'s a {self.pos_}, not a noun!')
-		
 		if not self.get_morph('Number') == 'Sing':
 			# bug in pattern.en.singularize and pluralize: don't deal with capital letters correctly
+			# need to add exceptions: this doesn't work for 'these', 'those', 'all', etc. 
 			self.text = singularize(self.text.lower())
 			self.text = (self.text[0].upper() if self.is_sent_start else self.text[0]) + self.text[1:]
 			self.set_morph(Number='Sing')
 	
 	def pluralize(self) -> None:
 		'''Make a (NOUN) token plural.'''
-		if not self.can_be_numbered:
-			raise ValueError(f"'{self.text}' can't be pluralized; it's a {self.pos_}, not a noun!")
-		
 		if not self.get_morph('Number') == 'Plur':
 			self.text = pluralize(self.text.lower())
 			self.text = (self.text[0].upper() if self.is_sent_start else self.text[0]) + self.text[1:]
@@ -254,7 +257,7 @@ class EToken():
 							tense=TENSE_MAP[tense],
 							**kwargs
 						)
-		except KeyError:
+		except :
 			print(self.text)
 			breakpoint()
 			
@@ -459,6 +462,19 @@ class EDoc():
 			return s.get_morph('Number')
 	
 	@property
+	def main_subject_determiner(self) -> Union[EToken,List[EToken]]:
+		'''Get the determiner(s) of the main subject.'''
+		s = self.main_subject
+		if not isinstance(s, list):
+			s = [s]
+		
+		d = [c for c in subj.children for subj in s if c.dep_ == 'det']
+		if len(d) == 1:
+			d = d[0]
+		
+		return d
+	
+	@property
 	def main_subject_verb_interveners(self) -> List[EToken]:
 		'''
 		Get the tokens for the nouns that 
@@ -501,6 +517,23 @@ class EDoc():
 	def has_main_subject_verb_distractors(self) -> bool:
 		'''Are there any distractors between the main clause subject and the main clause verb?'''
 		return any(self.main_subject_verb_distractors)
+	
+	@property
+	def main_subject_verb_distractors_determiners(self) -> List[EToken]:
+		'''
+		Get the determiners for the interveners
+		between the subject and the main verb
+		that mismatch the head noun of the subject
+		in the number feature. Note that this
+		currently only works for distractors
+		that occur after the subject head noun
+		(i.e., not on Wagers et al. 2009) structures).
+		'''
+		n 			= self.main_subject_number
+		interveners = self.main_subject_verb_interveners
+		distractors = [t for t in interveners if t.get_morph('Number') != n]
+		distractors_d = [t for d in distractors for t in d.children if d.dep_ == 'det']
+		return distractors_d
 	
 	@property
 	def has_main_object(self) -> bool:
@@ -562,13 +595,17 @@ class EDoc():
 		return self.reinflect_main_verb(number=n, tense=PRESENT)
 	
 	def renumber_main_subject(self, number: str) -> 'EDoc':
+		'''Renumber the main subject, along with its determiner and verb.'''
 		s = self.main_subject
-		s.renumber(number)
+		s.renumber(number=number)
+		
+		d = self.main_subject_determiner
+		d.renumber(number=number)
 		
 		v = self.main_verb
 		v.reinflect(number=number)
 		
-		return self.copy_with_replace(tokens=[s,v])
+		return self.copy_with_replace(tokens=[s,d,v])
 	
 	def singularize_main_subject(self) -> 'EDoc':
 		'''Make the main subject singular, and reinflect the verb.'''
@@ -587,11 +624,15 @@ class EDoc():
 			f = lambda t: t.pluralize()
 		
 		ds = self.main_subject_verb_distractors
-		for i, t in enumerate(ds):
+		for i, _ in enumerate(ds):
 			f(ds[i])
 		
+		dds = self.main_subject_verb_distractors_determiners
+		for i, _ in enumerate(dds):
+			f(dds[i])
+		
 		if ds:
-			return self.copy_with_replace(tokens=ds)
+			return self.copy_with_replace(tokens=ds + dds)
 	
 	def singularize_main_subject_verb_distractors(self) -> 'EDoc':
 		'''Make all distractor nouns singular.'''
