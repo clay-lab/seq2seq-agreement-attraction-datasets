@@ -172,11 +172,12 @@ class EToken():
 	def _morph_to_dict(self) -> Dict:
 		'''Get the morphological information as a dictionary.'''
 		m = str(self.morph)
-		try:
+		if m:
 			d = {k: v for k, v in [f.split('=') for f in m.split('|')]}
-		except ValueError:
-			breakpoint()
-		return d
+		else:
+			d = {}	
+		
+		return d	
 	
 	@staticmethod
 	def _dict_to_morph(d: Dict[str,str]) -> str:
