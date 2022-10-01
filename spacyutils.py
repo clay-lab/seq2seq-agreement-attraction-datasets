@@ -3,7 +3,7 @@ Useful wrappers for editing spaCy
 Some of this is adapted from 
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Set
 
 import spacy
 

@@ -8,16 +8,12 @@ import re
 import json
 import gzip
 import spacy
-import string
 import random
 
 from tqdm import tqdm
-from typing import *
+from typing import List, Callable, Tuple, Dict
 from datasets import load_dataset, Dataset
-from itertools import zip_longest
 from collections import defaultdict
-from en_grammar_funs import en_conditions
-from en_metadata_funs import get_en_metadata
 
 from spacyutils import nlp
 
@@ -338,4 +334,5 @@ def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
 	return config
 
 if __name__ == '__main__':
+	
 	create_datasets_from_config()
