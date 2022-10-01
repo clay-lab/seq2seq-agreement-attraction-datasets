@@ -33,6 +33,6 @@ def get_en_metadata(pair: Dict) -> Dict:
 	metadata.update({'final_intervener_number': final_intervener_number})
 	metadata.update({'n_distractors': len(source.main_subject_verb_distractors)})
 	metadata.update({'pos_sequence': source.pos_seq})
-	metadata.update({'tense': pfx})
+	metadata.update({'tense': prefix})
 	
 	return metadata
