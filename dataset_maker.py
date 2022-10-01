@@ -177,7 +177,7 @@ def create_datasets_from_config(
 			
 			# unpack the config
 			conditions 			= config['sources'][dataset]['names'][name]['conditions']
-			conditions 			= list(conditions) if isinstance(conditions, str) else conditions
+			conditions 			= [conditions] if isinstance(conditions, str) else conditions
 			splits 				= config['sources'][dataset]['names'][name]['splits']
 			splits_funs 		= config['sources'][dataset]['names'][name]['splits_funs']
 			splits_funs_args 	= config['sources'][dataset]['names'][name]['splits_funs_kwargs']
@@ -189,7 +189,6 @@ def create_datasets_from_config(
 			# so we need to import the actual objects
 			for i, f in enumerate(conditions):
 				if isinstance(f, str):
-					breakpoint()
 					module = f.split('.')[0]
 					exec(f'import {module}')
 					conditions[i] = eval(f)
