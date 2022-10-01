@@ -53,7 +53,7 @@ nlp = lambda s: EDoc(nlp_(s))
 
 # workaround for pattern.en bug in python > 3.6
 try:
-	lexeme('bad pattern.en >:(')
+	_ = lexeme('bad pattern.en >:(')
 except RuntimeError:
 	pass
 
