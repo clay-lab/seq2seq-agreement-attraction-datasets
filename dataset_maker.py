@@ -151,8 +151,9 @@ def get_random_sentence(
 			e = ex[r]
 		
 		n_rounds += 1
-		print(f'\r{n_rounds}', flush=True)
+		print(f'\r{n_rounds}', flush=True, end='')
 	
+	print('\n')
 	return e
 
 def create_datasets_from_config(
