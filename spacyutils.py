@@ -48,6 +48,17 @@ TENSE_MAP: Dict[str,str] = {
 	'pres': PRESENT
 }
 
+# cases that pattern.en doesn't handle correctly
+SINGULARIZE_MAP = {
+	'these': 'this',
+	'those': 'that',
+	'all': 'every', # works well enough
+}
+
+# none found yet
+PLURALIZE_MAP = {
+}
+
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
 nlp  = lambda s: EDoc(nlp_(s))
 
@@ -224,14 +235,14 @@ class EToken():
 		if not self.get_morph('Number') == 'Sing':
 			# bug in pattern.en.singularize and pluralize: don't deal with capital letters correctly
 			# need to add exceptions: this doesn't work for 'these', 'those', 'all', etc. 
-			self.text = singularize(self.text.lower())
+			self.text = SINGULARIZE_MAP.get(self.text.lower(), singularize(self.text.lower()))
 			self.text = (self.text[0].upper() if self.is_sent_start else self.text[0]) + self.text[1:]
 			self.set_morph(Number='Sing')
 	
 	def pluralize(self) -> None:
 		'''Make a (NOUN) token plural.'''
 		if not self.get_morph('Number') == 'Plur':
-			self.text = pluralize(self.text.lower())
+			self.text = PLURALIZE_MAP.get(self.text.lower(), pluralize(self.text.lower()))
 			self.text = (self.text[0].upper() if self.is_sent_start else self.text[0]) + self.text[1:]
 			self.set_morph(Number='Plur')
 	
