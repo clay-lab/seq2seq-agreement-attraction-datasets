@@ -105,6 +105,12 @@ def create_seq2seq_dataset(
 				pbar.set_postfix(split=split)
 				pbar.update(1)
 		
+		if 'prefix' in new_dataset[0]['translation']:
+			prefixes = [e['translation']['prefix'] for e in new_dataset]
+			unique_prefixes = set(prefixes)
+			for pfx in unique_prefixes:
+				print(f'{name} prop {pfx} examples: {len([p for p in prefixes if p == pfx])/len(prefixes):.4f}')
+		
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		print(f'Writing out dataset {name} ({split}).')
 		with gzip.open(os.path.join('data', name, f'{name}_{split}.json.gz'), 'wt', encoding='utf-8') as out_file:
