@@ -172,7 +172,10 @@ class EToken():
 	def _morph_to_dict(self) -> Dict:
 		'''Get the morphological information as a dictionary.'''
 		m = str(self.morph)
-		d = {k: v for k, v in [f.split('=') for f in m.split('|')]}
+		try:
+			d = {k: v for k, v in [f.split('=') for f in m.split('|')]}
+		except ValueError:
+			breakpoint()
 		return d
 	
 	@staticmethod
@@ -398,7 +401,10 @@ class EDoc():
 	@property
 	def main_verb(self) -> Token:
 		'''Convenience method for get_root().'''
-		return self.root
+		if self.root_is_verb:
+			return self.root
+		else:
+			raise ValueError('There is no main verb for this sentence! (spaCy messed up)')
 	
 	@property
 	def main_verb_tense(self) -> str:
