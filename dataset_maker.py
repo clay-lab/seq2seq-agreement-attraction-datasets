@@ -65,19 +65,19 @@ def create_seq2seq_dataset(
 			splits_funs_kwargs (dict)	: additional arguments to pass to the function used on each example
 										
 	'''
-	name 				= name if not name == None else dataset
-	dataset_args 		= () if dataset_args is None else dataset_args
-	dataset_kwargs 		= {} if dataset_kwargs is None else dataset_kwargs
+	name 				= name if name is not None else dataset
+	dataset_args 		= () if not dataset_args else dataset_args
+	dataset_kwargs 		= {} if not dataset_kwargs else dataset_kwargs
 	
 	conditions 			= [] if conditions is None else conditions
 	
-	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if splits_funs is None else splits_funs
-	splits_funs_args 	= defaultdict(lambda: ()) if splits_funs_args is None else splits_funs_args
-	splits_funs_kwargs 	= defaultdict(lambda: {}) if splits_funs_kwargs is None else splits_funs_kwargs
+	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if not splits_funs else splits_funs
+	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
+	splits_funs_kwargs 	= defaultdict(lambda: {}) if not splits_funs_kwargs else splits_funs_kwargs
 	
-	metadata_fun 		= (lambda *args, **kwargs: {}) if metadata_fun is None else metadata_fun
-	metadata_fun_args 	= () if metadata_fun_args is None else metadata_fun_args
-	metadata_fun_kwargs = {} if metadata_fun_kwargs is None else metadata_fun_kwargs
+	metadata_fun 		= (lambda *args, **kwargs: {}) if not metadata_fun else metadata_fun
+	metadata_fun_args 	= () if not metadata_fun_args else metadata_fun_args
+	metadata_fun_kwargs = {} if not metadata_fun_kwargs else metadata_fun_kwargs
 	
 	try:
 		dataset = load_dataset(dataset, *dataset_args, **dataset_kwargs)
