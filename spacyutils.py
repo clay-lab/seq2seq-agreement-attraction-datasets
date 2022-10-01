@@ -389,6 +389,10 @@ class EDoc():
 	
 	@property
 	def root_is_verb(self) -> bool:
+		'''
+		Is the root a verb?
+		This is False if spaCy messed up.
+		'''
 		return self.root.pos_ == 'VERB'
 	
 	@property
@@ -406,8 +410,11 @@ class EDoc():
 	def main_subject(self) -> Union[EToken,List[EToken]]:
 		'''Gets the main clause subject of the SDoc if one exists.'''
 		v = self.main_verb
-		s = [EToken(t) for t in v.children if t.dep_ in SUBJ_DEPS]
-		s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
+		try:
+			s = [EToken(t) for t in v.children if t.dep_ in SUBJ_DEPS]
+			s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
+		except IndexError:
+			breakpoint()
 		
 		if len(s) == 1:
 			s = s[0]
