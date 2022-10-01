@@ -232,7 +232,12 @@ class EToken():
 			self.text = (self.text[0].upper() if self.is_sent_start else self.text[0]) + self.text[1:]
 			self.set_morph(Number='Plur')
 	
-	def reinflect(self, number: str = None, tense: str = None, **kwargs: Dict[str,str]) -> None:
+	def reinflect(
+		self, 
+		number: str = None, 
+		tense: str = None, 
+		**kwargs: Dict[str,str]
+	) -> None:
 		'''Reinflect the (VERB) token.'''
 		if not self.can_be_inflected:
 			raise ValueError(f"'{self.text}' can't be reinflected; it's a {self.pos_}, not a verb!")
@@ -242,14 +247,17 @@ class EToken():
 		
 		number 	= self.get_morph('Number') if number is None else number
 		tense 	= self.get_morph('Tense') if tense is None else tense
-		
-		self.text = conjugate(
-						self.text, 
-						number=NUMBER_MAP[number], 
-						tense=TENSE_MAP[tense],
-						**kwargs
-					)
-		
+		try:
+			self.text = conjugate(
+							self.text, 
+							number=NUMBER_MAP[number], 
+							tense=TENSE_MAP[tense],
+							**kwargs
+						)
+		except IndexError:
+			print(self.text)
+			breakpoint()
+			
 		n = 'Sing' if NUMBER_MAP[number] == SG else 'Plur'
 		t = 'Past' if TENSE_MAP[tense] == PAST else 'Pres'
 		
