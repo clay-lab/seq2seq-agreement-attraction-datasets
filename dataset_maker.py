@@ -136,7 +136,6 @@ def get_random_sentence(
 	conditions = [conditions] if not isinstance(conditions,list) else conditions
 	
 	e = ''
-	n_rounds = 0
 	while not e:
 		# pick a random example
 		r  = int(round(random.random() * (len(dataset)-1),0))
@@ -149,11 +148,7 @@ def get_random_sentence(
 			# get a random example from the retained sentences
 			r = int(round(random.random() * (len(ex)-1),0))
 			e = ex[r]
-		
-		n_rounds += 1
-		print(f'\r{n_rounds}', flush=True, end='')
 	
-	print('\n')
 	return e
 
 def create_datasets_from_config(
