@@ -139,7 +139,7 @@ class EToken():
 	@property
 	def can_be_inflected(self) -> bool:
 		'''Can the (VERB) token be reinflected?'''
-		return self.is_verb or self.is_aux
+		return (self.is_verb and not self.tag_ == 'VBN') or self.is_aux
 	
 	@property
 	def is_expl(self):
@@ -420,13 +420,9 @@ class EDoc():
 	@property
 	def root(self) -> EToken:
 		'''Get the root node (i.e., main verb) of s.'''
-		try:
-			return EToken([
-				t for t in self.doc if t.dep_ == 'ROOT'
-			][0])
-		except IndexError:
-			print(self.doc)
-			breakpoint()
+		return EToken([
+			t for t in self.doc if t.dep_ == 'ROOT'
+		][0])
 	
 	@property
 	def root_is_verb(self) -> bool:
@@ -440,7 +436,12 @@ class EDoc():
 	def main_verb(self) -> EToken:
 		'''Convenience method for get_root().'''
 		if self.root_is_verb:
-			return self.root
+			# in passives, the root is the participle, but we want the aux
+			auxpass = [t for t in self.root.children if t.dep_ == 'auxpass']
+			if auxpass:
+				return auxpass[0]
+			else:
+				return self.root
 		else:
 			raise ValueError('There is no main verb for this sentence! (spaCy messed up)')
 	
@@ -466,8 +467,18 @@ class EDoc():
 	@property
 	def main_subject(self) -> Union[EToken,List[EToken]]:
 		'''Gets the main clause subject of the SDoc if one exists.'''
-		v = self.main_verb
+		v = self.main_verb		
 		s = [EToken(t) for t in v.children if t.dep_ in SUBJ_DEPS]
+		
+		# in passives, spaCy parses the participle as the main verb
+		# and assigns it the dependency to the subject
+		# however, we return the main verb as the aux
+		# in this case, we want to get the subject spaCy assigned
+		# to the participle instead, so we go through the head
+		# of the auxpass = main_verb
+		if not s:
+			s = [EToken(t) for t in v.head.children if t.dep_ in SUBJ_DEPS]
+			
 		s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
 		
 		if len(s) == 1:
@@ -710,3 +721,8 @@ class EDoc():
 		'''Make all distractor nouns match the main subject number.'''
 		n = NUMBER_MAP[self.main_subject_number]
 		return self.renumber_main_subject_verb_distractors(number=n)
+
+if __name__ == '__main__':
+	ss = 'He is then sworn in the next day.'
+	s = nlp(ss)
+	breakpoint()
