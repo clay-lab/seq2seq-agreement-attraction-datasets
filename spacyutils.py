@@ -483,6 +483,7 @@ class EDoc():
 		if isinstance(s,list) and len(s) > 1:
 			tag_counts = Counter([t.dep_ for t in s])
 			# happens with some dummy 'it' subject sentences
+			# and some copular sentences
 			# one subject and one attr
 			if tag_counts['nsubj'] == 1 and tag_counts['attr'] == 1:
 				nums = [t.get_morph('Number') for t in s]
