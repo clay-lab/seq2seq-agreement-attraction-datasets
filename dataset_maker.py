@@ -143,18 +143,22 @@ def get_random_sentence(
 	
 	e = ''
 	while not e:
-		# pick a random example
+		# pick a random example/page
 		r  = int(round(random.random() * (len(dataset)-1),0))
+		
 		# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
 		ex = [str(s).strip() for s in split_sentences(dataset[r]['text']).sents]
-		ex = [s for s in ex if all([c(s) for c in conditions])]
 		
-		# if there's anything left, save a sentence
-		if ex:
-			# get a random example from the retained sentences
-			r = int(round(random.random() * (len(ex)-1),0))
-			e = ex[r]
-	
+		# get a random sentence first and then check
+		# because most sentences will meet our criteria
+		# this way we don't parse all of them. 
+		# this should speed things up considerably
+		r2 = int(round(random.random() * (len(ex)-1),0))
+		s  = ex[r2]
+		
+		if all(c(s) for c in conditions):
+			e = s
+		
 	return e
 
 def create_datasets_from_config(
