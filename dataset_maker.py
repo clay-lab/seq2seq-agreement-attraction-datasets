@@ -16,10 +16,10 @@ from typing import *
 from datasets import load_dataset, Dataset
 from itertools import zip_longest
 from collections import defaultdict
-from en_grammar_funs import *
-from en_metadata_funs import *
+from en_grammar_funs import en_conditions
+from en_metadata_funs import get_en_metadata
 
-from spacyutils import *
+from spacyutils import nlp
 
 split_sentences = spacy.load(
 	'en_core_web_trf', 

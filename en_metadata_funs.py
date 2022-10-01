@@ -1,6 +1,6 @@
 from typing import Dict
 
-def get_metadata(pair: Dict) -> Dict:
+def get_en_metadata(pair: Dict) -> Dict:
 	"""
 	Gets metadata about the passed example, consisting of a seq2seq mapping with a source, prefix, and target.
 	:param pair: a dict mapping the keys 'src', 'prefix', and 'tgt' to an EDoc, a str, and an EDoc, respectively.
