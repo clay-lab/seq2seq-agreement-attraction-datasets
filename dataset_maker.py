@@ -151,7 +151,7 @@ def get_random_sentence(
 			e = ex[r]
 		
 		n_rounds += 1
-		print(f'\r{n_rounds}')
+		print(f'\r{n_rounds}', flush=True)
 	
 	return e
 
