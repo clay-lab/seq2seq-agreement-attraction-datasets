@@ -66,6 +66,10 @@ def en_conditions(s: str) -> bool:
 	if not s.root_is_verb:
 		return False
 	
+	# if there is no subject, we don't want it
+	if not s.has_main_subject:
+		return False
+	
 	# if the main verb cannot be inflected, we don't want it
 	if not s.main_verb.can_be_inflected:
 		return False
