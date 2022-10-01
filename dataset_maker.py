@@ -169,58 +169,57 @@ def create_datasets_from_config(
 	config = load_config(config) if config is None or isinstance(config,str) else config
 	
 	for dataset in config['sources']:
-		dataset_args = config['sources']['dataset_args']
-		dataset_kwargs = config['sources']['dataset_kwargs']
+		dataset_args = config['sources'][dataset]['dataset_args']
+		dataset_kwargs = config['sources'][dataset]['dataset_kwargs']
 		
-		for name in config['sources']['names']:
-			for name in config['sources']['names']:
-				print(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
-				
-				# unpack the config
-				conditions 			= config['sources']['names'][name]['conditions']
-				conditions 			= list(conditions) if isinstance(conditions, str) else conditions
-				splits 				= config['sources']['names'][name]['splits']
-				splits_funs 		= config['sources']['names'][name]['splits_funs']
-				splits_funs_args 	= config['sources']['names'][name]['splits_funs_kwargs']
-				metadata_fun 		= config['sources']['names'][name]['metadata_fun']
-				metadata_fun_args 	= config['sources']['names'][name]['metadata_fun_args']
-				metadata_fun_kwargs = config['sources']['names'][name]['metadata_fun_kwargs']
-								
-				# if we're loading from a file, we have to store these as strings,
-				# so we need to import the actual objects
-				for i, f in enumerate(conditions):
-					if isinstance(f, str):
-						module = f.split('.')[0]
-						exec(f'import {module}')
-						conditions[i] = eval(f)
-				
-				for split in splits_funs:
-					if isinstance(splits_funs[split], str):
-						module = f.split('.')[0]
-						exec(f'import {module}')
-						splits_funs[split] = eval(splits_funs[split])
-				
-				if isinstance(metadata_fun, str):
-					module = metadata_fun.split('.')[0]
+		for name in config['sources'][dataset]['names']:
+			print(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
+			
+			# unpack the config
+			conditions 			= config['sources'][dataset]['names'][name]['conditions']
+			conditions 			= list(conditions) if isinstance(conditions, str) else conditions
+			splits 				= config['sources'][dataset]['names'][name]['splits']
+			splits_funs 		= config['sources'][dataset]['names'][name]['splits_funs']
+			splits_funs_args 	= config['sources'][dataset]['names'][name]['splits_funs_kwargs']
+			metadata_fun 		= config['sources'][dataset]['names'][name]['metadata_fun']
+			metadata_fun_args 	= config['sources'][dataset]['names'][name]['metadata_fun_args']
+			metadata_fun_kwargs = config['sources'][dataset]['names'][name]['metadata_fun_kwargs']
+							
+			# if we're loading from a file, we have to store these as strings,
+			# so we need to import the actual objects
+			for i, f in enumerate(conditions):
+				if isinstance(f, str):
+					module = f.split('.')[0]
 					exec(f'import {module}')
-					metadata_fun = eval(metadata_fun)	
-				
-				create_seq2seq_dataset(
-					dataset=dataset,
-					dataset_args=dataset_args,
-					dataset_kwargs=dataset_kwargs,
-					name=name,
-					conditions=conditions,
-					splits=splits,
-					splits_funs=splits_funs,
-					splits_funs_args=splits_funs_args,
-					splits_funs_kwargs=splits_funs_kwargs,
-					metadata_fun=metadata_fun,
-					metadata_fun_args=metadata_fun_args,
-					metadata_fun_kwargs=metadata_fun_kwargs
-				)
-				
-				print('')
+					conditions[i] = eval(f)
+			
+			for split in splits_funs:
+				if isinstance(splits_funs[split], str):
+					module = f.split('.')[0]
+					exec(f'import {module}')
+					splits_funs[split] = eval(splits_funs[split])
+			
+			if isinstance(metadata_fun, str):
+				module = metadata_fun.split('.')[0]
+				exec(f'import {module}')
+				metadata_fun = eval(metadata_fun)	
+			
+			create_seq2seq_dataset(
+				dataset=dataset,
+				dataset_args=dataset_args,
+				dataset_kwargs=dataset_kwargs,
+				name=name,
+				conditions=conditions,
+				splits=splits,
+				splits_funs=splits_funs,
+				splits_funs_args=splits_funs_args,
+				splits_funs_kwargs=splits_funs_kwargs,
+				metadata_fun=metadata_fun,
+				metadata_fun_args=metadata_fun_args,
+				metadata_fun_kwargs=metadata_fun_kwargs
+			)
+			
+			print('')
 	
 	create_t5_scripts(config, **kwargs)
 
