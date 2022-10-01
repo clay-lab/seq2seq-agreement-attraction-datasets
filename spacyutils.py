@@ -488,15 +488,27 @@ class EDoc():
 				nums = [t.get_morph('Number') for t in s]
 				if all([n == 'Sing' for n in nums]):
 					return 'Sing'
+				# this happens in weird cases like
+				# "the best thing were the ..."
+				# in this case, we just go with the verb if possible
+				# otherwise, choose the first number feature that exists
+				# in a subject noun. If none exists, breakpoint
 				else:
-					print(self.doc)
-					breakpoint()
+					if self.main_verb.get_morph('Number'):
+						return self.main_verb.get_morph('Number')
+					
+					for subj in s:
+						if subj.get_morph('Number'):
+							return subj.get_morph('Number')
+					else:
+						print(self.doc)
+						breakpoint()			
 			else:
 				# conjoined subjects (i.e., and, or, etc.)
 				return 'Plur'
 		elif self.main_subject.dep_ in ['csubj', 'csubjpass']:
 			# clausal subjects are not correctly associated
-			# with a number feature
+			# with a Singular number feature
 			return 'Sing'
 		else:
 			return s.get_morph('Number')
@@ -686,8 +698,3 @@ class EDoc():
 		'''Make all distractor nouns match the main subject number.'''
 		n = NUMBER_MAP[self.main_subject_number]
 		return self.renumber_main_subject_verb_distractors(number=n)
-
-if __name__ == '__main__':
-	ss = 'It is an important species caught both in commercial and artisanal fisheries.'
-	s = nlp(ss)
-	breakpoint()
