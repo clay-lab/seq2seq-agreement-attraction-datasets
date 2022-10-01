@@ -342,5 +342,10 @@ def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
 	return config
 
 if __name__ == '__main__':
-	
-	create_datasets_from_config()
+	create_seq2seq_dataset(
+		dataset='wikipedia', 
+		dataset_args=['20200501.en'], 
+		name='wikitest2', 
+		conditions=en_conditions,
+		splits=dict(test=100)
+	)

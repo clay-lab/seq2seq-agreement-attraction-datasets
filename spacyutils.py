@@ -388,6 +388,10 @@ class EDoc():
 		][0])
 	
 	@property
+	def root_is_verb(self) -> bool:
+		return self.root.pos_ == 'VERB'
+	
+	@property
 	def main_verb(self) -> Token:
 		'''Convenience method for get_root().'''
 		return self.root
