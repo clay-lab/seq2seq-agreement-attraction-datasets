@@ -169,8 +169,8 @@ def create_datasets_from_config(
 	config = load_config(config) if config is None or isinstance(config,str) else config
 	
 	for dataset in config['sources']:
-		dataset_args = config['sources'][dataset]['dataset_args']
-		dataset_kwargs = config['sources'][dataset]['dataset_kwargs']
+		dataset_args 	= config['sources'][dataset]['dataset_args']
+		dataset_kwargs 	= config['sources'][dataset]['dataset_kwargs']
 		
 		for name in config['sources'][dataset]['names']:
 			print(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
@@ -189,6 +189,7 @@ def create_datasets_from_config(
 			# so we need to import the actual objects
 			for i, f in enumerate(conditions):
 				if isinstance(f, str):
+					breakpoint()
 					module = f.split('.')[0]
 					exec(f'import {module}')
 					conditions[i] = eval(f)
