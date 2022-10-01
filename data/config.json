@@ -4,8 +4,8 @@
 			"dataset_args": ["20200501.en"],
 			"dataset_kwargs": {},
 			"names": {
-				"wiki-en-nodist-pres-and-past": {
-					"conditions": "en_grammar_funs.conditions",
+				"en_wiki-nodist-pres-and-past": {
+					"conditions": "en_grammar_funs.en_conditions",
 					"splits": {
 						"test": 100
 					},
@@ -16,12 +16,12 @@
 					"splits_funs_kwargs": {
 						"pres_p": 0.5
 					},
-					"metadata_fun": "en_metadata_funs.get_metadata",
+					"metadata_fun": "en_metadata_funs.get_en_metadata",
 					"metadata_fun_args": [],
 					"metadata_fun_kwargs": {}
 				}
 			}
 		}
 	},
-	"pairs": []
+	"pairs": [["en_wiki-nodist-pres-and-past", "en_RC_PP-dist-pres"]]
 }
