@@ -19,6 +19,8 @@ from collections import defaultdict
 from en_grammar_funs import *
 from en_metadata_funs import *
 
+from spacyutils import *
+
 split_sentences = spacy.load(
 	'en_core_web_trf', 
 	disable=['transformer', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner']
