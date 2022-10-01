@@ -180,7 +180,8 @@ def create_datasets_from_config(
 			conditions 			= [conditions] if isinstance(conditions, str) else conditions
 			splits 				= config['sources'][dataset]['names'][name]['splits']
 			splits_funs 		= config['sources'][dataset]['names'][name]['splits_funs']
-			splits_funs_args 	= config['sources'][dataset]['names'][name]['splits_funs_kwargs']
+			splits_funs_args 	= config['sources'][dataset]['names'][name]['splits_funs_args']
+			splits_funs_kwargs 	= config['sources'][dataset]['names'][name]['splits_funs_kwargs']
 			metadata_fun 		= config['sources'][dataset]['names'][name]['metadata_fun']
 			metadata_fun_args 	= config['sources'][dataset]['names'][name]['metadata_fun_args']
 			metadata_fun_kwargs = config['sources'][dataset]['names'][name]['metadata_fun_kwargs']
