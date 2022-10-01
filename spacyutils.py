@@ -17,6 +17,7 @@ from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
 
 SUBJ_DEPS: Set[str] = {"csubj", "csubjpass", "expl", "nsubj", "nsubjpass"}
+OBJ_DEPS: Set[str] = {"cobj", "nobj"}
 NUMBER_MAP: Dict[str,str] = {
 	'Singular': SG,
 	'singular': SG,
@@ -492,6 +493,41 @@ class EDoc():
 	def has_main_subject_verb_distractors(self) -> bool:
 		'''Are there any distractors between the main clause subject and the main clause verb?'''
 		return any(self.main_subject_verb_distractors)
+	
+	@property
+	def has_main_object(self) -> bool:
+		'''Does the sentence have an object of the main verb?'''
+		return True if self.main_object else False
+	
+	@property
+	def main_object(self) -> Union[EToken,List[EToken]]:
+		v = self.main_verb
+		s = [EToken(t) for t in v.children if t.dep_ in OBJ_DEPS]
+		if s:
+			s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
+		
+		if len(s) == 1:
+			s = s[0]
+		
+		return s
+	
+	@property
+	def main_object_number(self) -> str:
+		'''
+		What is the number of the main object of the verb?
+		Returns None if there is no object.
+		'''
+		if self.has_main_object:
+			o = self.main_object
+			if isinstance(o,list) and len(o) > 1:
+				return 'Plur'
+			else:
+				return o.get_morph('Number')
+	
+	@property
+	def pos_seq(self) -> List[str]:
+		'''Get the part of speech sequence of the sentence.'''
+		return [t.pos_ for t in self] 
 	
 	@staticmethod
 	def _get_conjuncts(t: Union[Token,EToken]):
