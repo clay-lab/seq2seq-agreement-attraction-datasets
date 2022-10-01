@@ -254,7 +254,7 @@ class EToken():
 							tense=TENSE_MAP[tense],
 							**kwargs
 						)
-		except IndexError:
+		except KeyError:
 			print(self.text)
 			breakpoint()
 			
