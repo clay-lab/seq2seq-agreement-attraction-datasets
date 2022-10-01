@@ -51,7 +51,7 @@ def en_conditions(s: str) -> bool:
 	# must be longer than a single character
 	if len(s) <= 1:
 		return False
-		
+	
 	# must start with a capital letter
 	if not s[0].isupper():
 		return False
@@ -59,7 +59,7 @@ def en_conditions(s: str) -> bool:
 	# must not contain a semicolon (i.e., two sentences)
 	if ';' in s:
 		return False
-		
+	
 	# commas and periods must not be preceded by spaces
 	if ' ,' in s or ' .' in s:
 		return False
@@ -99,8 +99,8 @@ def en_conditions(s: str) -> bool:
 	if re.search(r'\w:\w', s):
 		return False
 	
-	if not has_inflected_main_verb_with_acceptable_subject(s):
-		return False
+	# if not has_inflected_main_verb_with_acceptable_subject(s):
+	# 	return False
 	
 	return True
 
