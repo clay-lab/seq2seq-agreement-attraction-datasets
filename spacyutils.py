@@ -1,5 +1,5 @@
 '''
-Useful wrappers for editing spaCy Docs.
+Useful wrappers for editing spaCy
 Some of this is adapted from 
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
@@ -329,6 +329,13 @@ class EDoc():
 		replaced with snew tokens from the list.
 		'''
 		# get the properties of the current doc
+		tokens 		= [tokens] if not isinstance(tokens, list) else tokens
+		indices		= [t.i for t in tokens] if indices is None else indices
+		indices 	= [indices] if not isinstance(indices, list) else indices
+		
+		if not len(tokens) == len(indices):
+			raise ValueError('There must be an equal number of tokens and indices!') 
+		
 		vocab 		= self.vocab
 		words 		= [t.text for t in self.doc]
 		spaces 		= [t.whitespace_ == ' ' for t in self.doc]
@@ -341,10 +348,6 @@ class EDoc():
 		deps 		= [t.dep_ for t in self.doc]	
 		sent_starts = [t.is_sent_start for t in self.doc]
 		ents 		= [t.ent_iob_ for t in self.doc]
-		
-		tokens 		= [tokens] if not isinstance(tokens, list) else tokens
-		indices		= [t.i for t in tokens] if indices is None else indices
-		indices 	= [indices] if not isinstance(indices, list) else indices
 		
 		# replace the properties at each index with the properties from the updated tokens
 		for i, t in zip(indices, tokens):

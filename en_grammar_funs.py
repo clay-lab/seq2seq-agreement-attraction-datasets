@@ -1,14 +1,8 @@
 import re
-import spacy
 import string
 import random
 
 from typing import *
-
-from pattern.en import singularize, pluralize
-from pattern.en import conjugate
-from pattern.en import SG, PL
-from pattern.en import PAST, PRESENT
 
 from spacyutils import *
 
@@ -17,66 +11,32 @@ NUMBER_MAP = {
 	'Plur': PL
 }
 
-def has_inflected_main_verb_with_acceptable_subject(s: str) -> bool:
-	'''Is there a main verb in the sentence, and is it inflected?'''
-	main_verb = [t for t in nlp(s) if t.dep_ == 'ROOT']
-	if main_verb:
-		if (
-			main_verb[0].tag_ in ['VBZ', 'VBP', 'VBD'] and not
-			main_verb[0].lemma_ == 'be'
-		):
-			# must have a subject!
-			if not [t for t in main_verb[0].children if t.dep_ == 'nsubj']:
-				return False
-			
-			# no expletive subjects!
-			if any([t.dep_ == 'expl' for t in main_verb[0].children]):
-				return False
-			# no acronym subjects!
-			elif [t for t in main_verb[0].children if t.dep_ == 'nsubj'][0].text.isupper():
-				return False
-			# no proper noun subjects!
-			elif [t for t in main_verb[0].children if t.dep_ == 'nsubj'][0].tag_ in ['NNP', 'PRP']:
-				return False
-			else:
-				return True
-	else:
-		return False
-
 def en_conditions(s: str) -> bool:
 	'''
-	Applies conditions to en sentence all at once. 
-	This should be faster, since we can return false early rather than evaluate each condition.
+	Applies conditions to en sentence in order.
+	These are currently ordered by how long it takes
+	to perform each check, with shorter ones earlier.
 	'''
 	# must be longer than a single character
 	if len(s) <= 1:
 		return False
 	
 	# must start with a capital letter
-	if not s[0].isupper():
+	if s[0].islower():
 		return False
-		
+	
+	# too long!
+	if len(s.split()) > 50:
+		return False
+	
 	# must not contain a semicolon (i.e., two sentences)
-	if ';' in s:
+	# must not contain a quote (also two sentences)
+	# must not have spaces before commas and periods
+	# must not have a newline
+	if any(c in s for c in [';', '"', ' ,', ' .', '\n']):
 		return False
 	
-	# commas and periods must not be preceded by spaces
-	if ' ,' in s or ' .' in s:
-		return False
-	
-	# if the number of quotation marks is not even
-	if s.count('"') % 2 == 1:
-		return False
-	
-	# no sentences with any finite form of 'be'
-	if ' was ' in s or ' were ' in s or ' is ' in s or ' are ' in s:
-		return False
-	
-	# must be less than 50 words
-	if not len(s.split()) <= 50:
-		return False
-	
-	# must consistent only of punctuation and english letters
+	# must consist only of punctuation and english letters
 	if not s.translate(str.maketrans('', '', string.punctuation)).isascii():
 		return False
 	
@@ -86,21 +46,23 @@ def en_conditions(s: str) -> bool:
 			return False
 		
 		# must not end with a . preceded by an abbreviation
+		if s[-5:] in ['Prof.', 'Blvd.']:
+			return False
+		
 		if s[-4:] in ['Mrs.', 'Ave.', 'Ltd.', 'Inc.']:
 			return False
 		
 		if s[-3:] in ['Mr.', 'Dr.', 'Ms.', 'St.', 'Av.']:
 			return False
-		
-		if s[-5:] in ['Prof.', 'Blvd.']:
-			return False
-		
+	
 	# must not contain a colon separating two word characters (occurs in references lists)
 	if re.search(r'\w:\w', s):
 		return False
 	
-	# if not has_inflected_main_verb_with_acceptable_subject(s):
-	# 	return False
+	# now we have to parse
+	s = nlp(s)
+	if s.has_main_subject_verb_distractors or not s.main_verb.can_be_inflected:
+		return False
 	
 	return True
 

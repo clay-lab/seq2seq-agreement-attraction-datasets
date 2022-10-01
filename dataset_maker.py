@@ -16,8 +16,8 @@ from random import random
 from datasets import load_dataset, Dataset
 from itertools import zip_longest
 from collections import defaultdict
-# from grammar_funs import *
-# from metadata_funs import *
+from grammar_funs import *
+from metadata_funs import *
 
 split_sentences = spacy.load(
 	'en_core_web_trf', 
@@ -73,7 +73,7 @@ def create_seq2seq_dataset(
 	
 	conditions 			= [] if conditions is None else conditions
 	
-	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'ex': str(s)}) if splits_funs is None else splits_funs
+	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if splits_funs is None else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if splits_funs_args is None else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if splits_funs_kwargs is None else splits_funs_kwargs
 	
@@ -85,10 +85,6 @@ def create_seq2seq_dataset(
 		dataset = load_dataset(dataset, *dataset_args, **dataset_kwargs)
 	except Exception:
 		raise ValueError(f'Unable to load dataset {dataset} on huggingface!')
-	
-	nlp	= spacy.load('en_core_web_trf')
-	# exs	= [None for _ in range(sum(splits.values()))] # so we don't repeat sentences, even across datasets
-	exs = []
 	
 	for split, n in splits.items():
 		# preallocate
@@ -107,7 +103,6 @@ def create_seq2seq_dataset(
 				pair 					=  splits_funs[split](parsed, **splits_funs_kwargs[split])
 				new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair.items()}}
 				new_metadata[n_chosen] 	=  metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)	
-				# exs[n_chosen] 			=  ex
 				n_chosen 				+= 1
 				pbar.set_postfix(split=split)
 				pbar.update(1)
@@ -145,38 +140,11 @@ def get_random_sentence(
 	'''
 	conditions = [conditions] if not isinstance(conditions,list) else conditions
 	
-	# def split_sentences(s: str, d: str = r'[\.!\?]') -> str:
-	# 	'''Splits string s into sentences, delimited by regex d.'''
-		
-	# 	# # deals with a problematic abbreviation
-	# 	# if ' c. ' in s:
-	# 	# 	return [''] 
-		
-	# 	# ss = re.split(f'({d} )', s)
-		
-	# 	# # merge adjacent delimeters back into the sentence
-	# 	# it = iter(ss)
-	# 	# ss = [f'{s1}{s2}' for s1, s2 in zip_longest(it, it, fillvalue='')]
-		
-	# 	# # remove extra spaces
-	# 	# ss = [s.strip() for s in ss if s.strip()]
-		
-	# 	# # iterating is way faster than using re.sub
-	# 	# for i, _ in enumerate(ss):
-	# 	# 	while '  ' in ss[i]:
-	# 	# 		ss[i] = ss[i].replace('  ', ' ')
-		
-	# 	# return ss
-	
 	e = ''
 	while not e:
 		# pick a random example
-		# np.random.choice is sloooow with big lists
-		r 	= int(round(random() * (len(dataset)-1),0))
-		# ex 	= split_sentences(dataset[r]['text'])
+		r  = int(round(random() * (len(dataset)-1),0))
 		ex = [str(s) for s in split_sentences(dataset[r]['text']).sents]
-		# also exclude sentences with newlines, since it's not clear what to do about those
-		# ex 	= [s for s in ex if not s in exclude and all([c(s) for c in conditions])]
 		ex = [s for s in ex if all([c(s) for c in conditions])]
 		
 		# if there's anything left, save a sentence
