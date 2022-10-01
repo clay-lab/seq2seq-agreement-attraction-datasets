@@ -3,7 +3,7 @@ Useful wrappers for editing spaCy
 Some of this is adapted from 
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
-from typing import *
+from typing import Union, List, Dict
 
 import spacy
 
@@ -18,6 +18,7 @@ from pattern.en import PAST, PRESENT
 
 SUBJ_DEPS: Set[str] = {"csubj", "csubjpass", "expl", "nsubj", "nsubjpass"}
 OBJ_DEPS: Set[str] = {"cobj", "nobj"}
+
 NUMBER_MAP: Dict[str,str] = {
 	'Singular': SG,
 	'singular': SG,
@@ -34,7 +35,6 @@ NUMBER_MAP: Dict[str,str] = {
 	'Pl': PL,
 	'pl': PL,
 }
-
 TENSE_MAP: Dict[str,str] = {
 	'PAST': PAST,
 	'Past': PAST,
@@ -49,7 +49,7 @@ TENSE_MAP: Dict[str,str] = {
 }
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
-nlp = lambda s: EDoc(nlp_(s))
+nlp  = lambda s: EDoc(nlp_(s))
 
 # workaround for pattern.en bug in python > 3.6
 try:
@@ -536,7 +536,7 @@ class EDoc():
 	
 	# CONVENIENCE METHODS.
 	# These return new objects; they do NOT modify in-place.
-	def reinflect_main_verb(self, number, tense, **kwargs) -> 'EDoc':
+	def reinflect_main_verb(self, number: str, tense: str, **kwargs) -> 'EDoc':
 		'''Reinflect the main verb.'''
 		v = self.main_verb
 		v.reinflect(number, tense, **kwargs)
@@ -553,7 +553,7 @@ class EDoc():
 		n = self.main_subject_number
 		return self.reinflect_main_verb(number=n, tense=PRESENT)
 	
-	def renumber_main_subject(self, number) -> 'EDoc':
+	def renumber_main_subject(self, number: str) -> 'EDoc':
 		s = self.main_subject
 		s.renumber(number)
 		

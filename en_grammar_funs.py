@@ -2,14 +2,9 @@ import re
 import string
 import random
 
-from typing import *
+from typing import Dict
 
-from spacyutils import *
-
-NUMBER_MAP = {
-	'Sing': SG,
-	'Plur': PL
-}
+from spacyutils import nlp, EDoc
 
 def en_conditions(s: str) -> bool:
 	'''
@@ -80,119 +75,52 @@ def en_conditions(s: str) -> bool:
 	
 	return True
 
-"""
-	These are all implemented in EDoc now.
-	def reinflect(t: EDoc) -> EDoc:
-		'''
-		Converts the main verb in a sentence from past to present tense.
-		'''
-		# Make a deep copy so we don't mess up the original tree
-		t_copy = t.copy(deep=True)
-		
-		# get the main clause verb
-		main_clause_VP = grep_next_subtree(t_copy, r'^VP$')
-		main_clause_V = grep_next_subtree(main_clause_VP, r'^V$')
-		
-		# get the number of the main clause subject
-		main_clause_subject = grep_next_subtree(t_copy, r'^DP$')
-		main_clause_subject = grep_next_subtree(main_clause_subject, r'^NP$')
-		while grep_next_subtree(main_clause_subject[0], r'^NP$'):
-			main_clause_subject = grep_next_subtree(main_clause_subject[0], r'^NP$')
-		
-		main_clause_subject = grep_next_subtree(main_clause_subject, r'^N_')
-		subject_number = 'sg' if str(main_clause_subject.label()).endswith('sg') else 'pl'
-		
-		# map the past form of the verb to the present form based on the number of the subject
-		main_clause_V[0] = PAST_PRES[subject_number][main_clause_V[0]]
-		
-		return t_copy
+def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
+	'''Generate a present tense or past tense pair, with p(past-to-pres) = pres_p.'''
+	return present_pair(s) if random.random() < pres_p else past_pair(s)
 
-	def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
-		
-		return present_pair(s) if random.random() < pres_p else past_pair(s)
+def present_pair(s: EDoc) -> Dict:
+	'''
+	Get a pair of sentenecs where the source is 
+	past tense and the target is present tense.
+	''' 
+	return {
+		'src': s.make_main_verb_past_tense(),
+		'prefix': 'pres',
+		'tgt': s.make_main_verb_present_tense()	
+	}
 
-	def present_pair(s: EDoc) -> Dict:
-		breakpoint()
+def past_pair(s: EDoc) -> Dict:
+	'''
+	Get a pair of sentences where the 
+	source and target are in past tense.
+	'''
+	s = s.make_main_verb_past_tense()
+	
+	return {
+		'src': s,
+		'prefix': 'past',
+		'tgt': s
+	}
 
-	def past_pair(s: EDoc) -> Dict:
-		'''Create a past --> past pair from a dependency parsed sentence.'''
-		# get the main clause verb
-		main_verb = [t for t in s if t.dep_ == 'ROOT'][0]
-		if main_verb.morph.get('Tense')[0] == 'Past':
-			return {
-				'src': s,
-				'prefix': 'past',
-				'tgt': s
-			}
-		
-		# to reinflect, we need to get the subject number
-		main_subject = [t for t in main_verb.children if t.dep_ == 'nsubj'][0]
-		main_subject_num = main_subject.morph.get('Number')[0]
-		
-		# unfortunately, spaCy token's text is not writable, so we have to get around this
-		# this could be better optimized, but whatever for now
-		s = pd.DataFrame(s.to_json()['tokens']).assign(word = [t.text for t in s])
-		s.loc[s.dep == 'ROOT', 'word'] = conjugate(
-											s[s.dep == 'ROOT'].word.iloc[0], 
-											number=NUMBER_MAP[main_subject_num], 
-											tense=PAST
-										)
-		
-		s = ' '.join(s.word)
-		s = re.sub(rf'\s([{string.punctuation}])', '\\1', s)
-		
-		s = nlp(s)
-		
-		return {
-			'src': s,
-			'prefix': 'past',
-			'tgt': s
-		}		
-
-	def pres_or_past_no_pres_dist(s: EDoc, pres_p: float = 0.5) -> Tuple:
-		breakpoint()
-		source, pfx, target = tuple(pres_or_past(s, pres_p).values())
-		
-		# for English, we do not care about distractors in the past tense, since they do not affect attraction
-		# in fact, we WANT some of these for training
-		if pfx == 'pres':
-			# otherwise, we need to modify the tree to change the number of all interveners to match the subject's number
-			main_clause_subject = grep_next_subtree(source, r'^DP$')
-			
-			# this works now because the main clause subject is always the first noun!
-			# it will need to be changed if we add nouns before the main clause subject
-			pre_verb_noun_positions = [
-				pos 
-				for pos in main_clause_subject.treepositions() 
-				if 	not isinstance(main_clause_subject[pos],str) and 
-					re.search(r'^N_', str(main_clause_subject[pos].label()))
-			]
-			main_clause_subject_pos = pre_verb_noun_positions[0]
-			
-			if len(pre_verb_noun_positions) > 1:
-				main_clause_subject_number = re.findall(r'_(.*)', str(main_clause_subject[main_clause_subject_pos].label()))[0]
-				intervener_positions = [
-					pos 
-					for pos in pre_verb_noun_positions[1:] 
-						if not re.findall(r'_(.*)', str(main_clause_subject[pos].label()))[0] == main_clause_subject_number
-				]
-				
-				for t in [source, target]:
-					
-					main_clause_subject = grep_next_subtree(t, r'^DP$')
-					
-					for pos in intervener_positions:
-						if main_clause_subject_number == 'sg':
-							main_clause_subject[pos] = Tree(
-								main_clause_subject[main_clause_subject_pos].label(),
-								[re.sub('s$', '', main_clause_subject[pos][0])]
-							)
-						elif main_clause_subject_number == 'pl':
-							if not main_clause_subject[pos][0].endswith('s'):
-								main_clause_subject[pos] = Tree(
-									main_clause_subject[main_clause_subject_pos].label(),
-									[f'{main_clause_subject[pos][0]}s']
-								)
-				
-		return source, pfx, target
-"""
+def pres_or_past_no_pres_dist(s: EDoc, pres_p: float = 0.5) -> Dict:
+	'''
+	Get a pair of sentences where the
+	source is in past tense, the target
+	may be in present (p=pres_p) tense
+	or past tense. If the target is
+	in present tense, all will be renumbered
+	so that they are no longer distractors.
+	
+	However, you should _probably_ not being using
+	this, since it will not necessarily renumber
+	all distractors correctly (i.e., proper nouns).
+	Instead, filter out sentences with distractors
+	to begin with, which will ensure accuracy.
+	'''
+	d = pres_or_past(s=s, pres_p=pres_p)
+	
+	if d['prefix'] == 'pres':
+		d['tgt'] = d['tgt'].auto_renumber_main_subject_verb_distractors()
+	
+	return d
