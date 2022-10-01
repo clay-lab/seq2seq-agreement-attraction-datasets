@@ -241,7 +241,8 @@ def create_t5_scripts(
 	If no argument is passed, attempt to load the language ids from a file ./data/config.json
 	'''	
 	script = '\n'.join([
-		'#!/bin/bash\n',
+		'#!/bin/bash',
+		'',
 		'#SBATCH --job-name=T5-base-finetune-tense-[TRAIN_LANG]',
 		'#SBATCH --output=joblogs/%x_%j.txt',
 		'#SBATCH --nodes=1',
@@ -279,10 +280,7 @@ def create_t5_scripts(
 	eval_script = re.sub(r'_dev(\.|_)', '_test\\1', eval_script)
 	eval_script = eval_script.replace('--per_device_train_batch_size=4', '--per_device_train_batch_size=8')
 	eval_script = eval_script.replace('	--gradient_accumulation_steps=32 \\\n', '')
-	eval_script = eval_script.replace(
-		'	--predict_with_generate \\\n	--num_train_epochs 10.0', 
-		'	--predict_with_generate \\'
-	)
+	eval_script = eval_script.replace('\n	--num_train_epochs 10.0', '')
 	
 	config 		= load_config() if config is None else config
 	all_pairs 	= [tuple(pair) for pair in config['pairs']] if 'pairs' in config else []
@@ -299,7 +297,6 @@ def create_t5_scripts(
 		
 		train_lang 		= lang[0]
 		dev_lang 		= lang[0]
-		# train_dash_lang = lang[0].replace('_', '-')
 		test_lang 		= lang[1]
 		
 		file_name 		= '_'.join(lang) if lang[0] != lang[1] else lang[0]
@@ -313,18 +310,16 @@ def create_t5_scripts(
 			):
 				lang_ft_script = lang_ft_script.replace('[TRAIN_LANG]', train_lang)
 				lang_ft_script = lang_ft_script.replace('[DEV_LANG]', dev_lang)
-				# lang_ft_script = lang_ft_script.replace('[TRAIN-LANG]', train_dash_lang)
 				if not os.path.exists(os.path.join('scripts', 'finetune', f'finetune_t5_{file_name}_bs128.sh')) or overwrite:
 					with open(os.path.join('scripts', 'finetune', f'finetune_t5_{file_name}_bs128.sh'), 'wt') as out_file:
 						out_file.write(lang_ft_script)
 			
-			if os.path.isfile(os.path.join('data', test_lang, f'{test_lang}_test.json.gz')):
-				lang_ev_script = lang_ev_script.replace('[TRAIN_LANG]', train_lang)
-				lang_ev_script = lang_ev_script.replace('[TEST_LANG]', test_lang)
-				# lang_ev_script = lang_ev_script.replace('[TRAIN-LANG]', train_dash_lang)
-				if not os.path.exists(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh')) or overwrite:
-					with open(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh'), 'wt') as out_file:
-						out_file.write(lang_ev_script)
+			# if os.path.isfile(os.path.join('data', test_lang, f'{test_lang}_test.json.gz')):
+			lang_ev_script = lang_ev_script.replace('[TRAIN_LANG]', train_lang)
+			lang_ev_script = lang_ev_script.replace('[TEST_LANG]', test_lang)
+			if not os.path.exists(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh')) or overwrite:
+				with open(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh'), 'wt') as out_file:
+					out_file.write(lang_ev_script)
 
 def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
 	'''
