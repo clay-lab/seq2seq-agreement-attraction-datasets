@@ -81,6 +81,7 @@ def en_conditions(s: str) -> bool:
 	return True
 
 """
+	These are all implemented in EDoc now.
 	def reinflect(t: EDoc) -> EDoc:
 		'''
 		Converts the main verb in a sentence from past to present tense.

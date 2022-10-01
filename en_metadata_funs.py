@@ -1,4 +1,4 @@
-from typing import *
+from typing import Dict
 
 def get_metadata(pair: Dict) -> Dict:
 	"""
@@ -21,22 +21,16 @@ def get_metadata(pair: Dict) -> Dict:
 	metadata = {}
 	
 	metadata.update({'subject_number': source.main_subject_number})
-	
-	if source.has_main_object:
-		metadata.update({'object_number': source.main_object_number})
-	else:
-		metadata.update({'object_number': None})
-	
-	# main verb
+	metadata.update({'object_number': source.main_object_number})
 	metadata.update({'main_verb': source.main_verb})
 	
 	metadata.update({'n_interveners': len(source.main_subject_verb_interveners)})
 	if source.has_main_subject_verb_interveners:
 		final_intervener_number = source.main_subject_verb_interveners[-1].get_morph('Number')
-		metadata.update({'final_intervener_number': final_intervener_number})
 	else:
-		metadata.update({'final_intervener_number': None})
+		final_intervener_number = None
 	
+	metadata.update({'final_intervener_number': final_intervener_number})
 	metadata.update({'n_distractors': len(source.main_subject_verb_distractors)})
 	metadata.update({'pos_sequence': source.pos_seq})
 	metadata.update({'tense': pfx})
