@@ -385,14 +385,11 @@ class EDoc():
 	
 	# CONVENIENCE PROPERTIES
 	@property
-	def root(self) -> Token:
+	def root(self) -> EToken:
 		'''Get the root node (i.e., main verb) of s.'''
-		try:
-			return EToken([
-				t for t in self.doc if t.dep_ == 'ROOT'
-			][0])
-		except IndexError:
-			breakpoint()
+		return EToken([
+			t for t in self.doc if t.dep_ == 'ROOT'
+		][0])
 	
 	@property
 	def root_is_verb(self) -> bool:
@@ -403,7 +400,7 @@ class EDoc():
 		return self.root.pos_ == 'VERB'
 	
 	@property
-	def main_verb(self) -> Token:
+	def main_verb(self) -> EToken:
 		'''Convenience method for get_root().'''
 		if self.root_is_verb:
 			return self.root

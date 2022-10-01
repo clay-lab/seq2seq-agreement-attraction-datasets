@@ -143,7 +143,8 @@ def get_random_sentence(
 	while not e:
 		# pick a random example
 		r  = int(round(random.random() * (len(dataset)-1),0))
-		ex = [str(s) for s in split_sentences(dataset[r]['text']).sents]
+		# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
+		ex = [str(s).strip() for s in split_sentences(dataset[r]['text']).sents]
 		ex = [s for s in ex if all([c(s) for c in conditions])]
 		
 		# if there's anything left, save a sentence
