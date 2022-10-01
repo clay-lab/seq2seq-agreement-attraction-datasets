@@ -419,9 +419,13 @@ class EDoc():
 	@property
 	def root(self) -> EToken:
 		'''Get the root node (i.e., main verb) of s.'''
-		return EToken([
-			t for t in self.doc if t.dep_ == 'ROOT'
-		][0])
+		try:
+			return EToken([
+				t for t in self.doc if t.dep_ == 'ROOT'
+			][0])
+		except IndexError:
+			print(self.doc)
+			breakpoint()
 	
 	@property
 	def root_is_verb(self) -> bool:
