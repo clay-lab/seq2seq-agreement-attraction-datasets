@@ -9,10 +9,10 @@ import json
 import gzip
 import spacy
 import string
+import random
 
 from tqdm import tqdm
 from typing import *
-from random import random
 from datasets import load_dataset, Dataset
 from itertools import zip_longest
 from collections import defaultdict
@@ -140,14 +140,14 @@ def get_random_sentence(
 	e = ''
 	while not e:
 		# pick a random example
-		r  = int(round(random() * (len(dataset)-1),0))
+		r  = int(round(random.random() * (len(dataset)-1),0))
 		ex = [str(s) for s in split_sentences(dataset[r]['text']).sents]
 		ex = [s for s in ex if all([c(s) for c in conditions])]
 		
 		# if there's anything left, save a sentence
 		if ex:
 			# get a random example from the retained sentences
-			r = int(round(random() * (len(ex)-1),0))
+			r = int(round(random.random() * (len(ex)-1),0))
 			e = ex[r]
 	
 	return e
