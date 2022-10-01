@@ -98,7 +98,7 @@ def create_seq2seq_dataset(
 		# sentence from that row. we also don't want repeats that are identical except for case
 		with tqdm(total=n) as pbar:
 			while n_chosen < n:
-				ex 						=  get_random_sentence(dataset['train'], exclude=exs, conditions=conditions)
+				ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
 				parsed 					=  nlp(ex)
 				pair 					=  splits_funs[split](parsed, **splits_funs_kwargs[split])
 				new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair.items()}}
@@ -122,7 +122,6 @@ def create_seq2seq_dataset(
 
 def get_random_sentence(
 	dataset: Dataset, 
-	exclude: List[str] = None, 
 	conditions: List[Callable] = None,
 ) -> str:
 	'''
@@ -130,8 +129,6 @@ def get_random_sentence(
 	
 		params:
 			dataset (Dataset)			: a Dataset to draw a random example from
-			exclude (List(str))			: a list of strings to exclude.
-										  useful if you want distinct examples
 			conditions (list[callable])	: a list of functions to apply to a sentence.
 										  all must be true for a sentence to be included
 		
