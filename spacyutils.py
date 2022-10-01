@@ -49,14 +49,20 @@ TENSE_MAP: Dict[str,str] = {
 }
 
 # cases that pattern.en doesn't handle correctly
-SINGULARIZE_MAP = {
+SINGULARIZE_MAP: Dict[str,str] = {
 	'these': 'this',
 	'those': 'that',
 	'all': 'every', # works well enough
 }
 
 # none found yet
-PLURALIZE_MAP = {
+PLURALIZE_MAP: Dict[str,str] = {
+}
+
+# incorrect morphs
+INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
+	'was' : {'Number': 'Sing'},
+	'were': {'Number': 'Plur'},
 }
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
@@ -95,6 +101,9 @@ class EToken():
 		self.rights 		= token.rights
 		self.children 		= [EToken(t) for t in token.children]
 		self.i 				= token.i
+		
+		if self.text in INCORRECT_MORPHS:
+			self.set_morph(**INCORRECT_MORPHS[self.text])		
 	
 	def __len__(self) -> int:
 		'''Returns the length in characters of the token text.'''
@@ -417,10 +426,10 @@ class EDoc():
 	@property
 	def root_is_verb(self) -> bool:
 		'''
-		Is the root a verb?
+		Is the root a verb or aux?
 		This is False if spaCy messed up.
 		'''
-		return self.root.pos_ == 'VERB'
+		return self.root.is_verb or self.root.is_aux
 	
 	@property
 	def main_verb(self) -> EToken:
@@ -469,6 +478,10 @@ class EDoc():
 		if isinstance(s,list) and len(s) > 1:
 			# conjoined subjects (i.e., 'and', 'or', etc.)
 			return 'Plur'
+		elif self.main_subject.dep_ in ['csubj', 'csubjpass']:
+			# clausal subjects are not correctly associated
+			# with a number feature
+			return 'Sing'
 		else:
 			return s.get_morph('Number')
 	
@@ -659,6 +672,6 @@ class EDoc():
 		return self.renumber_main_subject_verb_distractors(number=n)
 
 if __name__ == '__main__':
-	ss = 'There was a test sentence.'
+	ss = 'That Bill was tired was obvious.'
 	s = nlp(ss)
 	breakpoint()
