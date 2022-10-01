@@ -93,7 +93,7 @@ class EToken():
 		self.is_sent_start 	= token.is_sent_start
 		self.ent_iob_		= token.ent_iob_
 		self.rights 		= token.rights
-		self.children 		= list(token.children)
+		self.children 		= [EToken(t) for t in token.children]
 		self.i 				= token.i
 	
 	def __len__(self) -> int:
@@ -479,7 +479,7 @@ class EDoc():
 		if not isinstance(s, list):
 			s = [s]
 		
-		d = [c for c in subj.children for subj in s if c.dep_ == 'det']
+		d = [c for subj in s for c in subj.children if c.dep_ == 'det']
 		if len(d) == 1:
 			d = d[0]
 		
@@ -657,3 +657,8 @@ class EDoc():
 		'''Make all distractor nouns match the main subject number.'''
 		n = NUMBER_MAP[self.main_subject_number]
 		return self.renumber_main_subject_verb_distractors(number=n)
+
+if __name__ == '__main__':
+	ss = 'There was a test sentence.'
+	s = nlp(ss)
+	breakpoint()
