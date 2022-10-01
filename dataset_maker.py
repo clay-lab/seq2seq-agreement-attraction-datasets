@@ -72,6 +72,7 @@ def create_seq2seq_dataset(
 	conditions 			= [] if conditions is None else conditions
 	
 	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if not splits_funs else splits_funs
+	breakpoint()
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if not splits_funs_kwargs else splits_funs_kwargs
 	
@@ -98,7 +99,7 @@ def create_seq2seq_dataset(
 			while n_chosen < n:
 				ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
 				parsed 					=  nlp(ex)
-				pair 					=  splits_funs[split](parsed, **splits_funs_kwargs[split])
+				pair 					=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
 				new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair.items()}}
 				new_metadata[n_chosen] 	=  metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)	
 				n_chosen 				+= 1
