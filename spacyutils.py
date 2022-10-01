@@ -481,38 +481,49 @@ class EDoc():
 		s = self.main_subject
 		
 		if isinstance(s,list) and len(s) > 1:
-			tag_counts = Counter([t.dep_ for t in s])
-			# happens with some dummy 'it' subject sentences
-			# and some copular sentences
-			# one subject and one attr
-			if tag_counts['nsubj'] == 1 and tag_counts['attr'] == 1:
-				nums = [t.get_morph('Number') for t in s]
-				if all([n == 'Sing' for n in nums]):
-					return 'Sing'
-				# this happens in weird cases like
-				# "the best thing were the ..."
-				# in this case, we just go with the verb if possible
-				# otherwise, choose the first number feature that exists
-				# in a subject noun. If none exists, breakpoint
-				else:
-					if self.main_verb.get_morph('Number'):
-						return self.main_verb.get_morph('Number')
-					
-					for subj in s:
-						if subj.get_morph('Number'):
-							return subj.get_morph('Number')
-					else:
-						print(self.doc)
-						breakpoint()			
-			else:
-				# conjoined subjects (i.e., and, or, etc.)
-				return 'Plur'
+			return self._get_list_subject_number()
 		elif self.main_subject.dep_ in ['csubj', 'csubjpass']:
 			# clausal subjects are not correctly associated
 			# with a Singular number feature
 			return 'Sing'
 		else:
 			return s.get_morph('Number')
+	
+	def _get_list_subject_number(self) -> str:
+		'''
+		We call this to get the number of the subject when
+		there are multiple subject dependencies in a sentence.
+		This happens with expletive 'it' subjects, some copular
+		sentences, and sentences with conjoined subjects.
+		'''
+		tag_counts = Counter([t.dep_ for t in s])
+		# happens with some dummy 'it' subject sentences
+		# and some copular sentences
+		# one subject and one attr
+		if tag_counts['nsubj'] == 1 and tag_counts['attr'] == 1:
+			nums = [t.get_morph('Number') for t in s]
+			# if all the subjects are singular and we have one attr
+			# and one nsubj, then the subject is singular
+			if all([n == 'Sing' for n in nums]):
+				return 'Sing'
+			# this happens in weird cases like
+			# "the best thing were the movies we watched..."
+			# in this case, we just go with the verb number if possible
+			# otherwise, choose the first number feature that exists
+			# in a subject noun. If none exists, breakpoint
+			else:
+				if self.main_verb.get_morph('Number'):
+					return self.main_verb.get_morph('Number')
+				
+				for subj in s:
+					if subj.get_morph('Number'):
+						return subj.get_morph('Number')
+				else:
+					print(self.doc)
+					breakpoint()			
+		else:
+			# conjoined subjects (i.e., and, or, etc.)
+			return 'Plur'
 	
 	@property
 	def main_subject_determiner(self) -> Union[EToken,List[EToken]]:
