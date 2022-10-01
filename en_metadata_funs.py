@@ -16,23 +16,22 @@ def get_en_metadata(pair: Dict) -> Dict:
 	"""
 	source = pair['src']
 	prefix = pair['prefix']
-	target = pair['tgt']
 	
-	metadata = {}
-	
-	metadata.update({'subject_number': source.main_subject_number})
-	metadata.update({'object_number': source.main_object_number})
-	metadata.update({'main_verb': source.main_verb})
-	
-	metadata.update({'n_interveners': len(source.main_subject_verb_interveners)})
 	if source.has_main_subject_verb_interveners:
 		final_intervener_number = source.main_subject_verb_interveners[-1].get_morph('Number')
 	else:
 		final_intervener_number = None
 	
-	metadata.update({'final_intervener_number': final_intervener_number})
-	metadata.update({'n_distractors': len(source.main_subject_verb_distractors)})
-	metadata.update({'pos_sequence': source.pos_seq})
-	metadata.update({'tense': prefix})
+	metadata = dict(
+				subject_number=source.main_subject_number,
+				object_number=source.main_object_number,
+				main_verb=source.main_verb.text,
+				main_verb_lemma=source.main_verb.lemma_,
+				n_interveners=len(source.main_subject_verb_interveners),
+				final_intervener_number=final_intervener_number,
+				n_distractors=len(source.main_subject_verb_distractors),
+				pos_sequence=source.pos_seq,
+				tense=prefix
+			)
 	
 	return metadata
