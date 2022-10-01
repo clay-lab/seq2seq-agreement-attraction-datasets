@@ -670,8 +670,3 @@ class EDoc():
 		'''Make all distractor nouns match the main subject number.'''
 		n = NUMBER_MAP[self.main_subject_number]
 		return self.renumber_main_subject_verb_distractors(number=n)
-
-if __name__ == '__main__':
-	ss = 'That Bill was tired was obvious.'
-	s = nlp(ss)
-	breakpoint()
