@@ -47,7 +47,7 @@ TENSE_MAP: Dict[str,str] = {
 	'pres': PRESENT
 }
 
-nlp_ = spacy.load('en_core_web_sm', disable=['ner'])
+nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
 nlp = lambda s: EDoc(nlp_(s))
 
 # workaround for pattern.en bug in python > 3.6
