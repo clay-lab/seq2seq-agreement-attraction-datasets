@@ -72,7 +72,6 @@ def create_seq2seq_dataset(
 	conditions 			= [] if conditions is None else conditions
 	
 	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if not splits_funs else splits_funs
-	breakpoint()
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if not splits_funs_kwargs else splits_funs_kwargs
 	
