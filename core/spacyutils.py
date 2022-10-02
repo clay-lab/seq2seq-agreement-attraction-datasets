@@ -252,11 +252,15 @@ class EToken():
 		c_kwargs = {**c_kwargs, **kwargs}
 		
 		self.text = conjugate(self.text, **c_kwargs)
-			
-		n = 'Sing' if NUMBER_MAP[number] == SG else 'Plur'
-		t = 'Past' if TENSE_MAP[tense] == PAST else 'Pres'
 		
-		self.set_morph(Number=n, Tense=t, **kwargs)
+		n = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
+		t = 'Past' if TENSE_MAP.get(tense) == PAST else 'Pres'
+		
+		m_kwargs = dict(Number=n, Tense=t)
+		m_kwargs = {k: v for k, v in m_kwargs.items() if v is not None}
+		m_kwargs = {**m_kwargs, **kwargs}
+		
+		self.set_morph(**m_kwargs)
 	
 	def make_past_tense(self, number: str) -> None:
 		'''Make the (VERB) token past tense.'''

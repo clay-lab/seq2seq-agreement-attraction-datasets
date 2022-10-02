@@ -106,7 +106,7 @@ def create_seq2seq_dataset(
 					pbar.set_postfix(split=split)
 					pbar.update(1)
 				except Exception:
-					raise Exception(f'Example {parsed} ran into an error!')
+					raise Exception(f'Example "{parsed}" ran into an error!')
 		
 		if 'prefix' in new_dataset[0]['translation']:
 			prefixes = [e['translation']['prefix'] for e in new_dataset]
