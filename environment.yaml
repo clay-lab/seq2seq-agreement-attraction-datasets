@@ -6,4 +6,6 @@ dependencies:
   - tqdm=4.62.3
   - spacy
   - pattern
-  - cudatoolkit=11.3
+  - cudatoolkit
+  - pytorch::pytorch
+  - setuptools <=59.5.0
