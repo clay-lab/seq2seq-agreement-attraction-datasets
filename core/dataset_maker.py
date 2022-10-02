@@ -15,7 +15,7 @@ from typing import List, Callable, Tuple, Dict
 from datasets import load_dataset, Dataset
 from collections import defaultdict
 
-from spacyutils import nlp
+from .spacyutils import nlp
 
 split_sentences = spacy.load(
 	'en_core_web_trf', 

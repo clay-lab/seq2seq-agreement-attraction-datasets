@@ -4,37 +4,19 @@ import random
 
 from typing import Dict
 
-from spacyutils import nlp, EDoc
+from ..language_funs import string_conditions
+from ...spacyutils import nlp, EDoc
 
-def en_conditions(s: str) -> bool:
+def no_dist_conditions(s: str) -> bool:
 	'''
 	Applies conditions to en sentence in order.
 	These are currently ordered by how long it takes
 	to perform each check, with shorter ones earlier.
 	'''
-	# must be longer than a single character
-	if len(s) <= 1:
+	if not string_conditions(s):
 		return False
 	
-	# must start with a capital letter
-	if s[0].islower():
-		return False
-	
-	# too long!
-	if len(s.split()) > 50:
-		return False
-	
-	# must not contain a semicolon (i.e., two sentences)
-	# must not contain a quote (also two sentences)
-	# must not have spaces before commas and periods
-	# must not have a newline
-	if any(c in s for c in [';', '"', ' ,', ' .', '\n']):
-		return False
-	
-	# must consist only of punctuation and english letters
-	if not s.translate(str.maketrans('', '', string.punctuation)).isascii():
-		return False
-	
+	# English-specific filters
 	if s[-1] == '.':
 		# must not end with a . preceded by a capital letter (happens when splitting on middle names)
 		if s[-2].isupper():
@@ -49,10 +31,6 @@ def en_conditions(s: str) -> bool:
 		
 		if s[-3:] in ['Mr.', 'Dr.', 'Ms.', 'St.', 'Av.']:
 			return False
-	
-	# must not contain a colon separating two word characters (occurs in references lists)
-	if re.search(r'\w:\w', s):
-		return False
 	
 	# now we have to parse
 	s = nlp(s)

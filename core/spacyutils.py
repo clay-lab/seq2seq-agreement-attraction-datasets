@@ -17,54 +17,7 @@ from pattern.en import conjugate
 from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
 
-SUBJ_DEPS: Set[str] = {"csubj", "csubjpass", "attr", "nsubj", "nsubjpass"}
-OBJ_DEPS: Set[str] = {"cobj", "nobj"}
-
-NUMBER_MAP: Dict[str,str] = {
-	'Singular': SG,
-	'singular': SG,
-	'Sing': SG,
-	'sing': SG,
-	'SG': SG,
-	'Sg': SG,
-	'sg': SG,
-	'Plural': PL,
-	'plural': PL,
-	'Plur': PL,
-	'plur': PL,
-	'PL': PL,
-	'Pl': PL,
-	'pl': PL,
-}
-TENSE_MAP: Dict[str,str] = {
-	'PAST': PAST,
-	'Past': PAST,
-	'past': PAST,
-	'Pst': PAST,
-	'pst': PAST,
-	'PRESENT': PRESENT,
-	'Present': PRESENT,
-	'present': PRESENT,
-	'Pres': PRESENT,
-	'pres': PRESENT
-}
-
-# cases that pattern.en doesn't handle correctly
-SINGULARIZE_MAP: Dict[str,str] = {
-	'these': 'this',
-	'those': 'that',
-	'all': 'every', # works well enough
-}
-
-# none found yet
-PLURALIZE_MAP: Dict[str,str] = {
-}
-
-# incorrect morphs
-INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
-	'was' : {'Number': 'Sing'},
-	'were': {'Number': 'Plur'},
-}
+from .constants import *
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
 nlp  = lambda s: EDoc(nlp_(s))
@@ -99,9 +52,16 @@ class EToken():
 		self.dep_ 			= token.dep_
 		self.is_sent_start 	= token.is_sent_start
 		self.ent_iob_		= token.ent_iob_
-		self.rights 		= token.rights
+		self.rights 		= [EToken(t) for t in token.rights]
 		self.children 		= [EToken(t) for t in token.children]
 		self.i 				= token.i
+		
+		# spaCy doesn't respect this property when
+		# we create a Doc manually using the constructor.
+		# I don't know why. But let's fix it here.
+		# this is a hack, but it will work for us.
+		if self.i == 0:
+			self.is_sent_start = True
 		
 		if self.text in INCORRECT_MORPHS:
 			self.set_morph(**INCORRECT_MORPHS[self.text])		
@@ -368,7 +328,7 @@ class EDoc():
 		# get the properties of the current doc
 		tokens 		= [tokens] if not isinstance(tokens, list) else tokens
 		indices		= [t.i for t in tokens] if indices is None else indices
-		indices 	= [indices] if not isinstance(indices, list) else indices
+		indices 	= [indices] if not isinstance(indices,(list,range)) else indices
 		
 		if not len(tokens) == len(indices):
 			raise ValueError('There must be an equal number of tokens and indices!') 
@@ -415,6 +375,62 @@ class EDoc():
 		)
 		
 		return EDoc(new_s)		
+	
+	def _copy_with_remove(
+		self,
+		indices: Union[int,List[int]]
+	) -> 'EDoc':
+		'''
+		Creates a copy of the current doc with
+		the tokens at the indices removed.
+		Generally best to avoid; used internally
+		for conjunction reduction.
+		'''
+		indices 	= [indices] if not isinstance(indices,(list,range)) else indices
+				
+		if any(i > (len(self) - 1) for i in indices):
+			raise IndexError(
+				f'The current doc is length {len(self)}, so '
+				f'there is no token to remove at index >{len(self) - 1}!'
+			)
+		
+		tokens 		= [t for t in self.doc if not t.i in indices]
+		
+		vocab 		= self.vocab
+		words 		= [t.text for t in tokens]
+		spaces 		= [t.whitespace_ == ' ' for t in tokens]
+		user_data	= self.user_data
+		tags 		= [t.tag_ for t in tokens]
+		pos 		= [t.pos_ for t in tokens]
+		morphs 		= [str(t.morph) for t in tokens]
+		lemmas 		= [t.lemma_ for t in tokens]
+		heads 		= [t.head.i for t in tokens]
+		
+		# have to reduce the head indices for each index we remove
+		for i in indices:
+			heads 	= [h - 1 if h > i else h for h in heads]
+		
+		deps 		= [t.dep_ for t in tokens]	
+		sent_starts = [t.is_sent_start for t in tokens]
+		sent_starts[0] = True # what if removing the first token?
+		ents 		= [t.ent_iob_ for t in tokens]
+		
+		new_s = Doc(
+			vocab=vocab,
+			words=words,
+			spaces=spaces,
+			user_data=user_data,
+			tags=tags,
+			pos=pos,
+			morphs=morphs,
+			lemmas=lemmas,
+			heads=heads,
+			deps=deps,
+			sent_starts=sent_starts,
+			ents=ents
+		)
+		
+		return EDoc(new_s)
 	
 	# CONVENIENCE PROPERTIES
 	@property
@@ -500,6 +516,26 @@ class EDoc():
 		else:
 			return s.get_morph('Number')
 	
+	@property
+	def has_singular_main_subject(self) -> str:
+		'''Is the main subject singular?'''
+		return self.main_subject_number == 'Sing'
+	
+	@property
+	def has_plural_main_subject(self) -> str:
+		'''Is the main subject plural?'''
+		return self.main_subject_number == 'Plur'
+	
+	@property
+	def has_conjoined_main_subject(self):
+		'''Is the main subject a conjoined phrase?'''
+		s = self.main_subject
+		
+		if isinstance(s,list):
+			return any(self._get_conjuncts(s[0]))
+		
+		return False
+	
 	def _get_list_subject_number(self, s: List[EToken]) -> str:
 		'''
 		We call this to get the number of the subject when
@@ -546,6 +582,8 @@ class EDoc():
 		d = [c for subj in s for c in subj.children if c.dep_ == 'det']
 		if len(d) == 1:
 			d = d[0]
+		elif len(d) == 0:
+			d = None
 		
 		return d
 	
@@ -671,16 +709,50 @@ class EDoc():
 	
 	def renumber_main_subject(self, number: str) -> 'EDoc':
 		'''Renumber the main subject, along with its determiner and verb.'''
-		s = self.main_subject
+		if self.has_conjoined_main_subject and NUMBER_MAP.get(number) == SG:
+			edoc = self._remove_conjunctions_to_main_subject()
+		else:
+			edoc = self
+		
+		tokens = []
+		
+		s = edoc.main_subject
 		s.renumber(number=number)
+		tokens.append(s)
 		
-		d = self.main_subject_determiner
-		d.renumber(number=number)
+		d = edoc.main_subject_determiner
+		if d:
+			d.renumber(number=number)
+			tokens.append(d)
 		
-		v = self.main_verb
+		v = edoc.main_verb
 		v.reinflect(number=number)
+		tokens.append(v)
 		
-		return self.copy_with_replace(tokens=[s,d,v])
+		return edoc.copy_with_replace(tokens=tokens)
+	
+	def _remove_conjunctions_to_main_subject(self) -> 'EDoc':
+		'''
+		Return a copy of the current EDoc with all but the
+		first noun of a conjoined subject removed. Useful
+		when renumbering a sentence with a conjoined subject.
+		'''
+		if not self.has_conjoined_main_subject:
+			return self
+		
+		s = self.main_subject
+		
+		# remove tokens after this position
+		starting_index 	= s[0].i
+		
+		# until this position
+		remove_until 	= max([t.i for t in s[1:]])
+		
+		# remove from one after the head of the conjP
+		# until the final position to remove (range() is [x,y))
+		range_to_remove = range(starting_index+1, remove_until+1)
+		
+		return self._copy_with_remove(indices=range_to_remove)
 	
 	def singularize_main_subject(self) -> 'EDoc':
 		'''Make the main subject singular, and reinflect the verb.'''
@@ -721,8 +793,3 @@ class EDoc():
 		'''Make all distractor nouns match the main subject number.'''
 		n = NUMBER_MAP[self.main_subject_number]
 		return self.renumber_main_subject_verb_distractors(number=n)
-
-if __name__ == '__main__':
-	ss = 'He is then sworn in the next day.'
-	s = nlp(ss)
-	breakpoint()
