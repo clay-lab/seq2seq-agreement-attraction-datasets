@@ -99,7 +99,10 @@ class EToken():
 	@property
 	def can_be_inflected(self) -> bool:
 		'''Can the (VERB) token be reinflected?'''
-		return (self.is_verb and not self.tag_ == 'VBN') or self.is_aux
+		return (
+			(self.is_verb and not self.tag_ == 'VBN') or 
+			(self.is_aux and self.lemma_ == 'be')
+		)
 	
 	@property
 	def is_expl(self):
@@ -231,6 +234,7 @@ class EToken():
 		
 		number 	= self.get_morph('Number') if number is None else number
 		tense 	= self.get_morph('Tense') if tense is None else tense
+		
 		try:
 			self.text = conjugate(
 							self.text, 
