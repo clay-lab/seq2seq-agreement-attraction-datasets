@@ -5,12 +5,12 @@
 			"dataset_kwargs": {},
 			"names": {
 				"en_wiki-nodist-pres-and-past": {
-					"conditions": ".language_funs.en.grammar_funs.no_dist_conditions",
+					"conditions": "language_funs.en.grammar_funs.no_dist_conditions",
 					"splits": {
 						"test": 100
 					},
 					"splits_funs": {
-						"test": ".language_funs.en.grammar_funs.pres_or_past"
+						"test": "language_funs.en.grammar_funs.pres_or_past"
 					},
 					"splits_funs_args": {},
 					"splits_funs_kwargs": {
@@ -18,7 +18,7 @@
 							"pres_p": 0.5
 						}
 					},
-					"metadata_fun": ".language_funs.en.grammar_funs.get_metadata",
+					"metadata_fun": "language_funs.en.grammar_funs.get_metadata",
 					"metadata_fun_args": [],
 					"metadata_fun_kwargs": {}
 				}
