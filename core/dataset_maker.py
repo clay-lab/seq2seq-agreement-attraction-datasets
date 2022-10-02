@@ -85,47 +85,67 @@ def create_seq2seq_dataset(
 		raise ValueError(f'Unable to load dataset {dataset} on huggingface!')
 	
 	for split, n in splits.items():
-		# preallocate
-		new_dataset 	= [None for _ in range(n)]
-		new_metadata 	= [None for _ in range(n)]
-		n_chosen 		= 0
+		new_dataset 	= []
+		new_metadata 	= []
+		
+		file_name 		= os.path.join('data', name, f'{name}_{split}.json.gz')
+		metadata_name 	= os.path.join('data', name, f'{name}_{split}_metadata.json.gz')
 		
 		# we don't just shuffle the dataset and choose the first n examples,
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
-		with tqdm(total=n) as pbar:
-			while n_chosen < n:
+		mode = 'wt'
+		os.makedirs(os.path.join('data', name), exist_ok=True)
+		with tqdm(range(n)) as pbar:
+			pbar.set_postfix(split=split)
+			for i in pbar:
 				ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
 				parsed 					=  nlp(ex)
 				try:
-					pair 					=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
-					new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair.items()}}
-					new_metadata[n_chosen] 	=  metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)	
-					n_chosen 				+= 1
-					pbar.set_postfix(split=split)
-					pbar.update(1)
+					pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
+					new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
+					new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
 				except Exception:
 					raise Exception(f'Example "{parsed}" ran into an error!')
+				
+				# dump to disk every so often so we don't run out of (V)RAM
+				if (i - 1) % 2500 == 0:
+					mode = 'at' if i > 2501 else mode
+					with gzip.open(file_name, mode, encoding='utf-8') as out_file:
+						for ex in tqdm(new_dataset):
+							json.dump(ex, out_file, ensure_ascii=False)
+							out_file.write('\n')
+					
+					with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
+						for m in tqdm(new_metadata):
+							json.dump(m, out_file, ensure_ascii=False)
+							out_file.write('\n')
+					
+					new_dataset  = []
+					new_metadata = []
+		
+		print(f'Writing out dataset {name} ({split}).')
+		with gzip.open(file_name, mode, encoding='utf-8') as out_file:
+			for ex in tqdm(new_dataset):
+				json.dump(ex, out_file, ensure_ascii=False)
+				out_file.write('\n')
+		
+		print(f'Writing out metadata for {name} ({split}).')
+		with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
+			for m in tqdm(new_metadata):
+				json.dump(m, out_file, ensure_ascii=False)
+				out_file.write('\n')
+		
+		# print stats
+		with gzip.open(file_name, 'rt', encoding='utf-8') as in_file:
+			new_dataset = [json.loads(l.strip()) for l in in_file.readlines()]
 		
 		if 'prefix' in new_dataset[0]['translation']:
 			prefixes = [e['translation']['prefix'] for e in new_dataset]
 			unique_prefixes = set(prefixes)
 			for pfx in unique_prefixes:
 				print(f'{name} prop {pfx} examples: {len([p for p in prefixes if p == pfx])/len(prefixes):.4f}')
-		
-		os.makedirs(os.path.join('data', name), exist_ok=True)
-		print(f'Writing out dataset {name} ({split}).')
-		with gzip.open(os.path.join('data', name, f'{name}_{split}.json.gz'), 'wt', encoding='utf-8') as out_file:
-			for ex in tqdm(new_dataset):
-				json.dump(ex, out_file, ensure_ascii=False)
-				out_file.write('\n')
-		
-		print(f'Writing out metadata for {name} ({split}).')
-		with gzip.open(os.path.join('data', name, f'{name}_{split}_metadata.json.gz'), 'wt', encoding='utf-8') as out_file:
-			for m in tqdm(new_metadata):
-				json.dump(m, out_file, ensure_ascii=False)
-				out_file.write('\n')
 
 def get_random_sentence(
 	dataset: Dataset, 
