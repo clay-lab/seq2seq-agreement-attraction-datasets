@@ -457,7 +457,8 @@ class EDoc():
 		'''Convenience method for get_root().'''
 		if self.root_is_verb:
 			# in passives, the root is the participle, but we want the aux
-			auxpass = [t for t in self.root.children if t.dep_ == 'auxpass']
+			# this also happens with stacked auxiliaries (i.e., would be, would have been, etc.)
+			auxpass = [t for t in self.root.children if t.dep_ in ['auxpass', 'aux']]
 			if auxpass:
 				return auxpass[0]
 			else:
