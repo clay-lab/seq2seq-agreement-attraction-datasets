@@ -451,9 +451,12 @@ class EDoc():
 	@property
 	def root(self) -> EToken:
 		'''Get the root node (i.e., main verb) of s.'''
-		return EToken([
-			t for t in self.doc if t.dep_ == 'ROOT'
-		][0])
+		try:
+			return EToken([
+				t for t in self.doc if t.dep_ == 'ROOT'
+			][0])
+		except IndexError:
+			return None
 	
 	@property
 	def root_is_verb(self) -> bool:
@@ -461,7 +464,10 @@ class EDoc():
 		Is the root a verb or aux?
 		This is False if spaCy messed up.
 		'''
-		return self.root.is_verb or self.root.is_aux
+		if self.root:
+			return self.root.is_verb or self.root.is_aux
+		else:
+			return False
 	
 	@property
 	def main_verb(self) -> EToken:
@@ -475,7 +481,7 @@ class EDoc():
 			else:
 				return self.root
 		else:
-			raise ValueError('There is no main verb for this sentence! (spaCy messed up)')
+			return None
 	
 	@property
 	def main_verb_tense(self) -> str:
