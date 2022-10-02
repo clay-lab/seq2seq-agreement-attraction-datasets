@@ -2,6 +2,8 @@
 general functions that are 
 useful across different languages
 '''
+import re
+
 def string_conditions(s: str) -> bool:
 	'''
 	Does the string pass certain basic checks?
