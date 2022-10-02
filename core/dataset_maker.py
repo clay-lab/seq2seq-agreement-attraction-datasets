@@ -62,8 +62,7 @@ def create_seq2seq_dataset(
 			splits_funs (dict)			: mapping between split names and additional functions to perform on the
 										  sentence (parsed with core_en_web_trf)
 			splits_funs_args (dict)		: mapping between split names and additional args to for splits_funs[split]
-			splits_funs_kwargs (dict)	: additional arguments to pass to the function used on each example
-										
+			splits_funs_kwargs (dict)	: additional arguments to pass to the function used on each example							
 	'''
 	name 				= name if name is not None else dataset
 	dataset_args 		= () if not dataset_args else dataset_args
@@ -114,12 +113,12 @@ def create_seq2seq_dataset(
 				if i > 1 and (i - 1) % 2500 == 0:
 					mode = 'at' if i > 2501 else mode
 					with gzip.open(file_name, mode, encoding='utf-8') as out_file:
-						for ex in tqdm(new_dataset):
+						for ex in new_dataset:
 							json.dump(ex, out_file, ensure_ascii=False)
 							out_file.write('\n')
 					
 					with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
-						for m in tqdm(new_metadata):
+						for m in new_metadata:
 							json.dump(m, out_file, ensure_ascii=False)
 							out_file.write('\n')
 					
