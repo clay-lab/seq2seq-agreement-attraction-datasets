@@ -97,6 +97,7 @@ def create_seq2seq_dataset(
 		# sentence from that row. we also don't want repeats that are identical except for case
 		mode = 'wt'
 		os.makedirs(os.path.join('data', name), exist_ok=True)
+		
 		with tqdm(range(n)) as pbar:
 			pbar.set_postfix(split=split)
 			for i in pbar:
@@ -110,7 +111,7 @@ def create_seq2seq_dataset(
 					raise Exception(f'Example "{parsed}" ran into an error!')
 				
 				# dump to disk every so often so we don't run out of (V)RAM
-				if (i - 1) % 2500 == 0:
+				if i > 1 and (i - 1) % 2500 == 0:
 					mode = 'at' if i > 2501 else mode
 					with gzip.open(file_name, mode, encoding='utf-8') as out_file:
 						for ex in tqdm(new_dataset):
