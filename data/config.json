@@ -18,7 +18,7 @@
 							"pres_p": 0.5
 						}
 					},
-					"metadata_fun": "core.language_funs.en.grammar_funs.get_metadata",
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata",
 					"metadata_fun_args": [],
 					"metadata_fun_kwargs": {}
 				}
