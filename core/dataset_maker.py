@@ -346,7 +346,3 @@ def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
 		config = json.load(in_file)
 	
 	return config
-
-if __name__ == '__main__':
-	
-	create_datasets_from_config()
