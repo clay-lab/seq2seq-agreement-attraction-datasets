@@ -204,18 +204,18 @@ def create_datasets_from_config(
 			# so we need to import the actual objects
 			for i, f in enumerate(conditions):
 				if isinstance(f, str):
-					module = f.split('.')[0]
+					module = f.rsplit('.', 1)[0]
 					exec(f'import {module}')
 					conditions[i] = eval(f)
 			
 			for split in splits_funs:
 				if isinstance(splits_funs[split], str):
-					module = f.split('.')[0]
+					module = f.rsplit('.', 1)[0]
 					exec(f'import {module}')
 					splits_funs[split] = eval(splits_funs[split])
 			
 			if isinstance(metadata_fun, str):
-				module = metadata_fun.split('.')[0]
+				module = metadata_fun.rsplit('.', 1)[0]
 				exec(f'import {module}')
 				metadata_fun = eval(metadata_fun)	
 			
