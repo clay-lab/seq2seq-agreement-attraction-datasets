@@ -17,3 +17,7 @@ module load miniconda
 source activate /gpfs/gibbs/project/frank/ref4/conda_envs/seq2seq-datasets
 
 python make_datasets.py
+
+git add --all .
+git commit -m "added new datasets"
+git push origin main
