@@ -283,7 +283,7 @@ def create_t5_scripts(
 		'	--predict_with_generate \\',
 		'	--num_train_epochs 10.0'
 	]) + '\n'
-	breakpoint()
+	
 	eval_script = script.replace('finetune', 'eval')
 	eval_script = eval_script.replace('--do_train \\', '--do_learning_curve \\')
 	eval_script = eval_script.replace('[DEV_LANG]', '[TEST_LANG]')

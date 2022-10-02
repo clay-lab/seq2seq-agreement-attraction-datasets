@@ -18,15 +18,25 @@ from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
 
 from .constants import *
+from .timeout import timeout
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
-nlp  = lambda s: EDoc(nlp_(s))
 
 # workaround for pattern.en bug in python > 3.6
 try:
 	_ = lexeme('bad pattern.en >:(')
 except RuntimeError:
 	pass
+
+class ParseError(Exception):
+	pass
+
+def nlp(s: str) -> 'EDoc':
+	with timeout(error_message=f'"{s}" took too long to process!'):
+		try:
+			return EDoc(nlp_(s))
+		except Exception:
+			raise ParseError(f'"{s}" ran into a parsing error!')
 
 class EToken():
 	'''
@@ -235,16 +245,12 @@ class EToken():
 		number 	= self.get_morph('Number') if number is None else number
 		tense 	= self.get_morph('Tense') if tense is None else tense
 		
-		try:
-			self.text = conjugate(
-							self.text, 
-							number=NUMBER_MAP[number], 
-							tense=TENSE_MAP[tense],
-							**kwargs
-						)
-		except :
-			print(self.text)
-			breakpoint()
+		self.text = conjugate(
+						self.text, 
+						number=NUMBER_MAP[number], 
+						tense=TENSE_MAP[tense],
+						**kwargs
+					)
 			
 		n = 'Sing' if NUMBER_MAP[number] == SG else 'Plur'
 		t = 'Past' if TENSE_MAP[tense] == PAST else 'Pres'
@@ -440,13 +446,9 @@ class EDoc():
 	@property
 	def root(self) -> EToken:
 		'''Get the root node (i.e., main verb) of s.'''
-		try:
-			return EToken([
-				t for t in self.doc if t.dep_ == 'ROOT'
-			][0])
-		except KeyboardInterrupt:
-			print(self.doc)
-			breakpoint()
+		return EToken([
+			t for t in self.doc if t.dep_ == 'ROOT'
+		][0])
 	
 	@property
 	def root_is_verb(self) -> bool:
@@ -566,7 +568,7 @@ class EDoc():
 			# "the best thing were the movies we watched..."
 			# in this case, we just go with the verb number if possible
 			# otherwise, choose the first number feature that exists
-			# in a subject noun. If none exists, breakpoint
+			# in a subject noun. If none exists, raise ValueError
 			else:
 				if self.main_verb.get_morph('Number'):
 					return self.main_verb.get_morph('Number')
@@ -575,8 +577,7 @@ class EDoc():
 					if subj.get_morph('Number'):
 						return subj.get_morph('Number')
 				else:
-					print(self.doc)
-					breakpoint()			
+					raise ValueError(f'No token in {s} has a number feature!')
 		else:
 			# conjoined subjects (i.e., and, or, etc.)
 			return 'Plur'

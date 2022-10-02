@@ -7,16 +7,17 @@
 				"en_wiki-nodist-pres-and-past": {
 					"conditions": "core.language_funs.en.grammar_funs.no_dist_conditions",
 					"splits": {
-						"test": 100
+						"train": 100000,
+						"dev"  : 1000
 					},
 					"splits_funs": {
-						"test": "core.language_funs.en.grammar_funs.pres_or_past"
+						"train": "core.language_funs.en.grammar_funs.pres_or_past",
+						"dev": "core.language_funs.en.grammar_funs.pres_or_past"
 					},
 					"splits_funs_args": {},
 					"splits_funs_kwargs": {
-						"test": {
-							"pres_p": 0.5
-						}
+						"train": {"pres_p": 0.5},
+						"dev"  : {"pres_p": 0.5}
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata",
 					"metadata_fun_args": [],
