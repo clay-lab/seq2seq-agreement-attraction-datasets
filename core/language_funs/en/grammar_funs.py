@@ -33,24 +33,28 @@ def no_dist_conditions(s: str) -> bool:
 			return False
 	
 	# now we have to parse
-	s = nlp(s)
-	
-	# if the root is not a verb, we don't want it
-	if not s.root_is_verb:
-		return False
-	
-	# if there is no subject, we don't want it
-	if not s.has_main_subject:
-		return False
-	
-	# if the main verb cannot be inflected, we don't want it
-	if not s.main_verb.can_be_inflected:
-		return False
-	
-	# if there are distractors, we don't want it for training
-	if s.has_main_subject_verb_distractors:
-		return False
-	
+	try:
+		s = nlp(s)
+		
+		# if the root is not a verb, we don't want it
+		if not s.root_is_verb:
+			return False
+		
+		# if there is no subject, we don't want it
+		if not s.has_main_subject:
+			return False
+		
+		# if the main verb cannot be inflected, we don't want it
+		if not s.main_verb.can_be_inflected:
+			return False
+		
+		# if there are distractors, we don't want it for training
+		if s.has_main_subject_verb_distractors:
+			return False
+	except KeyboardInterrupt:
+		print(s)
+		breakpoint()
+		
 	return True
 
 def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
