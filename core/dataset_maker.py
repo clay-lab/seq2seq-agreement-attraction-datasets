@@ -98,12 +98,15 @@ def create_seq2seq_dataset(
 			while n_chosen < n:
 				ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
 				parsed 					=  nlp(ex)
-				pair 					=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
-				new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair.items()}}
-				new_metadata[n_chosen] 	=  metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)	
-				n_chosen 				+= 1
-				pbar.set_postfix(split=split)
-				pbar.update(1)
+				try:
+					pair 					=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
+					new_dataset[n_chosen] 	=  {'translation': {k: str(v) for k, v in pair.items()}}
+					new_metadata[n_chosen] 	=  metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)	
+					n_chosen 				+= 1
+					pbar.set_postfix(split=split)
+					pbar.update(1)
+				except Exception:
+					raise Exception(f'Example {parsed} ran into an error!')
 		
 		if 'prefix' in new_dataset[0]['translation']:
 			prefixes = [e['translation']['prefix'] for e in new_dataset]

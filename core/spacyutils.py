@@ -245,12 +245,13 @@ class EToken():
 		number 	= self.get_morph('Number') if number is None else number
 		tense 	= self.get_morph('Tense') if tense is None else tense
 		
-		self.text = conjugate(
-						self.text, 
-						number=NUMBER_MAP[number], 
-						tense=TENSE_MAP[tense],
-						**kwargs
-					)
+		# we need to filter out Nones, in case the current word
+		# doesn't have these morphs
+		c_kwargs = dict(Number=number, Tense=tense)
+		c_kwargs = {k: v for k, v in c_kwargs.items() if v is not None}
+		c_kwargs = {**c_kwargs, **kwargs}
+		
+		self.text = conjugate(self.text, **c_kwargs)
 			
 		n = 'Sing' if NUMBER_MAP[number] == SG else 'Plur'
 		t = 'Past' if TENSE_MAP[tense] == PAST else 'Pres'
