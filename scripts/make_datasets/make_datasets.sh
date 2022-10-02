@@ -1,12 +1,19 @@
 #!/bin/bash
 
-#SBATCH --job-name=backup-seq2seq-datasets
+#SBATCH --job-name=make-seq2seq-datasets
 #SBATCH --output=joblogs/%x_%j.txt
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --time=00:10:00
+#SBATCH --mem=30GB
+#SBATCH --time=20:00:00
+#SBATCH --gpus=v100:1
+#SBATCH --partition=gpu
 #SBATCH --mail-type=END,FAIL,INVALID_DEPEND
 
-git add --all .
-git commit -m "add new datasets"
-git push origin main
+module load CUDA
+module load cuDNN
+module load miniconda
+
+source activate /gpfs/gibbs/project/frank/ref4/conda_envs/seq2seq-datasets
+
+python make_datasets.py
