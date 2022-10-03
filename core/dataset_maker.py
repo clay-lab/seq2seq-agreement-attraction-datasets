@@ -25,7 +25,16 @@ split_sentences = spacy.load(
 split_sentences.add_pipe('sentencizer')
 
 # after how many examples should we dump to disk?
-DUMP_FREQ = 1000
+DUMP_FREQ: int = 1000
+
+# what metadata should we not print?
+# this is a list of keys in the metadata dict
+# to exclude from printing (because there are
+# too many categories to be informative, etc.)
+DONT_PRINT: List[str] = [
+	'pos_sequence',
+	'tag_sequence',
+]
 
 def create_seq2seq_dataset(
 	dataset: str,
@@ -156,16 +165,16 @@ def create_seq2seq_dataset(
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
 			prefixes = {k: v/total for k, v in prefixes.items()}
-			print('Pr. of each prefix:', ', '.join([': '.join([k,f'{v:.04f}']) for k, v in prefixes.items()]))
+			print('Pr. of each prefix:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in prefixes.items()]))
 		
 		with gzip.open(metadata_name, 'rt', encoding='utf-8') as in_file:
 			new_metadata = [json.loads(l.strip()) for l in in_file.readlines()]
 		
-		for k in new_metadata[0]:
+		for k in [k for k in new_metadata[0] if not k in DONT_PRINT]:
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
 			all_ks = {k: v/total for k, v in all_ks.items()}
-			print(f'Pr. of each {k}:', ', '.join([': '.join([k,f'{v:.04f}']) for k, v in all_ks.items()]))	
+			print(f'Pr. of each {k}:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in all_ks.items()]))	
 
 def get_random_sentence(
 	dataset: Dataset, 
