@@ -101,15 +101,18 @@ def create_seq2seq_dataset(
 		with tqdm(range(n)) as pbar:
 			pbar.set_postfix(split=split)
 			for i in pbar:
-				ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
-				parsed 					=  nlp(ex)
-				try:
-					pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
-					new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
-					new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
-				except Exception:
-					raise Exception(f'Example "{parsed}" ran into an error!')
-				
+				while not ex:
+					ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
+					parsed 					=  nlp(ex)
+					try:
+						pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
+						new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
+						new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
+					except Exception:
+						print(f'Example "{ex}" ran into an error!')
+						ex = ''
+						pass
+					
 				# dump to disk every so often so we don't run out of (V)RAM
 				if i > 1 and (i - 1) % 2500 == 0:
 					mode = 'at' if i > 2501 else mode
