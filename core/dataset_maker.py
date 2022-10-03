@@ -114,6 +114,9 @@ def create_seq2seq_dataset(
 						ex = ''
 						pass
 					
+					del ex
+					del parsed
+					
 				# dump to disk every so often so we don't run out of (V)RAM
 				if len(new_dataset) == 2500:
 					mode = 'wt' if mode is None else 'at'
