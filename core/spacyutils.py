@@ -704,6 +704,11 @@ class EDoc():
 		'''Get the part of speech sequence of the sentence.'''
 		return [t.pos_ for t in self] 
 	
+	@property
+	def tag_seq(self) -> List[str]:
+		'''Get the tag sequence of the sentence.'''
+		return [t.tag_ for t in self]
+		
 	@staticmethod
 	def _get_conjuncts(t: Union[Token,EToken]):
 		'''Returns all conjuncts dependent on the first in a coordinated phrase.'''

@@ -31,6 +31,7 @@ def get_metadata(pair: Dict) -> Dict:
 				final_intervener_number=final_intervener_number,
 				n_distractors=len(source.main_subject_verb_distractors),
 				pos_sequence=source.pos_seq,
+				tag_sequence=source.tag_seq,
 				tense=prefix
 			)
 	
