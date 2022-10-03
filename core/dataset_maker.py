@@ -101,6 +101,7 @@ def create_seq2seq_dataset(
 		with tqdm(range(n)) as pbar:
 			pbar.set_postfix(split=split)
 			for i in pbar:
+				ex = ''
 				while not ex:
 					ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
 					parsed 					=  nlp(ex)
