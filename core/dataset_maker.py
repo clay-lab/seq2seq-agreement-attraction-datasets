@@ -5,10 +5,12 @@
 # like you have a lot of extra disk space you'd like to fill up
 import os
 import re
+import sys
 import json
 import gzip
 import spacy
 import random
+import traceback
 
 from tqdm import tqdm
 from pprint import PrettyPrinter
@@ -123,10 +125,12 @@ def create_seq2seq_dataset(
 						pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
 						new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
 						new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
+					except KeyboardInterrupt:
+						sys.exit('User terminated program.')
 					except Exception as e:
-						print(f'Example "{ex}" ran into an error!')
-						print(str(e))
-						breakpoint()
+						print(f'Example "{ex}" ran into an error!:\n\n')
+						print(traceback.format_exc())
+						print('\n\n')
 						ex = ''
 						pass
 					
