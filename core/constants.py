@@ -78,3 +78,18 @@ PARTITIVES: List[str] = [
 	'Some',
 	'some',
 ]
+
+# maps some deps to others for purposes
+# of recording distractor structures
+STRUCTURE_MAP: Dict[str,str] = {
+	'prep': 'PP',
+	'pcomp': 'PP',
+	'relcl': 'RC',
+	'acl': 'CC', 
+}
+
+# list of valid distractor structures
+DISTRACTOR_STRUCTURES: List[str] = [
+	'CP',
+	'PP',
+]

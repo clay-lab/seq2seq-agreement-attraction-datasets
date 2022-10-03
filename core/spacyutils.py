@@ -668,6 +668,30 @@ class EDoc():
 		return any(self.main_subject_verb_distractors)
 	
 	@property
+	def main_subject_verb_distractor_structures(self) -> List[str]:
+		'''What structure is each distractor embedded in?'''
+		s_i = self.main_subject.i + 1
+		d 	= self.main_subject_verb_distractors
+		if d:
+			# use get here to deal with cases we haven't mapped yet
+			d_dep_seqs 	= [STRUCTURE_MAP.get(t.head.dep_, t.head.dep_) for t in d]
+			d_dep_seqs  = [
+							'multiple' 
+								if not all([dep == d_dep_seqs[i] for dep in d_dep_seqs[:i]]) 
+								else d_dep_seqs[i] 
+							for i, _ in enumerate(d_dep_seqs)
+						]
+			
+			return d_dep_seqs
+	
+	@property
+	def main_subject_verb_final_distractor_structure(self) -> str:
+		'''What structure is the final distractor embedded in?'''
+		d = self.main_subject_verb_distractor_structures
+		if d:
+			return d[-1]	
+	
+	@property
 	def main_subject_verb_distractors_determiners(self) -> List[EToken]:
 		'''
 		Get the determiners for the interveners
