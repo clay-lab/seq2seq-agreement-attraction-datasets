@@ -14,7 +14,7 @@ from tqdm import tqdm
 from pprint import PrettyPrinter
 from typing import List, Callable, Tuple, Dict
 from datasets import load_dataset, Dataset
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from .spacyutils import nlp
 
@@ -23,6 +23,9 @@ split_sentences = spacy.load(
 	disable=['transformer', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner']
 )
 split_sentences.add_pipe('sentencizer')
+
+# after how many examples should we dump to disk?
+DUMP_FREQ = 1000
 
 def create_seq2seq_dataset(
 	dataset: str,
@@ -114,12 +117,8 @@ def create_seq2seq_dataset(
 						ex = ''
 						pass
 					
-					del ex
-					del parsed
-					ex = ''
-					
 				# dump to disk every so often so we don't run out of (V)RAM
-				if len(new_dataset) == 2500:
+				if len(new_dataset) == DUMP_FREQ:
 					mode = 'wt' if mode is None else 'at'
 					with gzip.open(file_name, mode, encoding='utf-8') as out_file:
 						for ex in new_dataset:
@@ -134,28 +133,39 @@ def create_seq2seq_dataset(
 					new_dataset  = []
 					new_metadata = []
 		
-		mode = 'wt' if mode is None else 'at'
-		print(f'Writing out dataset {name} ({split}).')
-		with gzip.open(file_name, mode, encoding='utf-8') as out_file:
-			for ex in tqdm(new_dataset):
-				json.dump(ex, out_file, ensure_ascii=False)
-				out_file.write('\n')
-		
-		print(f'Writing out metadata for {name} ({split}).')
-		with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
-			for m in tqdm(new_metadata):
-				json.dump(m, out_file, ensure_ascii=False)
-				out_file.write('\n')
-		
+		if new_dataset:
+			mode = 'wt' if mode is None else 'at'
+			print(f'Writing out dataset {name} ({split}).')
+			with gzip.open(file_name, mode, encoding='utf-8') as out_file:
+				for ex in tqdm(new_dataset):
+					json.dump(ex, out_file, ensure_ascii=False)
+					out_file.write('\n')
+			
+		if new_metadata:
+			print(f'Writing out metadata for {name} ({split}).')
+			with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
+				for m in tqdm(new_metadata):
+					json.dump(m, out_file, ensure_ascii=False)
+					out_file.write('\n')
+			
 		# print stats
 		with gzip.open(file_name, 'rt', encoding='utf-8') as in_file:
 			new_dataset = [json.loads(l.strip()) for l in in_file.readlines()]
 		
 		if 'prefix' in new_dataset[0]['translation']:
-			prefixes = [e['translation']['prefix'] for e in new_dataset]
-			unique_prefixes = set(prefixes)
-			for pfx in unique_prefixes:
-				print(f'{name} prop {pfx} examples: {len([p for p in prefixes if p == pfx])/len(prefixes):.4f}')
+			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
+			total = sum(prefixes.values())
+			prefixes = {k: v/total for k, v in prefixes.items()}
+			print('Pr. of each prefix:', ', '.join([': '.join([k,f'{v:.04f}']) for k, v in prefixes.items()]))
+		
+		with gzip.open(metadata_name, 'rt', encoding='utf-8') as in_file:
+			new_metadata = [json.loads(l.strip()) for l in in_file.readlines()]
+		
+		for k in new_metadata[0]:
+			all_ks = Counter([m[k] for m in new_metadata])
+			total = sum(all_ks.values())
+			all_ks = {k: v/total for k, v in all_ks.items()}
+			print(f'Pr. of each {k}:', ', '.join([': '.join([k,f'{v:.04f}']) for k, v in all_ks.items()]))	
 
 def get_random_sentence(
 	dataset: Dataset, 
