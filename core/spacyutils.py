@@ -543,6 +543,17 @@ class EDoc():
 			return s.get_morph('Number')
 	
 	@property
+	def _main_subject_index(self):
+		'''What is the final index of the main subject?'''
+		s = self.main_subject
+		if isinstance(s, list):
+			s_loc = max([subj.i for subj in s]) + 1
+		else:
+			s_loc = s.i + 1
+		
+		return s_loc
+	
+	@property
 	def has_singular_main_subject(self) -> str:
 		'''Is the main subject singular?'''
 		return self.main_subject_number == 'Sing'
@@ -630,12 +641,7 @@ class EDoc():
 		intervene between the head noun(s)
 		of the main subject and the main verb.
 		'''
-		s = self.main_subject
-		if isinstance(s, list):
-			s_loc = max([subj.i for subj in s]) + 1
-		else:
-			s_loc = s.i + 1
-		
+		s_loc = self._main_subject_index
 		v_loc = self.main_verb.i
 		interveners = [EToken(t) for t in self[s_loc:v_loc] if t.pos_ == 'NOUN']
 		
@@ -670,7 +676,7 @@ class EDoc():
 	@property
 	def main_subject_verb_distractor_structures(self) -> List[str]:
 		'''What structure is each distractor embedded in?'''
-		s_i = self.main_subject.i + 1
+		s_i = self._main_subject_index
 		d 	= self.main_subject_verb_distractors
 		if d:
 			# use get here to deal with cases we haven't mapped yet
