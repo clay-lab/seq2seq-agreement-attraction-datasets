@@ -95,7 +95,7 @@ def create_seq2seq_dataset(
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
-		mode = 'wt'
+		mode = None
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		
 		with tqdm(range(n)) as pbar:
@@ -115,8 +115,8 @@ def create_seq2seq_dataset(
 						pass
 					
 				# dump to disk every so often so we don't run out of (V)RAM
-				if i > 1 and (i - 1) % 2500 == 0:
-					mode = 'at' if i > 2501 else mode
+				if len(new_dataset) == 2500:
+					mode = 'wt' if mode is None else 'at'
 					with gzip.open(file_name, mode, encoding='utf-8') as out_file:
 						for ex in new_dataset:
 							json.dump(ex, out_file, ensure_ascii=False)
@@ -130,6 +130,7 @@ def create_seq2seq_dataset(
 					new_dataset  = []
 					new_metadata = []
 		
+		mode = 'wt' if mode is None else 'at'
 		print(f'Writing out dataset {name} ({split}).')
 		with gzip.open(file_name, mode, encoding='utf-8') as out_file:
 			for ex in tqdm(new_dataset):
