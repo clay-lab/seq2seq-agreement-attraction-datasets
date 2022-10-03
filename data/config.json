@@ -2,7 +2,6 @@
 	"sources": {
 		"wikipedia": {
 			"dataset_args": ["20200501.en"],
-			"dataset_kwargs": {},
 			"names": {
 				"en_wiki-nodist-pres-and-past": {
 					"conditions": "core.language_funs.en.grammar_funs.no_dist_conditions",
@@ -14,17 +13,17 @@
 						"train": "core.language_funs.en.grammar_funs.pres_or_past",
 						"dev": "core.language_funs.en.grammar_funs.pres_or_past"
 					},
-					"splits_funs_args": {},
 					"splits_funs_kwargs": {
 						"train": {"pres_p": 0.5},
 						"dev"  : {"pres_p": 0.5}
 					},
-					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata",
-					"metadata_fun_args": [],
-					"metadata_fun_kwargs": {}
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata"
 				}
 			}
 		}
 	},
-	"pairs": [["en_wiki-nodist-pres-and-past", "en_RC_PP-dist-pres"]]
+	"pairs": [
+		["en_wiki-nodist-pres-and-past", "en_RC_PP-dist-pres"],
+		["en_wiki-nodist-pres-and-past", "en_RC_PP_gen-dist-pres"]
+	]
 }

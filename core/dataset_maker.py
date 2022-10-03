@@ -53,6 +53,7 @@ def create_seq2seq_dataset(
 	metadata_fun: Callable = None,
 	metadata_fun_args: Tuple = None,
 	metadata_fun_kwargs: Dict = None,
+	dump_freq: int = DUMP_FREQ,
 ) -> None:
 	'''
 	Create a dataset for seq2seq models
@@ -75,7 +76,8 @@ def create_seq2seq_dataset(
 			splits_funs (dict)			: mapping between split names and additional functions to perform on the
 										  sentence (parsed with core_en_web_trf)
 			splits_funs_args (dict)		: mapping between split names and additional args to for splits_funs[split]
-			splits_funs_kwargs (dict)	: additional arguments to pass to the function used on each example							
+			splits_funs_kwargs (dict)	: additional arguments to pass to the function used on each example
+							
 	'''
 	name 				= name if name is not None else dataset
 	dataset_args 		= () if not dataset_args else dataset_args
@@ -235,22 +237,23 @@ def create_datasets_from_config(
 	config = load_config(config) if config is None or isinstance(config,str) else config
 		
 	for dataset in config['sources']:
-		dataset_args 	= config['sources'][dataset]['dataset_args']
-		dataset_kwargs 	= config['sources'][dataset]['dataset_kwargs']
+		dataset_args 	= config['sources'][dataset].get('dataset_args', [])
+		dataset_kwargs 	= config['sources'][dataset].get('dataset_kwargs', {})
 		
 		for name in config['sources'][dataset]['names']:
 			print(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
 			
 			# unpack the config
-			conditions 			= config['sources'][dataset]['names'][name]['conditions']
+			conditions 			= config['sources'][dataset]['names'][name].get('conditions', lambda *args, **kwargs: True)
 			conditions 			= [conditions] if isinstance(conditions, str) else conditions
 			splits 				= config['sources'][dataset]['names'][name]['splits']
 			splits_funs 		= config['sources'][dataset]['names'][name]['splits_funs']
-			splits_funs_args 	= config['sources'][dataset]['names'][name]['splits_funs_args']
-			splits_funs_kwargs 	= config['sources'][dataset]['names'][name]['splits_funs_kwargs']
+			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', {})
+			splits_funs_kwargs 	= config['sources'][dataset]['names'][name].get('splits_funs_kwargs', {})
 			metadata_fun 		= config['sources'][dataset]['names'][name]['metadata_fun']
-			metadata_fun_args 	= config['sources'][dataset]['names'][name]['metadata_fun_args']
-			metadata_fun_kwargs = config['sources'][dataset]['names'][name]['metadata_fun_kwargs']
+			metadata_fun_args 	= config['sources'][dataset]['names'][name].get('metadata_fun_args', [])
+			metadata_fun_kwargs = config['sources'][dataset]['names'][name].get('metadata_fun_kwargs', {})
+			dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
 							
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects
