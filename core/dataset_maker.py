@@ -123,8 +123,10 @@ def create_seq2seq_dataset(
 						pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
 						new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
 						new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
-					except Exception:
+					except Exception as e:
 						print(f'Example "{ex}" ran into an error!')
+						print(str(e))
+						breakpoint()
 						ex = ''
 						pass
 					
