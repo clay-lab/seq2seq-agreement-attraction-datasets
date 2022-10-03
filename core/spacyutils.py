@@ -535,6 +535,10 @@ class EDoc():
 			# clausal subjects are not correctly associated
 			# with a Singular number feature
 			return 'Sing'
+		# when 'some' is a det, it can be singular or plural
+		# but when it is the head noun, it should be plural
+		elif self.main_subject.text in ['Some', 'some'] and self.main_subject.dep_ != 'det':
+			return 'Plur'
 		else:
 			return s.get_morph('Number')
 	
@@ -577,10 +581,21 @@ class EDoc():
 				return 'Sing'
 			# this happens in weird cases like
 			# "the best thing were the movies we watched..."
+			# or partitives "Some of the best people were..."
 			# in this case, we just go with the verb number if possible
+			# since that is less likely to be errorful.
 			# otherwise, choose the first number feature that exists
 			# in a subject noun. If none exists, raise ValueError
 			else:
+				# this currently covers cases like "some of the (schools are/group is) unsure..."
+				if s[0].text in PARTITIVES:
+					# s[0].children == [of], so we get the children of that
+					head_noun = s[0].children[0].children
+					if len(head_noun) == 1:
+						return head_noun[0].get_morph('Number')
+					else:
+						return self._get_list_subject_number(head_noun)
+						
 				if self.main_verb.get_morph('Number'):
 					return self.main_verb.get_morph('Number')
 				

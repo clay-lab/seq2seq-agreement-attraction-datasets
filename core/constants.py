@@ -4,7 +4,7 @@ codify certain kinds of dependencies
 and make up for some deficiencies of
 pattern.en
 '''
-from typing import Set, Dict
+from typing import Set, Dict, List
 
 from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
@@ -67,4 +67,14 @@ PLURALIZE_MAP: Dict[str,str] = {
 INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'was' : {'Number': 'Sing'},
 	'were': {'Number': 'Plur'},
+	'is'  : {'Number': 'Sing'},
+	'are' : {'Number': 'Plur'},
 }
+
+# partitives are things where the head noun of the subject
+# is NOT what the verb is supposed to agree with
+# note that this does not necessarily cover all actual partitives
+PARTITIVES: List[str] = [
+	'Some',
+	'some',
+]

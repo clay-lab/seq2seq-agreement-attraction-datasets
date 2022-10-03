@@ -2,7 +2,11 @@
 Defines a with statement to use to timeout a 
 function that might hang.
 '''
+import os
 import signal
+import logging
+
+log = logging.getLogger(__name__)
 
 class timeout:
 	def __init__(self, seconds=120, error_message='Timeout'):
@@ -13,8 +17,12 @@ class timeout:
 		raise TimeoutError(self.error_message)
 	
 	def __enter__(self):
-		signal.signal(signal.SIGALRM, self.handle_timeout)
-		signal.alarm(self.seconds)
+		if os.name != 'nt':
+			signal.signal(signal.SIGALRM, self.handle_timeout)
+			signal.alarm(self.seconds)
+		else:
+			log.warn('WARNING: Timeout is not supported on Windows.')
 	
 	def __exit__(self, type, value, traceback):
-		signal.alarm(0)
+		if os.name != 'nt':
+			signal.alarm(0)
