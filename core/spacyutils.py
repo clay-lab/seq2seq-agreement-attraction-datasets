@@ -250,7 +250,7 @@ class EToken():
 		c_kwargs = dict(number=NUMBER_MAP[number], tense=TENSE_MAP[tense])
 		c_kwargs = {k: v for k, v in c_kwargs.items() if v is not None}
 		c_kwargs = {**c_kwargs, **kwargs}
-		breakpoint()
+		
 		self.text = conjugate(self.text, **c_kwargs)
 		
 		n = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
