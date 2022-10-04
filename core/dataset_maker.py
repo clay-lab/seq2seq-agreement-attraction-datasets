@@ -142,11 +142,11 @@ def create_seq2seq_dataset(
 						pass
 				
 				if len(new_dataset) % max(1,round(DUMP_FREQ/10)) == 0:
-					log.warning('')
-					log.warning(f'len of new_dataset: {len(new_dataset)}')
-					log.warning(f'mem usage of new_dataset:  {(asizeof(new_dataset)/1024/1024/1024):.02f} GB')
-					log.warning(f'mem usage of new_metadata: {(asizeof(new_metadata)/1024/1024/1024):.02f} GB')
-					log.warning('')
+					log.warning('\n')
+					log.warning(f'\nlen of new_dataset: {len(new_dataset)}')
+					log.warning(f'\nmem usage of new_dataset:  {(asizeof(new_dataset)/1024/1024/1024):.02f} GB')
+					log.warning(f'\nmem usage of new_metadata: {(asizeof(new_metadata)/1024/1024/1024):.02f} GB')
+					log.warning('\n')
 				
 				# dump to disk every so often so we don't run out of (V)RAM
 				if len(new_dataset) == DUMP_FREQ:
