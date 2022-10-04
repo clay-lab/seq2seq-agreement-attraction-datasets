@@ -1,11 +1,14 @@
 import re
 import string
 import random
+import logging
 
 from typing import Dict
 
 from ..language_funs import string_conditions
 from ...spacyutils import nlp, EDoc
+
+log = logging.getLogger(__name__)
 
 def no_dist_conditions(s: str) -> bool:
 	'''
@@ -33,25 +36,33 @@ def no_dist_conditions(s: str) -> bool:
 			return False
 	
 	# now we have to parse
-	s = nlp(s)
-	
-	# if the root is not a verb, we don't want it
-	if not s.root_is_verb:
+	try:
+		s = nlp(s)
+		
+		# if the root is not a verb, we don't want it
+		if not s.root_is_verb:
+			return False
+		
+		# if there is no subject, we don't want it
+		if not s.has_main_subject:
+			return False
+		
+		# if the main verb cannot be inflected, we don't want it
+		if not s.main_verb.can_be_inflected:
+			return False
+		
+		# if there are distractors, we don't want it for training
+		if s.has_main_subject_verb_distractors:
+			return False
+		
+		return s
+	except KeyboardInterrupt:
+		sys.exit('User terminated program.')	
+	except Exception as e:
+		log.warn(f'Example {s} ran into an error!:\n\n')
+		log.warn(traceback.format_exc())
+		log.warn('\n\n')
 		return False
-	
-	# if there is no subject, we don't want it
-	if not s.has_main_subject:
-		return False
-	
-	# if the main verb cannot be inflected, we don't want it
-	if not s.main_verb.can_be_inflected:
-		return False
-	
-	# if there are distractors, we don't want it for training
-	if s.has_main_subject_verb_distractors:
-		return False
-	
-	return True
 
 def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
 	'''Generate a present tense or past tense pair, with p(past-to-pres) = pres_p.'''

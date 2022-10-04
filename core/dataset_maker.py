@@ -14,7 +14,7 @@ import random
 import logging
 import traceback
 
-from pympler.asizeof import asizeof
+from pympler import muppy, summary
 
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -25,6 +25,7 @@ from collections import defaultdict, Counter
 
 from .spacyutils import nlp
 
+logging.basicConfig(encoding='utf-8', level=logging.INFO)
 log = logging.getLogger(__name__)
 
 split_sentences = spacy.load(
@@ -76,8 +77,8 @@ def create_seq2seq_dataset(
 			dataset_kwargs (dict)		: additional arguments to pass to load_dataset for each dataset
 			name (str)					: what to name the dataset. if not specified, a default name based
 										  on the huggingface name will be used
-			conditions (List[callable])	: a list of functions to apply to each sentence.
-										  all must be true for a sentence to be included
+			conditions_fun (callable)	: a function to apply to each sentence.
+										  must return an EDoc or False.
 			metadata_fun (callable)		: used to get metadata for a sentences parsed with spaCy
 			metadata_fun_args (Tuple)	: args for metadata_fun
 			metadata_fun_kwargs (Dict)	: kwargs for metadata_fun
@@ -92,7 +93,7 @@ def create_seq2seq_dataset(
 	dataset_args 		= () if not dataset_args else dataset_args
 	dataset_kwargs 		= {} if not dataset_kwargs else dataset_kwargs
 	
-	conditions 			= [] if conditions is None else conditions
+	conditions 			= [lambda s: nlp(s)] if conditions is None else conditions
 	
 	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if not splits_funs else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
@@ -128,10 +129,10 @@ def create_seq2seq_dataset(
 				for i in pbar:
 					ex = ''
 					while not ex:
-						ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
-						parsed 					=  nlp(ex)
+						ex = get_random_parsed_sentence(dataset['train'], conditions=conditions_fun)
 						try:
-							pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
+							pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
+							
 							json.dump({'translation': {k: str(v) for k, v in pair.items()}}, dset_out, ensure_ascii=False)
 							dset_out.write('\n')
 							
@@ -140,12 +141,17 @@ def create_seq2seq_dataset(
 						except KeyboardInterrupt:
 							sys.exit('User terminated program.')
 						except Exception as e:
-							print(f'Example "{ex}" ran into an error!:\n\n')
-							print(traceback.format_exc())
-							print('\n\n')
+							log.warn(f'Example "{ex}" ran into an error!:\n\n')
+							log.warn(traceback.format_exc())
+							log.warn('\n\n')
 							ex = ''
 							pass
-				
+					
+					# debugging oom error
+					if i % 1000 == 0 and i > 0:
+						sum1 = summary.summarize(muppy.get_objects())
+						summary.print_(sum1)
+						
 				# # dump to disk every so often so we don't run out of (V)RAM
 				# 	mode = 'wt' if mode is None else 'at'
 				# 	with gzip.open(file_name, mode, encoding='utf-8') as out_file:
@@ -189,7 +195,7 @@ def create_seq2seq_dataset(
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
 			prefixes = {k: v/total for k, v in prefixes.items()}
-			print('Pr. of each prefix:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in prefixes.items()]))
+			log.info('Pr. of each prefix:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in prefixes.items()]))
 		
 		with gzip.open(metadata_name, 'rt', encoding='utf-8') as in_file:
 			new_metadata = [json.loads(l.strip()) for l in in_file.readlines()]
@@ -198,22 +204,24 @@ def create_seq2seq_dataset(
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
 			all_ks = {k: v/total for k, v in all_ks.items()}
-			print(f'Pr. of each {k}:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in all_ks.items()]))	
+			log.info(f'Pr. of each {k}:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in all_ks.items()]))	
 
-def get_random_sentence(
+def get_random_parsed_sentence(
 	dataset: Dataset, 
-	conditions: List[Callable] = None,
+	conditions_fun: Callable = None,
 ) -> str:
 	'''
 	Returns a random example from the dataset.
 	
 		params:
 			dataset (Dataset)			: a Dataset to draw a random example from
-			conditions (list[callable])	: a list of functions to apply to a sentence.
-										  all must be true for a sentence to be included
+			conditions_fun (Callable)	: a function to apply to a sentence that can filter
+										  out unwanted examples. in case the sentence
+										  passes all checks, it should return the parsed sentence
+										  as an EDoc, else False
 		
 		returns:
-			str 				: a random sentence pulled from the dataset
+			EDoc 						: a random sentence pulled from the dataset, parsed
 	'''
 	conditions = [conditions] if not isinstance(conditions,list) else conditions
 	
@@ -236,7 +244,7 @@ def get_random_sentence(
 		while '  ' in s:
 			s = s.replace('  ', ' ')
 		
-		if all(c(s) for c in conditions):
+		if (s := conditions_fun(s)):
 			e = s
 		
 	return e
@@ -263,11 +271,11 @@ def create_datasets_from_config(
 		dataset_kwargs 	= config['sources'][dataset].get('dataset_kwargs', {})
 		
 		for name in config['sources'][dataset]['names']:
-			print(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
+			log.info(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
 			
 			# unpack the config
-			conditions 			= config['sources'][dataset]['names'][name].get('conditions', lambda *args, **kwargs: True)
-			conditions 			= [conditions] if isinstance(conditions, str) else conditions
+			conditions_fun		= config['sources'][dataset]['names'][name].get('conditions_fun', [lambda s: nlp(s)])
+			conditions_fun		= [conditions_fun] if isinstance(conditions_fun, str) else conditions_fun
 			splits 				= config['sources'][dataset]['names'][name]['splits']
 			splits_funs 		= config['sources'][dataset]['names'][name]['splits_funs']
 			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', {})
@@ -301,7 +309,7 @@ def create_datasets_from_config(
 				dataset_args=dataset_args,
 				dataset_kwargs=dataset_kwargs,
 				name=name,
-				conditions=conditions,
+				conditions_fun=conditions_fun,
 				splits=splits,
 				splits_funs=splits_funs,
 				splits_funs_args=splits_funs_args,
@@ -312,7 +320,7 @@ def create_datasets_from_config(
 				# dump_freq=dump_freq,
 			)
 			
-			print('')
+			log.info('')
 	
 	create_t5_scripts(config, **kwargs)
 
