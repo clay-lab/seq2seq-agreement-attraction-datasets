@@ -662,28 +662,28 @@ class EDoc():
 			# s[0].children == [of], so we get the children of that
 			head_noun = s.children[0].children
 			return process_head_noun(head_noun)
-		
 		# this covers cases like "a lot of people are/the money is"
 		# this is surprisingly tricky to do straightforwardly!
+		# this code is ugly :\
 		if s.text in PARTITIVES_WITH_INDEFINITE_ONLY:
 			s_det = [t for t in s.children if t.dep_ == 'det']
-			if s_det:
-				s_det = s_det[0]
-				if s_det.get_morph('Definite') == 'Ind':
+			if s_det and s_det[0].get_morph('Definite') == 'Ind':
+				s_chi = [t for t in s.children if t.dep_ != 'det']
+				if s_chi:
 					# first child not != 'det' is 'of', so get the children of that
-					s_chi = [t for t in s.children if t.dep_ != 'det'][0].children
+					s_chi = s_chi[0].children
 					if s_chi:
 						return process_head_noun(s_chi)
 					else:
-						process_default(s)
+						return process_default(s)
 				else:
-					process_default(s)
+					return process_default(s)
 			else:
-				raise ParseError(f'No determiner was found for {s}! ({self})')
+				return process_default(s)
 		
 		raise ValueError(
 			"_get_partitive_subject_number should only "
-			"be called with a subject that is a partitive!"
+			"be called with a subject that could be a partitive!"
 		)
 	
 	def _get_list_subject_number(self, s: List[EToken]) -> str:

@@ -2,6 +2,7 @@ import re
 import string
 import random
 import logging
+import traceback
 
 from typing import Dict
 
@@ -59,7 +60,7 @@ def no_dist_conditions(s: str) -> bool:
 	except KeyboardInterrupt:
 		sys.exit('User terminated program.')	
 	except Exception as e:
-		log.warn(f'Example {s} ran into an error!:\n\n')
+		log.warn(f'\n\nExample {s} ran into an error!:\n\n')
 		log.warn(traceback.format_exc())
 		log.warn('\n\n')
 		return False
