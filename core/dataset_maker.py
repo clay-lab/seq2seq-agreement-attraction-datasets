@@ -150,7 +150,7 @@ def create_seq2seq_dataset(
 							pass
 					
 					# debugging oom error
-					if i % 1000 == 0 and i > 0:
+					if i % 100 == 0 and i > 0:
 						sum1 = summary.summarize(muppy.get_objects())
 						for line in summary.format_(sum1):
 							log.warning(line)
