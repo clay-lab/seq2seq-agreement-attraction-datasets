@@ -44,6 +44,8 @@ split_sentences.add_pipe('sentencizer')
 DONT_PRINT: List[str] = [
 	'pos_sequence',
 	'tag_sequence',
+	'src_history',
+	'tgt_history',
 ]
 
 def create_seq2seq_dataset(
@@ -264,6 +266,8 @@ def create_datasets_from_config(
 	
 	:outputs: see outputs of create_tense_datasets and combine_language_datasets_for_tense.
 	'''
+	
+	breakpoint()
 	config = load_config(config) if config is None or isinstance(config,str) else config
 		
 	for dataset in config['sources']:

@@ -365,7 +365,7 @@ class EDoc():
 	@property
 	def history(self) -> None:
 		'''Print a string representation of the EDoc's history.'''
-		print(f'{self._history}\n--> {self}')
+		print(self._history.replace(".", "\\\n    .") + f'\n--> {self}')
 	
 	@property
 	def _history(self) -> str:
@@ -373,7 +373,7 @@ class EDoc():
 		string = ''
 		if hasattr(self, 'caller'):
 			if hasattr(self, 'previous') and self.previous is not None:
-				string += f'{self.previous._history} \\\n    .'
+				string += f'{self.previous._history}.'
 			
 			string += f'{self.caller}{self.caller_args}'
 		

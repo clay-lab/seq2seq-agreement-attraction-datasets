@@ -16,6 +16,7 @@ def get_metadata(pair: Dict) -> Dict:
 	"""
 	source = pair['src']
 	prefix = pair['prefix']
+	target = pair['tgt']
 	
 	if source.has_main_subject_verb_interveners:
 		final_intervener_number = source.main_subject_verb_interveners[-1].get_morph('Number')
@@ -34,7 +35,9 @@ def get_metadata(pair: Dict) -> Dict:
 				final_distractor_structure=source.main_subject_verb_final_distractor_structure,
 				pos_sequence=source.pos_seq,
 				tag_sequence=source.tag_seq,
-				tense=prefix
+				tense=prefix,
+				src_history=source._history,
+				tgt_history=target._history,
 			)
 	
 	return metadata
