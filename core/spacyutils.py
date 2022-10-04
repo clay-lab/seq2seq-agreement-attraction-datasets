@@ -365,7 +365,7 @@ class EDoc():
 	@property
 	def history(self) -> None:
 		'''Print a string representation of the EDoc's history.'''
-		print(self._history.replace(".", "\\\n    .") + f'\n--> {self}')
+		print(self._history.replace(").", ") \\\n    .") + f'\n--> {self}')
 	
 	@property
 	def _history(self) -> str:
