@@ -293,7 +293,7 @@ def create_datasets_from_config(
 		
 			for split in splits_funs:
 				if isinstance(splits_funs[split], str):
-					module = f.rsplit('.', 1)[0]
+					module = splits_funs[split].rsplit('.', 1)[0]
 					exec(f'import {module}')
 					splits_funs[split] = eval(splits_funs[split])
 			
