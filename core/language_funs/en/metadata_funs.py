@@ -4,15 +4,7 @@ def get_metadata(pair: Dict) -> Dict:
 	"""
 	Gets metadata about the passed example, consisting of a seq2seq mapping with a source, prefix, and target.
 	:param pair: a dict mapping the keys 'src', 'prefix', and 'tgt' to an EDoc, a str, and an EDoc, respectively.
-	:returns metadata: a dictionary recording the following properties for the example:
-					   - transitivity of the main verb (v_trans)
-					   - definiteness of main clause subject/object (subj_def, obj_def)
-					   - number of main clause subject/object (subj_num, obj_num)
-					   - the identity of the main auxiliary (main_aux)
-					   - how many adverbial clauses before the main clause
-					   - how many adverbial clauses after the main clause
-					   - the number of adverbial clauses
-					   - the PoS sequence of the source and target
+	:returns dict: a dictionary recording metadata for the source and target examples 
 	"""
 	source = pair['src']
 	prefix = pair['prefix']
