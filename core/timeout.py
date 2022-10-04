@@ -8,6 +8,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
+log.warn(
+	'WARNING: Timeout is not supported on Windows. '
+	'(This message will be shown once per session.)'
+)
+
 class timeout:
 	def __init__(self, seconds=120, error_message='Timeout'):
 		self.seconds = seconds
@@ -19,9 +24,7 @@ class timeout:
 	def __enter__(self):
 		if os.name != 'nt':
 			signal.signal(signal.SIGALRM, self.handle_timeout)
-			signal.alarm(self.seconds)
-		else:
-			log.warn('WARNING: Timeout is not supported on Windows.')
+			signal.alarm(self.seconds)			
 	
 	def __exit__(self, type, value, traceback):
 		if os.name != 'nt':

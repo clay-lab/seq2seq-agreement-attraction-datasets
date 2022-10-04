@@ -3,6 +3,8 @@ Useful wrappers for editing spaCy
 Some of this is adapted from 
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
+import inspect
+
 from typing import Union, List, Dict, Set
 from collections import Counter
 
@@ -274,14 +276,44 @@ class EDoc():
 	'''
 	Wrapper around spaCy Doc to implement useful methods.
 	'''
-	def __init__(self, Doc: Doc) -> 'EDoc':
+	def __init__(
+		self,
+		Doc: Doc = None, 
+		s: str = None, 
+		previous: 'EDoc' = None
+	) -> 'EDoc':
 		'''Creates an EDoc wrapper around a spaCy Doc.'''
+		if s is None and Doc is None:
+			raise ValueError('At least one of s or Doc must be specified!')
+		
+		if len(set([v for v in [s, Doc] if v is not None])) > 1:
+			raise ValueError('At most one of s or Doc may be specified!')
+		
+		if s is not None:
+			Doc = nlp_(s)
+		
 		self.doc = Doc
 		self.vocab = Doc.vocab
 		self.user_data = Doc.user_data
-	
+		self.previous = previous
+		
+		# keep the history so we can recreate this object exactly
+		# but get it in an informative way that excludes the mostly internal functions
+		stack = inspect.stack()
+		
+		most_recent_call_from_outside_self = [s.function in dir(self) for s in stack].index(False) - 1
+		if stack[most_recent_call_from_outside_self].function == '__init__':
+			most_recent_call_from_outside_self += 1
+		
+		stack = stack[most_recent_call_from_outside_self]
+		caller_args = inspect.getargvalues(stack.frame)
+		non_self_args = inspect.formatargvalues(*[arg if not arg == ['self'] else [] for arg in caller_args])
+		
+		self.caller_args = non_self_args
+		self.caller = stack.function
+			
 	def __repr__(self) -> str:
-		'''Returns the sentence text of the Doc.'''
+		'''Returns a string representation of the EDoc.'''
 		return self.__str__()
 	
 	def __str__(self) -> str:
@@ -326,6 +358,23 @@ class EDoc():
 			"To set a value, use copy_with_replace"
 			"(tokens, indices) instead to create a new EDoc."
 		))
+	
+	@property
+	def history(self) -> None:
+		'''Print a string representation of the EDoc's history.'''
+		print(f'{self._history}\n--> {self}')
+	
+	@property
+	def _history(self) -> str:
+		'''Get a string representation of the EDoc's history.'''
+		string = ''
+		if hasattr(self, 'caller'):
+			if hasattr(self, 'previous') and self.previous is not None:
+				string += f'{self.previous._history} \\\n    .'
+			
+			string += f'{self.caller}{self.caller_args}'
+		
+		return string
 	
 	# Main thing of importance: allows editing by
 	# returning a new spaCy doc that is identical to
@@ -386,10 +435,10 @@ class EDoc():
 			heads=heads,
 			deps=deps,
 			sent_starts=sent_starts,
-			ents=ents
+			ents=ents,
 		)
 		
-		return EDoc(new_s)		
+		return EDoc(new_s, previous=self)
 	
 	def _copy_with_remove(
 		self,
@@ -445,7 +494,7 @@ class EDoc():
 			ents=ents
 		)
 		
-		return EDoc(new_s)
+		return EDoc(new_s, previous=self)
 	
 	# CONVENIENCE PROPERTIES
 	@property
@@ -788,13 +837,25 @@ class EDoc():
 		tokens = []
 		
 		s = edoc.main_subject
-		s.renumber(number=number)
-		tokens.append(s)
+		# at this point, it's because we have a copular sentence,
+		# so renumber all args. conjunctions were removed above
+		if isinstance(s,list):
+			for t in s:
+				t.renumber(number=number)
+				tokens.append(t)
+		else:
+			s.renumber(number=number)
+			tokens.append(s)
 		
 		d = edoc.main_subject_determiner
 		if d:
-			d.renumber(number=number)
-			tokens.append(d)
+			if isinstance(d,list):
+				for t in d:
+					t.renumber(number=number)
+					tokens.append(t)
+			else:
+				d.renumber(number=number)
+				tokens.append(d)
 		
 		v = edoc.main_verb
 		v.reinflect(number=number)
