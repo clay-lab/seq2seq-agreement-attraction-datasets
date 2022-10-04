@@ -11,15 +11,21 @@ import json
 import gzip
 import spacy
 import random
+import logging
 import traceback
 
+from pympler.asizeof import asizeof
+
 from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 from pprint import PrettyPrinter
 from typing import List, Callable, Tuple, Dict
 from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
 
 from .spacyutils import nlp
+
+log = logging.getLogger(__name__)
 
 split_sentences = spacy.load(
 	'en_core_web_trf', 
@@ -115,7 +121,7 @@ def create_seq2seq_dataset(
 		mode = None
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		
-		with tqdm(range(n)) as pbar:
+		with tqdm(range(n)) as pbar, logging_redirect_tqdm():
 			pbar.set_postfix(split=split)
 			for i in pbar:
 				ex = ''
@@ -134,7 +140,14 @@ def create_seq2seq_dataset(
 						print('\n\n')
 						ex = ''
 						pass
-					
+				
+				if len(new_dataset) % max(1,round(DUMP_FREQ/10)) == 0:
+					log.warning('')
+					log.warning(f'len of new_dataset: {len(new_dataset)}')
+					log.warning(f'mem usage of new_dataset:  {(asizeof(new_dataset)/1024/1024/1024):.02f} GB')
+					log.warning(f'mem usage of new_metadata: {(asizeof(new_metadata)/1024/1024/1024):.02f} GB')
+					log.warning('')
+				
 				# dump to disk every so often so we don't run out of (V)RAM
 				if len(new_dataset) == DUMP_FREQ:
 					mode = 'wt' if mode is None else 'at'
