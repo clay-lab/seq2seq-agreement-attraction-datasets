@@ -143,16 +143,17 @@ def create_seq2seq_dataset(
 						except KeyboardInterrupt:
 							sys.exit('User terminated program.')
 						except Exception as e:
-							log.warn(f'Example "{ex}" ran into an error!:\n\n')
-							log.warn(traceback.format_exc())
-							log.warn('\n\n')
+							log.warning(f'Example "{ex}" ran into an error!:\n\n')
+							log.warning(traceback.format_exc())
+							log.warning('\n\n')
 							ex = ''
 							pass
 					
 					# debugging oom error
 					if i % 1000 == 0 and i > 0:
 						sum1 = summary.summarize(muppy.get_objects())
-						summary.print_(sum1)
+						for line in summary.format_(sum1):
+							log.warning(line)
 						
 				# # dump to disk every so often so we don't run out of (V)RAM
 				# 	mode = 'wt' if mode is None else 'at'

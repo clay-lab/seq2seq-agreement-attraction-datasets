@@ -60,9 +60,9 @@ def no_dist_conditions(s: str) -> bool:
 	except KeyboardInterrupt:
 		sys.exit('User terminated program.')	
 	except Exception as e:
-		log.warn(f'\n\nExample {s} ran into an error!:\n\n')
-		log.warn(traceback.format_exc())
-		log.warn('\n\n')
+		log.warning(f'\n\nExample {s} ran into an error!:\n\n')
+		log.warning(traceback.format_exc())
+		log.warning('\n\n')
 		return False
 
 def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:

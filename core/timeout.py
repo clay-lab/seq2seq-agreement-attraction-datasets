@@ -9,7 +9,7 @@ import logging
 log = logging.getLogger(__name__)
 
 if os.name == 'nt':
-	log.warn(
+	log.warning(
 		'WARNING: Timeout is not supported on Windows. '
 		'(This message will be shown once per session.)'
 	)
