@@ -583,14 +583,16 @@ class EDoc():
 		
 		if isinstance(s,list) and len(s) > 1:
 			return self._get_list_subject_number(s)
-		elif self.main_subject.dep_ in ['csubj', 'csubjpass']:
+		elif s.dep_ in ['csubj', 'csubjpass']:
 			# clausal subjects are not correctly associated
 			# with a Singular number feature
 			return 'Sing'
 		# when 'some' is a det, it can be singular or plural
 		# but when it is the head noun, it should be plural
-		elif self.main_subject.text in ['Some', 'some'] and self.main_subject.dep_ != 'det':
+		elif s.text in ['Some', 'some'] and s.dep_ != 'det':
 			return 'Plur'
+		elif s.text in ALL_PARTITIVES:
+			return self._get_partitive_subject_number(s)
 		else:
 			return s.get_morph('Number')
 	
@@ -625,6 +627,65 @@ class EDoc():
 		
 		return False
 	
+	def _get_partitive_subject_number(self, s: EToken) -> str:
+		'''Returns the number of a partitive subject.'''
+		# this currently covers cases like "some of the (schools are/group is) unsure..."
+		def process_head_noun(head_noun: EToken) -> str:
+			'''
+			If there is a single head noun,
+			return its number morph. Otherwise,
+			get the number feature of the multiple
+			head nouns.
+			'''
+			if len(head_noun) == 1:
+				return head_noun[0].get_morph('Number')
+			else:
+				return self._get_list_subject_number(head_noun)
+		
+		def process_default(s: EToken) -> str:
+			'''
+			If we can't find the special things that make
+			partitives partitives, we do some default processing
+			here. Return the number of the token if it exists,
+			otherwise assume singular.
+			'''
+			if s.get_morph('Number'):
+				return s.get_morph('Number')
+			else:
+				log.warn(
+					f'No number feature for "{s}" was found! '
+					 "I'm going to guess it's singular, but this may be wrong!"
+				)
+				return 'Sing'
+		
+		if s.text in PARTITIVES:
+			# s[0].children == [of], so we get the children of that
+			head_noun = s.children[0].children
+			return process_head_noun(head_noun)
+		
+		# this covers cases like "a lot of people are/the money is"
+		# this is surprisingly tricky to do straightforwardly!
+		if s.text in PARTITIVES_WITH_INDEFINITE_ONLY:
+			s_det = [t for t in s.children if t.dep_ == 'det']
+			if s_det:
+				s_det = s_det[0]
+				if s_det.get_morph('Definite') == 'Ind':
+					# first child not != 'det' is 'of', so get the children of that
+					s_chi = [t for t in s.children if t.dep_ != 'det'][0].children
+					if s_chi:
+						return process_head_noun(s_chi)
+					else:
+						process_default(s)
+				else:
+					process_default(s)
+			else:
+				raise ParseError(f'No determiner was found for {s}! ({self})')
+		
+		raise ValueError(
+			"_get_partitive_subject_number should only "
+			"be called with a subject that is a partitive!"
+		)
+	
 	def _get_list_subject_number(self, s: List[EToken]) -> str:
 		'''
 		We call this to get the number of the subject when
@@ -650,15 +711,9 @@ class EDoc():
 			# otherwise, choose the first number feature that exists
 			# in a subject noun. If none exists, raise ValueError
 			else:
-				# this currently covers cases like "some of the (schools are/group is) unsure..."
-				if s[0].text in PARTITIVES:
-					# s[0].children == [of], so we get the children of that
-					head_noun = s[0].children[0].children
-					if len(head_noun) == 1:
-						return head_noun[0].get_morph('Number')
-					else:
-						return self._get_list_subject_number(head_noun)
-						
+				if s[0].text in ALL_PARTITIVES:
+					return self._get_partitive_subject_number(s[0])
+				
 				if self.main_verb.get_morph('Number'):
 					return self.main_verb.get_morph('Number')
 				
@@ -836,6 +891,14 @@ class EDoc():
 		'''Renumber the main subject, along with its determiner and verb.'''
 		if self.has_conjoined_main_subject and NUMBER_MAP.get(number) == SG:
 			edoc = self._remove_conjunctions_to_main_subject()
+		elif (
+				self.main_subject.text in ALL_PARTITIVES and
+				self.has_main_subject_verb_distractors
+			):
+			# if there is a partitive subject and distractors,
+			# it means we are dealing with a plural partitive
+			# the best way around that is to delete the partitive
+			edoc = self._remove_partitive_from_main_subject()			
 		else:
 			edoc = self
 		
@@ -890,6 +953,46 @@ class EDoc():
 		range_to_remove = range(starting_index+1, remove_until+1)
 		
 		return self._copy_with_remove(indices=range_to_remove)
+	
+	def _remove_partitive_from_main_subject(self) -> 'EDoc':
+		'''
+		Return a copy of the current EDoc with all but the
+		first noun of a conjoined subject removed. Useful
+		when renumbering a sentence with a conjoined subject.
+		'''
+		# this is tricky because we sometimes want to keep the determiner
+		# and sometimes not:
+		#     a lot of people are --sing--> a person is (not 'person is')
+		#     a lot of the money is --sing--> the money is (not 'a money is')
+		# for now let's disallow this
+		raise NotImplementedError('Cannot currently renumber sentences with a partitive subject.')
+		
+		# if not self.main_subject.text in ALL_PARTITIVES:
+		# 	return self
+		
+		# s = self.main_subject
+		
+		# # remove tokens starting at this position
+		# starting_index 	= s.i
+		
+		# # get the children of the subject
+		# s_chi = [t for t in s.children if t.dep_ != 'det']
+		# if s_chi:
+		# 	s_chi = s_chi[0].children
+		
+		# if not s_chi:
+		# 	# if there are no children, it means the partitive
+		# 	# itself determines the number, so there's nothing to change
+		# 	return self
+		
+		# # until this position
+		# remove_until 	= min([t.i for t in s_chi]) - 1
+		
+		# # remove from one after the head of the conjP
+		# # until the final position to remove (range() is [x,y))
+		# range_to_remove = range(starting_index+1, remove_until+1)
+		
+		# return self._copy_with_remove(indices=range_to_remove)
 	
 	def singularize_main_subject(self) -> 'EDoc':
 		'''Make the main subject singular, and reinflect the verb.'''

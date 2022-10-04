@@ -74,10 +74,26 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 # partitives are things where the head noun of the subject
 # is NOT what the verb is supposed to agree with
 # note that this does not necessarily cover all actual partitives
-PARTITIVES: List[str] = [
+PARTITIVES: Set[str] = {
 	'Some',
 	'some',
-]
+}
+
+# these are partitives when they have an indefinite
+# determiner. Otherwise, they are normal nouns
+PARTITIVES_WITH_INDEFINITE_ONLY: Set[str] = {
+	'amount',
+	'group',
+	'lot',
+	'number',
+	'quantity',
+	'ton',
+}
+
+ALL_PARTITIVES: Set[str] = {
+	*PARTITIVES,
+	*PARTITIVES_WITH_INDEFINITE_ONLY
+}
 
 # maps some deps to others for purposes
 # of recording distractor structures
@@ -89,7 +105,7 @@ STRUCTURE_MAP: Dict[str,str] = {
 }
 
 # list of valid distractor structures
-DISTRACTOR_STRUCTURES: List[str] = [
+DISTRACTOR_STRUCTURES: Set[str] = {
 	'CP',
 	'PP',
-]
+}

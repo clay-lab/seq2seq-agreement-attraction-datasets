@@ -289,7 +289,7 @@ def create_datasets_from_config(
 							
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects
-			for i, f in enumerate(conditions):
+			for i, f in enumerate(conditions_fun):
 				if isinstance(f, str):
 					module = f.rsplit('.', 1)[0]
 					exec(f'import {module}')
