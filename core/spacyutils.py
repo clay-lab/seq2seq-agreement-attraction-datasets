@@ -4,6 +4,7 @@ Some of this is adapted from
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
 import inspect
+import logging
 
 from typing import Union, List, Dict, Set
 from collections import Counter
@@ -21,6 +22,8 @@ from pattern.en import PAST, PRESENT
 
 from .constants import *
 from .timeout import timeout
+
+log = logging.getLogger(__name__)
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
 
@@ -663,7 +666,8 @@ class EDoc():
 					if subj.get_morph('Number'):
 						return subj.get_morph('Number')
 				else:
-					raise ValueError(f'No token in {s} has a number feature!')
+					log.warn(f'No token in {s} has a number feature! ({self})')
+					return None
 		else:
 			# conjoined subjects (i.e., and, or, etc.)
 			return 'Plur'
