@@ -53,7 +53,7 @@ def create_seq2seq_dataset(
 	dataset_args: tuple = None,
 	dataset_kwargs: tuple = None,
 	name: str = None,
-	conditions_fun: List[Callable] = None,
+	conditions_fun: Callable = None,
 	splits: Dict[str,int] = dict(
 		train 	= 100000,
 		dev 	= 1000,
@@ -95,7 +95,7 @@ def create_seq2seq_dataset(
 	dataset_args 		= () if not dataset_args else dataset_args
 	dataset_kwargs 		= {} if not dataset_kwargs else dataset_kwargs
 	
-	conditions_fun 		= [lambda s: nlp(s)] if conditions_fun is None else conditions_fun
+	conditions_fun 		= (lambda s: nlp(s)) if conditions_fun is None else conditions_fun
 	
 	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if not splits_funs else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
@@ -225,8 +225,6 @@ def get_random_parsed_sentence(
 		returns:
 			EDoc 						: a random sentence pulled from the dataset, parsed
 	'''
-	conditions_fun = [conditions_fun] if not isinstance(conditions_fun,list) else conditions_fun
-	
 	e = ''
 	while not e:
 		# pick a random example/page
@@ -276,8 +274,7 @@ def create_datasets_from_config(
 			log.info(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
 			
 			# unpack the config
-			conditions_fun		= config['sources'][dataset]['names'][name].get('conditions_fun', [lambda s: nlp(s)])
-			conditions_fun		= [conditions_fun] if isinstance(conditions_fun, str) else conditions_fun
+			conditions_fun		= config['sources'][dataset]['names'][name].get('conditions_fun', lambda s: nlp(s))
 			splits 				= config['sources'][dataset]['names'][name]['splits']
 			splits_funs 		= config['sources'][dataset]['names'][name]['splits_funs']
 			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', {})
@@ -289,12 +286,11 @@ def create_datasets_from_config(
 							
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects
-			for i, f in enumerate(conditions_fun):
-				if isinstance(f, str):
-					module = f.rsplit('.', 1)[0]
-					exec(f'import {module}')
-					conditions_fun[i] = eval(f)
-			
+			if isinstance(conditions_fun, str):
+				module = conditions_fun.rsplit('.', 1)[0]
+				exec(f'import {module}')
+				conditions_fun = eval(conditions_fun)
+		
 			for split in splits_funs:
 				if isinstance(splits_funs[split], str):
 					module = f.rsplit('.', 1)[0]
