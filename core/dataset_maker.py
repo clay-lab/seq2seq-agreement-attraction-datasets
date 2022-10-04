@@ -5,6 +5,7 @@
 # like you have a lot of extra disk space you'd like to fill up
 import os
 import re
+import gc
 import sys
 import json
 import gzip
@@ -146,6 +147,11 @@ def create_seq2seq_dataset(
 						for m in new_metadata:
 							json.dump(m, out_file, ensure_ascii=False)
 							out_file.write('\n')
+					
+					# OOM errors
+					del new_dataset
+					del new_metadata
+					gc.collect()
 					
 					new_dataset  = []
 					new_metadata = []
