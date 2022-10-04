@@ -667,7 +667,8 @@ class EDoc():
 						return subj.get_morph('Number')
 				else:
 					log.warn(f'No token in {s} has a number feature! ({self})')
-					return None
+					log.warn("I'm going to guess it's singular, but this may be wrong!")
+					return 'Sing'
 		else:
 			# conjoined subjects (i.e., and, or, etc.)
 			return 'Plur'
