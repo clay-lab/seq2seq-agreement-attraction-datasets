@@ -53,7 +53,7 @@ def create_seq2seq_dataset(
 	dataset_args: tuple = None,
 	dataset_kwargs: tuple = None,
 	name: str = None,
-	conditions: List[Callable] = None,
+	conditions_fun: List[Callable] = None,
 	splits: Dict[str,int] = dict(
 		train 	= 100000,
 		dev 	= 1000,
@@ -95,7 +95,7 @@ def create_seq2seq_dataset(
 	dataset_args 		= () if not dataset_args else dataset_args
 	dataset_kwargs 		= {} if not dataset_kwargs else dataset_kwargs
 	
-	conditions 			= [lambda s: nlp(s)] if conditions is None else conditions
+	conditions_fun 		= [lambda s: nlp(s)] if conditions_fun is None else conditions_fun
 	
 	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if not splits_funs else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
@@ -131,7 +131,7 @@ def create_seq2seq_dataset(
 				for i in pbar:
 					ex = ''
 					while not ex:
-						ex = get_random_parsed_sentence(dataset['train'], conditions=conditions_fun)
+						ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
 						try:
 							pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
 							
@@ -225,7 +225,7 @@ def get_random_parsed_sentence(
 		returns:
 			EDoc 						: a random sentence pulled from the dataset, parsed
 	'''
-	conditions = [conditions] if not isinstance(conditions,list) else conditions
+	conditions_fun = [conditions_fun] if not isinstance(conditions_fun,list) else conditions_fun
 	
 	e = ''
 	while not e:
@@ -293,7 +293,7 @@ def create_datasets_from_config(
 				if isinstance(f, str):
 					module = f.rsplit('.', 1)[0]
 					exec(f'import {module}')
-					conditions[i] = eval(f)
+					conditions_fun[i] = eval(f)
 			
 			for split in splits_funs:
 				if isinstance(splits_funs[split], str):
