@@ -34,7 +34,7 @@ split_sentences = spacy.load(
 split_sentences.add_pipe('sentencizer')
 
 # after how many examples should we dump to disk?
-DUMP_FREQ: int = 1000
+# DUMP_FREQ: int = 1000
 
 # what metadata should we not print?
 # this is a list of keys in the metadata dict
@@ -62,7 +62,7 @@ def create_seq2seq_dataset(
 	metadata_fun: Callable = None,
 	metadata_fun_args: Tuple = None,
 	metadata_fun_kwargs: Dict = None,
-	dump_freq: int = DUMP_FREQ,
+	# dump_freq: int = DUMP_FREQ,
 ) -> None:
 	'''
 	Create a dataset for seq2seq models
@@ -108,8 +108,8 @@ def create_seq2seq_dataset(
 		raise ValueError(f'Unable to load dataset {dataset} on huggingface!')
 	
 	for split, n in splits.items():
-		new_dataset 	= []
-		new_metadata 	= []
+		# new_dataset 	= []
+		# new_metadata 	= []
 		
 		file_name 		= os.path.join('data', name, f'{name}_{split}.json.gz')
 		metadata_name 	= os.path.join('data', name, f'{name}_{split}_metadata.json.gz')
@@ -118,71 +118,68 @@ def create_seq2seq_dataset(
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
-		mode = None
+		# mode = None
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		
 		with tqdm(range(n)) as pbar, logging_redirect_tqdm():
 			pbar.set_postfix(split=split)
-			for i in pbar:
-				ex = ''
-				while not ex:
-					ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
-					parsed 					=  nlp(ex)
-					try:
-						pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
-						new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
-						new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
-					except KeyboardInterrupt:
-						sys.exit('User terminated program.')
-					except Exception as e:
-						print(f'Example "{ex}" ran into an error!:\n\n')
-						print(traceback.format_exc())
-						print('\n\n')
-						ex = ''
-						pass
+			with gzip.open(file_name, 'wt', encoding='utf-8') as dset_out, \
+				 gzip.open(metadata_name, 'wt', encoding='utf-8') as mset_out:
+				for i in pbar:
+					ex = ''
+					while not ex:
+						ex 						=  get_random_sentence(dataset['train'], conditions=conditions)
+						parsed 					=  nlp(ex)
+						try:
+							pair 				=  splits_funs[split](parsed, *splits_funs_args[split], **splits_funs_kwargs[split])
+							json.dump({'translation': {k: str(v) for k, v in pair.items()}}, dset_out, ensure_ascii=False)
+							dset_out.write('\n')
+							
+							json.dump(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs), mset_out, ensure_ascii=False)
+							mset_out.write('\n')
+						except KeyboardInterrupt:
+							sys.exit('User terminated program.')
+						except Exception as e:
+							print(f'Example "{ex}" ran into an error!:\n\n')
+							print(traceback.format_exc())
+							print('\n\n')
+							ex = ''
+							pass
 				
-				if len(new_dataset) % max(1,round(DUMP_FREQ/10)) == 0:
-					log.warning('\n')
-					log.warning(f'\nlen of new_dataset: {len(new_dataset)}')
-					log.warning(f'\nmem usage of new_dataset:  {(asizeof(new_dataset)/1024/1024/1024):.02f} GB')
-					log.warning(f'\nmem usage of new_metadata: {(asizeof(new_metadata)/1024/1024/1024):.02f} GB')
-					log.warning('\n')
-				
-				# dump to disk every so often so we don't run out of (V)RAM
-				if len(new_dataset) == DUMP_FREQ:
-					mode = 'wt' if mode is None else 'at'
-					with gzip.open(file_name, mode, encoding='utf-8') as out_file:
-						for ex in new_dataset:
-							json.dump(ex, out_file, ensure_ascii=False)
-							out_file.write('\n')
+				# # dump to disk every so often so we don't run out of (V)RAM
+				# 	mode = 'wt' if mode is None else 'at'
+				# 	with gzip.open(file_name, mode, encoding='utf-8') as out_file:
+				# 		for ex in new_dataset:
+				# 			json.dump(ex, out_file, ensure_ascii=False)
+				# 			out_file.write('\n')
 					
-					with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
-						for m in new_metadata:
-							json.dump(m, out_file, ensure_ascii=False)
-							out_file.write('\n')
+				# 	with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
+				# 		for m in new_metadata:
+				# 			json.dump(m, out_file, ensure_ascii=False)
+				# 			out_file.write('\n')
 					
-					# OOM errors
-					del new_dataset
-					del new_metadata
-					gc.collect()
+				# 	# OOM errors
+				# 	del new_dataset
+				# 	del new_metadata
+				# 	gc.collect()
 					
-					new_dataset  = []
-					new_metadata = []
+				# 	new_dataset  = []
+				# 	new_metadata = []
 		
-		if new_dataset:
-			mode = 'wt' if mode is None else 'at'
-			print(f'Writing out dataset {name} ({split}).')
-			with gzip.open(file_name, mode, encoding='utf-8') as out_file:
-				for ex in tqdm(new_dataset):
-					json.dump(ex, out_file, ensure_ascii=False)
-					out_file.write('\n')
+		# if new_dataset:
+		# 	mode = 'wt' if mode is None else 'at'
+		# 	print(f'Writing out dataset {name} ({split}).')
+		# 	with gzip.open(file_name, mode, encoding='utf-8') as out_file:
+		# 		for ex in tqdm(new_dataset):
+		# 			json.dump(ex, out_file, ensure_ascii=False)
+		# 			out_file.write('\n')
 			
-		if new_metadata:
-			print(f'Writing out metadata for {name} ({split}).')
-			with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
-				for m in tqdm(new_metadata):
-					json.dump(m, out_file, ensure_ascii=False)
-					out_file.write('\n')
+		# if new_metadata:
+		# 	print(f'Writing out metadata for {name} ({split}).')
+		# 	with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
+		# 		for m in tqdm(new_metadata):
+		# 			json.dump(m, out_file, ensure_ascii=False)
+		# 			out_file.write('\n')
 			
 		# print stats
 		with gzip.open(file_name, 'rt', encoding='utf-8') as in_file:
@@ -278,7 +275,7 @@ def create_datasets_from_config(
 			metadata_fun 		= config['sources'][dataset]['names'][name]['metadata_fun']
 			metadata_fun_args 	= config['sources'][dataset]['names'][name].get('metadata_fun_args', [])
 			metadata_fun_kwargs = config['sources'][dataset]['names'][name].get('metadata_fun_kwargs', {})
-			dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
+			# dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
 							
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects
@@ -311,7 +308,8 @@ def create_datasets_from_config(
 				splits_funs_kwargs=splits_funs_kwargs,
 				metadata_fun=metadata_fun,
 				metadata_fun_args=metadata_fun_args,
-				metadata_fun_kwargs=metadata_fun_kwargs
+				metadata_fun_kwargs=metadata_fun_kwargs,
+				# dump_freq=dump_freq,
 			)
 			
 			print('')
