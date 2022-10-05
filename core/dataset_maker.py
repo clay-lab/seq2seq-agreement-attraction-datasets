@@ -35,7 +35,7 @@ split_sentences = spacy.load(
 split_sentences.add_pipe('sentencizer')
 
 # after how many examples should we dump to disk?
-# DUMP_FREQ: int = 1000
+DUMP_FREQ: int = 5000
 
 # what metadata should we not print?
 # this is a list of keys in the metadata dict
@@ -65,7 +65,7 @@ def create_seq2seq_dataset(
 	metadata_fun: Callable = None,
 	metadata_fun_args: Tuple = None,
 	metadata_fun_kwargs: Dict = None,
-	# dump_freq: int = DUMP_FREQ,
+	dump_freq: int = DUMP_FREQ,
 ) -> None:
 	'''
 	Create a dataset for seq2seq models
@@ -111,8 +111,8 @@ def create_seq2seq_dataset(
 		raise ValueError(f'Unable to load dataset {dataset} on huggingface!')
 	
 	for split, n in splits.items():
-		# new_dataset 	= []
-		# new_metadata 	= []
+		new_dataset 	= []
+		new_metadata 	= []
 		
 		file_name 		= os.path.join('data', name, f'{name}_{split}.json.gz')
 		metadata_name 	= os.path.join('data', name, f'{name}_{split}_metadata.json.gz')
@@ -121,78 +121,26 @@ def create_seq2seq_dataset(
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
-		# mode = None
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		
 		with tqdm(range(n)) as pbar, logging_redirect_tqdm():
 			pbar.set_postfix(split=split)
-			with gzip.open(file_name, 'wt', encoding='utf-8') as dset_out, \
-				 gzip.open(metadata_name, 'wt', encoding='utf-8') as mset_out:
-				for i in pbar:
-					ex = ''
-					while not ex:
-						ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
-						try:
-							pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
-							
-							json.dump({'translation': {k: str(v) for k, v in pair.items()}}, dset_out, ensure_ascii=False)
-							dset_out.write('\n')
-							
-							json.dump(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs), mset_out, ensure_ascii=False)
-							mset_out.write('\n')
-						except KeyboardInterrupt:
-							sys.exit('User terminated program.')
-						except Exception as e:
-							log.warning(f'Example "{ex}" ran into an error!:\n\n')
-							log.warning(traceback.format_exc())
-							log.warning('\n\n')
-							ex = ''
-							pass
-					
-					# # debugging oom error
-					# if i % 10 == 0 and i > 0:
-					# 	sum1 = summary.summarize(muppy.get_objects())
-					# 	for line in summary.format_(sum1):
-					# 		log.warning(line)
-						
-				# # dump to disk every so often so we don't run out of (V)RAM
-				# 	mode = 'wt' if mode is None else 'at'
-				# 	with gzip.open(file_name, mode, encoding='utf-8') as out_file:
-				# 		for ex in new_dataset:
-				# 			json.dump(ex, out_file, ensure_ascii=False)
-				# 			out_file.write('\n')
-					
-				# 	with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
-				# 		for m in new_metadata:
-				# 			json.dump(m, out_file, ensure_ascii=False)
-				# 			out_file.write('\n')
-					
-				# 	# OOM errors
-				# 	del new_dataset
-				# 	del new_metadata
-				# 	gc.collect()
-					
-				# 	new_dataset  = []
-				# 	new_metadata = []
-		
-		# if new_dataset:
-		# 	mode = 'wt' if mode is None else 'at'
-		# 	print(f'Writing out dataset {name} ({split}).')
-		# 	with gzip.open(file_name, mode, encoding='utf-8') as out_file:
-		# 		for ex in tqdm(new_dataset):
-		# 			json.dump(ex, out_file, ensure_ascii=False)
-		# 			out_file.write('\n')
-			
-		# if new_metadata:
-		# 	print(f'Writing out metadata for {name} ({split}).')
-		# 	with gzip.open(metadata_name, mode, encoding='utf-8') as out_file:
-		# 		for m in tqdm(new_metadata):
-		# 			json.dump(m, out_file, ensure_ascii=False)
-		# 			out_file.write('\n')
-			
-		# print stats
-		with gzip.open(file_name, 'rt', encoding='utf-8') as in_file:
-			new_dataset = [json.loads(l.strip()) for l in in_file.readlines()]
+			for i in pbar:
+				ex = ''
+				while not ex:
+					ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
+					try:
+						pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
+						new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
+						new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
+					except KeyboardInterrupt:
+						sys.exit('User terminated program.')
+					except Exception as e:
+						log.warning(f'Example "{ex}" ran into an error!:\n\n')
+						log.warning(traceback.format_exc())
+						log.warning('\n\n')
+						ex = ''
+						pass
 		
 		if 'prefix' in new_dataset[0]['translation']:
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
@@ -200,14 +148,23 @@ def create_seq2seq_dataset(
 			prefixes = {k: v/total for k, v in prefixes.items()}
 			log.info('Pr. of each prefix:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in prefixes.items()]))
 		
-		with gzip.open(metadata_name, 'rt', encoding='utf-8') as in_file:
-			new_metadata = [json.loads(l.strip()) for l in in_file.readlines()]
+		print(f'Writing out dataset {name} ({split}).')
+		with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
+			for ex in tqdm(new_dataset):
+				json.dump(ex, out_file, ensure_ascii=False)
+				out_file.write('\n')
 		
 		for k in [k for k in new_metadata[0] if not k in DONT_PRINT]:
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
 			all_ks = {k: v/total for k, v in all_ks.items()}
 			log.info(f'Pr. of each {k}:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in all_ks.items()]))	
+		
+		print(f'Writing out metadata for {name} ({split}).')
+		with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
+			for m in tqdm(new_metadata):
+				json.dump(m, out_file, ensure_ascii=False)
+				out_file.write('\n')
 
 def get_random_parsed_sentence(
 	dataset: Dataset, 
@@ -232,7 +189,7 @@ def get_random_parsed_sentence(
 		# pick a random example/page
 		r  = int(round(random.random() * nrows,0))
 		ex = dataset[r]['text']
-		log.info(f'\n\n\n\nExample {r}:\n\n{ex}\n\n')
+		
 		# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
 		ex = [str(s).strip() for s in split_sentences(dataset[r]['text']).sents]
 		
@@ -242,14 +199,12 @@ def get_random_parsed_sentence(
 		# this should speed things up considerably
 		r2 = int(round(random.random() * (len(ex)-1),0))
 		s  = ex[r2]
-		log.info(f'\n\nSentence {r2}:\n\n{s}\n\n')
 		
 		# spaCy doesn't handle extra spaces well
 		while '  ' in s:
 			s = s.replace('  ', ' ')
 		
 		if (s := conditions_fun(s)):
-			log.info(f'\n\nChosen:\n\n{s}\n\n\n\n')
 			e = s
 		
 	return e
@@ -287,7 +242,7 @@ def create_datasets_from_config(
 			metadata_fun 		= config['sources'][dataset]['names'][name]['metadata_fun']
 			metadata_fun_args 	= config['sources'][dataset]['names'][name].get('metadata_fun_args', [])
 			metadata_fun_kwargs = config['sources'][dataset]['names'][name].get('metadata_fun_kwargs', {})
-			# dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
+			dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
 							
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects
@@ -320,7 +275,7 @@ def create_datasets_from_config(
 				metadata_fun=metadata_fun,
 				metadata_fun_args=metadata_fun_args,
 				metadata_fun_kwargs=metadata_fun_kwargs,
-				# dump_freq=dump_freq,
+				dump_freq=dump_freq,
 			)
 			
 			log.info('')

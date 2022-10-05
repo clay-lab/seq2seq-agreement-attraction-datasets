@@ -57,6 +57,16 @@ class EToken():
 		just what is needed to create something editable
 		to make a new EDoc.
 		'''
+		def rights() -> 'EToken':
+			'''Generator for the underlying Token's rights attribute.'''
+			for t in token.rights:
+				yield EToken(t)
+		
+		def children() -> 'EToken':
+			'''Generator for the underlying Token's children attribute.'''
+			for t in token.children:
+				yield EToken(t)
+		
 		self.text 			= token.text
 		self.whitespace_	= token.whitespace_
 		self.tag_			= token.tag_
@@ -67,8 +77,8 @@ class EToken():
 		self.dep_ 			= token.dep_
 		self.is_sent_start 	= token.is_sent_start
 		self.ent_iob_		= token.ent_iob_
-		self.rights 		= [EToken(t) for t in token.rights]
-		self.children 		= [EToken(t) for t in token.children]
+		self.rights 		= rights()
+		self.children 		= children()
 		self.i 				= token.i
 		
 		# spaCy doesn't respect this property when
