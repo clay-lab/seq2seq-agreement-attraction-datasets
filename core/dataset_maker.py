@@ -227,9 +227,10 @@ def get_random_parsed_sentence(
 			EDoc 						: a random sentence pulled from the dataset, parsed
 	'''
 	e = ''
+	nrows = len(dataset)-1
 	while not e:
 		# pick a random example/page
-		r  = int(round(random.random() * (len(dataset)-1),0))
+		r  = int(round(random.random() * nrows,0))
 		ex = dataset[r]['text']
 		log.info(f'\n\n\n\nExample {r}:\n\n{ex}\n\n')
 		# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
