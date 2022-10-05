@@ -149,11 +149,11 @@ def create_seq2seq_dataset(
 							ex = ''
 							pass
 					
-					# debugging oom error
-					if i % 100 == 0 and i > 0:
-						sum1 = summary.summarize(muppy.get_objects())
-						for line in summary.format_(sum1):
-							log.warning(line)
+					# # debugging oom error
+					# if i % 10 == 0 and i > 0:
+					# 	sum1 = summary.summarize(muppy.get_objects())
+					# 	for line in summary.format_(sum1):
+					# 		log.warning(line)
 						
 				# # dump to disk every so often so we don't run out of (V)RAM
 				# 	mode = 'wt' if mode is None else 'at'
@@ -214,7 +214,7 @@ def get_random_parsed_sentence(
 	conditions_fun: Callable = None,
 ) -> str:
 	'''
-	Returns a random example from the dataset.
+	Generates a random example from the dataset.
 	
 		params:
 			dataset (Dataset)			: a Dataset to draw a random example from
@@ -230,7 +230,8 @@ def get_random_parsed_sentence(
 	while not e:
 		# pick a random example/page
 		r  = int(round(random.random() * (len(dataset)-1),0))
-		
+		ex = dataset[r]['text']
+		log.info(f'\n\n\n\nExample {r}:\n\n{ex}\n\n')
 		# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
 		ex = [str(s).strip() for s in split_sentences(dataset[r]['text']).sents]
 		
@@ -240,12 +241,14 @@ def get_random_parsed_sentence(
 		# this should speed things up considerably
 		r2 = int(round(random.random() * (len(ex)-1),0))
 		s  = ex[r2]
+		log.info(f'\n\nSentence {r2}:\n\n{s}\n\n')
 		
 		# spaCy doesn't handle extra spaces well
 		while '  ' in s:
 			s = s.replace('  ', ' ')
 		
 		if (s := conditions_fun(s)):
+			log.info(f'\n\nChosen:\n\n{s}\n\n\n\n')
 			e = s
 		
 	return e
