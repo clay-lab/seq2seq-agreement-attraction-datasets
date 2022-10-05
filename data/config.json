@@ -6,8 +6,7 @@
 				"en_wiki-nodist-pres-and-past": {
 					"conditions_fun": "core.language_funs.en.grammar_funs.no_dist_conditions",
 					"splits": {
-						"train": 100000,
-						"dev"  : 1000
+						"train": 10
 					},
 					"splits_funs": {
 						"train": "core.language_funs.en.grammar_funs.pres_or_past",
