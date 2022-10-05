@@ -146,7 +146,7 @@ def create_seq2seq_dataset(
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
 			prefixes = {k: v/total for k, v in prefixes.items()}
-			log.info('Pr. of each prefix:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in prefixes.items()]))
+			log.info(f'\n\nPr. of each prefix ({split}):\n\t' + '\n\t'.join([': '.join([str(k),f'{v:.04f}']) for k, v in prefixes.items()]) + '\n')
 		
 		print(f'Writing out dataset {name} ({split}).')
 		with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
@@ -158,13 +158,15 @@ def create_seq2seq_dataset(
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
 			all_ks = {k: v/total for k, v in all_ks.items()}
-			log.info(f'Pr. of each {k}:\n\t', '\n\t'.join([': '.join([k,f'{v:.04f}']) for k, v in all_ks.items()]))	
+			log.info(f'\n\nPr. of each {k} ({split}):\n\t' + '\n\t'.join([': '.join([str(k),f'{v:.04f}']) for k, v in all_ks.items()]) + '\n')	
 		
 		print(f'Writing out metadata for {name} ({split}).')
 		with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
 			for m in tqdm(new_metadata):
 				json.dump(m, out_file, ensure_ascii=False)
 				out_file.write('\n')
+		
+		log.info('\n\n')
 
 def get_random_parsed_sentence(
 	dataset: Dataset, 
