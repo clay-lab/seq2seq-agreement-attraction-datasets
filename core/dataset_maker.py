@@ -145,15 +145,14 @@ def create_seq2seq_dataset(
 		if 'prefix' in new_dataset[0]['translation']:
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
-			prefixes = {k: v/total for k, v in prefixes.items()}
 			log.info(
 				f'\n\nPr. of each prefix ({split}):\n\t' + 
 				'\n\t'.join(
 					[
 						': '.join(
-							[str(k),f'{v:.04f} ({v*len(new_dataset)}/{len(new_dataset)}']
+							[str(k),f'{v/total:.04f} ({v}/{total})']
 						) 
-						for k, v in prefixes.items()
+						for k, v in sorted(prefixes.items())
 					]
 				) + 
 				'\n'
@@ -168,15 +167,14 @@ def create_seq2seq_dataset(
 		for k in [k for k in new_metadata[0] if not k in DONT_PRINT]:
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
-			all_ks = {k: v/total for k, v in all_ks.items()}
 			log.info(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
 				'\n\t'.join(
 					[
 						': '.join(
-							[str(k),f'{v:.04f} ({v*len(new_metadata)}/{len(new_metadata)}']
+							[str(k),f'{v/total:.04f} ({v}/{total})']
 						) 
-						for k, v in all_ks.items()
+						for k, v in sorted(all_ks.items())
 					]
 				) + 
 				'\n'
