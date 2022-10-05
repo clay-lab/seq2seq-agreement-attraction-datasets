@@ -35,7 +35,7 @@ split_sentences = spacy.load(
 split_sentences.add_pipe('sentencizer')
 
 # after how many examples should we dump to disk?
-DUMP_FREQ: int = 5000
+# DUMP_FREQ: int = 5000
 
 # what metadata should we not print?
 # this is a list of keys in the metadata dict
@@ -65,7 +65,7 @@ def create_seq2seq_dataset(
 	metadata_fun: Callable = None,
 	metadata_fun_args: Tuple = None,
 	metadata_fun_kwargs: Dict = None,
-	dump_freq: int = DUMP_FREQ,
+	# dump_freq: int = DUMP_FREQ,
 ) -> None:
 	'''
 	Create a dataset for seq2seq models
@@ -242,7 +242,7 @@ def create_datasets_from_config(
 			metadata_fun 		= config['sources'][dataset]['names'][name]['metadata_fun']
 			metadata_fun_args 	= config['sources'][dataset]['names'][name].get('metadata_fun_args', [])
 			metadata_fun_kwargs = config['sources'][dataset]['names'][name].get('metadata_fun_kwargs', {})
-			dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
+			# dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
 							
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects
@@ -275,7 +275,7 @@ def create_datasets_from_config(
 				metadata_fun=metadata_fun,
 				metadata_fun_args=metadata_fun_args,
 				metadata_fun_kwargs=metadata_fun_kwargs,
-				dump_freq=dump_freq,
+				# dump_freq=dump_freq,
 			)
 			
 			log.info('')
