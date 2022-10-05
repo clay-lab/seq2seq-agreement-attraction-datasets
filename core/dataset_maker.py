@@ -146,7 +146,18 @@ def create_seq2seq_dataset(
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
 			prefixes = {k: v/total for k, v in prefixes.items()}
-			log.info(f'\n\nPr. of each prefix ({split}):\n\t' + '\n\t'.join([': '.join([str(k),f'{v:.04f}']) for k, v in prefixes.items()]) + '\n')
+			log.info(
+				f'\n\nPr. of each prefix ({split}):\n\t' + 
+				'\n\t'.join(
+					[
+						': '.join(
+							[str(k),f'{v:.04f} ({v*len(new_dataset)}/{len(new_dataset)}']
+						) 
+						for k, v in prefixes.items()
+					]
+				) + 
+				'\n'
+			)
 		
 		print(f'Writing out dataset {name} ({split}).')
 		with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
@@ -158,7 +169,18 @@ def create_seq2seq_dataset(
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
 			all_ks = {k: v/total for k, v in all_ks.items()}
-			log.info(f'\n\nPr. of each {k} ({split}):\n\t' + '\n\t'.join([': '.join([str(k),f'{v:.04f}']) for k, v in all_ks.items()]) + '\n')	
+			log.info(
+				f'\n\nPr. of each {k} ({split}):\n\t' + 
+				'\n\t'.join(
+					[
+						': '.join(
+							[str(k),f'{v:.04f} ({v*len(new_metadata)}/{len(new_metadata)}']
+						) 
+						for k, v in all_ks.items()
+					]
+				) + 
+				'\n'
+			)	
 		
 		print(f'Writing out metadata for {name} ({split}).')
 		with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
