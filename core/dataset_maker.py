@@ -152,7 +152,7 @@ def create_seq2seq_dataset(
 						': '.join(
 							[str(k),f'{v/total:.04f} ({v}/{total})']
 						) 
-						for k, v in sorted(prefixes.items())
+						for k, v in prefixes.most_common()
 					]
 				) + 
 				'\n'
