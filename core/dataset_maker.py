@@ -222,6 +222,9 @@ def get_random_parsed_sentence(
 		r2 = int(round(random.random() * (len(ex)-1),0))
 		s  = ex[r2]
 		
+		# replace nbsp
+		s = s.replace(chr(160), ' ')
+		
 		# spaCy doesn't handle extra spaces well
 		while '  ' in s:
 			s = s.replace('  ', ' ')

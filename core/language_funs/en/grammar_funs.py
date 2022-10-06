@@ -4,12 +4,20 @@ import random
 import logging
 import traceback
 
-from typing import Dict
+from typing import Dict, Set
 
 from ..language_funs import string_conditions
 from ...spacyutils import nlp, EDoc
 
 log = logging.getLogger(__name__)
+
+EN_STOP_CHARS: Set[str] = {
+	'-',
+	':'
+	*[str(n) for n in range(10)],
+	'–', # ndash, separates numbers (which we don't want)
+	'—', # mdash, can separate two independent sentences
+}
 
 def no_dist_conditions(s: str) -> bool:
 	'''
@@ -18,6 +26,15 @@ def no_dist_conditions(s: str) -> bool:
 	to perform each check, with shorter ones earlier.
 	'''
 	if not string_conditions(s):
+		return False
+	
+	# these characters lead to weird behavior
+	# by spaCy
+	if any(c in s for c in EN_STOP_CHARS):
+		return False
+	
+	# must be ascii when punctuation is removed
+	if not s.translate(s.maketrans('', '', string.punctuation)).isascii():
 		return False
 	
 	# English-specific filters
@@ -33,7 +50,7 @@ def no_dist_conditions(s: str) -> bool:
 		if s[-4:] in ['Mrs.', 'Ave.', 'Ltd.', 'Inc.']:
 			return False
 		
-		if s[-3:] in ['Mr.', 'Dr.', 'Ms.', 'St.', 'Av.']:
+		if s[-3:] in ['Mr.', 'Dr.', 'Ms.', 'St.', 'Av.', 'no.', 'No.']:
 			return False
 	
 	# now we have to parse
@@ -46,6 +63,20 @@ def no_dist_conditions(s: str) -> bool:
 		
 		# if there is no subject, we don't want it
 		if not s.has_main_subject:
+			return False
+		
+		# if the main subject
+		# can be converted to a floating
+		# point number, exclude it
+		# this leads to all kinds of weird behavior
+		try:
+			float(s.main_subject.text.replace(',', ''))
+			return False
+		except ValueError:
+			pass
+		
+		# surprisingly frequent typo of 'they' -> 'the'
+		if s.main_subject.text.lower() == 'the':
 			return False
 		
 		# if the main verb cannot be inflected, we don't want it

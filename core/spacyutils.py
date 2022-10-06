@@ -57,16 +57,7 @@ class EToken():
 		just what is needed to create something editable
 		to make a new EDoc.
 		'''
-		def rights() -> 'EToken':
-			'''Generator for the underlying Token's rights attribute.'''
-			for t in token.rights:
-				yield EToken(t)
-		
-		def children() -> 'EToken':
-			'''Generator for the underlying Token's children attribute.'''
-			for t in token.children:
-				yield EToken(t)
-		
+		self._token 		= token
 		self.text 			= token.text
 		self.whitespace_	= token.whitespace_
 		self.tag_			= token.tag_
@@ -77,8 +68,6 @@ class EToken():
 		self.dep_ 			= token.dep_
 		self.is_sent_start 	= token.is_sent_start
 		self.ent_iob_		= token.ent_iob_
-		self.rights 		= rights()
-		self.children 		= children()
 		self.i 				= token.i
 		
 		# spaCy doesn't respect this property when
@@ -89,7 +78,12 @@ class EToken():
 			self.is_sent_start = True
 		
 		if self.text in INCORRECT_MORPHS:
-			self.set_morph(**INCORRECT_MORPHS[self.text])		
+			self.set_morph(**INCORRECT_MORPHS[self.text])
+		elif self.is_number:
+			if self.text.lower() == 'one':
+				self.set_morph(Number='Sing')
+			else:
+				self.set_morph(Number='Plur')
 	
 	def __len__(self) -> int:
 		'''Returns the length in characters of the token text.'''
@@ -112,6 +106,18 @@ class EToken():
 		return self.__str__()
 	
 	@property
+	def rights(self) -> 'EToken':
+		'''Generator for the underlying Token's rights attribute.'''
+		for t in self._token.rights:
+			yield EToken(t)
+	
+	@property
+	def children(self) -> 'EToken':
+		'''Generator for the underlying Token's children attribute.'''
+		for t in self._token.children:
+			yield EToken(t)
+	
+	@property
 	def is_aux(self):
 		'''Is the token an AUX?'''
 		return self.pos_ == 'AUX'	
@@ -120,6 +126,14 @@ class EToken():
 	def is_verb(self) -> bool:
 		'''Is the token a verb?'''
 		return self.pos_ == 'VERB'
+	
+	@property
+	def is_number(self):
+		'''
+		Is the word a string representation
+		of a number (for English)?
+		'''
+		return word_is_number(self.text)	
 	
 	@property
 	def can_be_inflected(self) -> bool:
@@ -266,7 +280,10 @@ class EToken():
 		c_kwargs = {k: v for k, v in c_kwargs.items() if v is not None}
 		c_kwargs = {**c_kwargs, **kwargs}
 		
-		self.text = conjugate(self.text, **c_kwargs)
+		if CONJUGATE_MAP.get(self.text, {}).get(c_kwargs['number'], {}).get(c_kwargs['tense'], {}):
+			self.text = CONJUGATE_MAP[self.text][c_kwargs['number']][c_kwargs['tense']]
+		else:
+			self.text = conjugate(self.text, **c_kwargs)
 		
 		n = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
 		t = 'Past' if TENSE_MAP.get(tense) == PAST else 'Pres'
@@ -514,9 +531,7 @@ class EDoc():
 	def root(self) -> EToken:
 		'''Get the root node (i.e., main verb) of s.'''
 		try:
-			return EToken([
-				t for t in self.doc if t.dep_ == 'ROOT'
-			][0])
+			return [t for t in self if t.dep_ == 'ROOT'][0]
 		except IndexError:
 			return None
 	
@@ -567,8 +582,8 @@ class EDoc():
 	@property
 	def main_subject(self) -> Union[EToken,List[EToken]]:
 		'''Gets the main clause subject of the SDoc if one exists.'''
-		v = self.main_verb		
-		s = [EToken(t) for t in v.children if t.dep_ in SUBJ_DEPS]
+		v = self.main_verb
+		s = [t for t in v.children if t.dep_ in SUBJ_DEPS]
 		
 		# in passives, spaCy parses the participle as the main verb
 		# and assigns it the dependency to the subject
@@ -577,12 +592,19 @@ class EDoc():
 		# to the participle instead, so we go through the head
 		# of the auxpass = main_verb
 		if not s:
-			s = [EToken(t) for t in v.head.children if t.dep_ in SUBJ_DEPS]
+			s = [t for t in EToken(v.head).children if t.dep_ in SUBJ_DEPS]
 			
-		s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
+		s.extend(t for t in self._get_conjuncts(s[0]))
 		
 		if len(s) == 1:
 			s = s[0]
+			# this is a weird bug spaCy has
+			# about hyphenated verbs
+			if s.text in VERB_PREFIXES:
+				s = [t for t in s.children if t.dep_ in SUBJ_DEPS]
+				s.extend(t for t in self._get_conjuncts(s[0]))
+				if len(s) == 1:
+					s = s[0]
 		
 		return s
 	
@@ -591,7 +613,10 @@ class EDoc():
 		'''Gets the number feature of the main clause subject.'''
 		s = self.main_subject
 		
-		if isinstance(s,list) and len(s) > 1:
+		# trust the inflection of the verb if it exists
+		if self.main_verb.get_morph('Number'):
+			return self.main_verb.get_morph('Number')
+		elif isinstance(s,list) and len(s) > 1:
 			return self._get_list_subject_number(s)
 		elif s.dep_ in ['csubj', 'csubjpass']:
 			# clausal subjects are not correctly associated
@@ -603,8 +628,19 @@ class EDoc():
 			return 'Plur'
 		elif s.text in ALL_PARTITIVES:
 			return self._get_partitive_subject_number(s)
-		else:
+		elif self.main_subject_determiner and self.main_subject_determiner.get_morph('Number'):
+			# if there is a helpful determiner
+			return self.main_subject_determiner.get_morph('Number')
+		elif s.get_morph('Number'):
 			return s.get_morph('Number')
+		elif self.main_verb.get_morph('Number'):
+			return self.main_verb.get_morph('Number')
+		else:
+			log.warning(
+				f'No number feature for "{s}" was found in "{self}"! '
+				 "I'm going to guess it's singular, but this may be wrong!"
+			)
+			return 'Sing'
 	
 	@property
 	def _main_subject_index(self):
@@ -648,7 +684,7 @@ class EDoc():
 			head nouns.
 			'''
 			if len(head_noun) == 1:
-				return head_noun[0].get_morph('Number')
+				return process_default(head_noun[0])
 			else:
 				return self._get_list_subject_number(head_noun)
 		
@@ -661,17 +697,41 @@ class EDoc():
 			'''
 			if s.get_morph('Number'):
 				return s.get_morph('Number')
+			elif s.text in ['Some', 'some']:
+				# we end up here if we have 'some' as a subject
+				# of a copular sentence. like "some were discarded buses,
+				# rais carriages."
+				return 'Plur'
 			else:
 				log.warning(
-					f'No number feature for "{s}" was found! '
+					f'No number feature for "{s}" was found in "{self}"! '
 					 "I'm going to guess it's singular, but this may be wrong!"
 				)
 				return 'Sing'
 		
-		if s.text in PARTITIVES:
+		if s.text in PARTITIVES_WITH_OF:
 			# next(s.children) == [of], so we get the children of that
-			head_noun = next(s.children).children
+			if any(s.children):
+				head_noun = [t for t in next(s.children).children]
+			else:
+				head_noun = [s]
+			
 			return process_head_noun(head_noun)
+		
+		if s.text in PARTITIVES_OPTIONAL_OF:
+			# next(s.children) == [of], so we get the children of that
+			if any(s.children):
+				head_noun = [t for t in s.children]
+				if any(t.text == 'of' for t in head_noun):
+					head_noun = [t for t in head_noun if t.text == 'of'][0]
+					head_noun = [t for t in head_noun.children]
+				else:
+					head_noun = [s]
+			else:
+				head_noun = [s]
+			
+			return process_head_noun(head_noun)
+		
 		# this covers cases like "a lot of people are/the money is"
 		# this is surprisingly tricky to do straightforwardly!
 		if s.text in PARTITIVES_WITH_INDEFINITE_ONLY:
@@ -757,7 +817,7 @@ class EDoc():
 		'''
 		s_loc = self._main_subject_index
 		v_loc = self.main_verb.i
-		interveners = [EToken(t) for t in self[s_loc:v_loc] if t.pos_ == 'NOUN']
+		interveners = [t for t in self[s_loc:v_loc] if t.pos_ == 'NOUN']
 		
 		return interveners
 	
@@ -836,9 +896,9 @@ class EDoc():
 	@property
 	def main_object(self) -> Union[EToken,List[EToken]]:
 		v = self.main_verb
-		s = [EToken(t) for t in v.children if t.dep_ in OBJ_DEPS]
+		s = [t for t in v.children if t.dep_ in OBJ_DEPS]
 		if s:
-			s.extend(EToken(t) for t in self._get_conjuncts(s[0]))
+			s.extend(t for t in self._get_conjuncts(s[0]))
 		
 		if len(s) == 1:
 			s = s[0]
@@ -870,8 +930,10 @@ class EDoc():
 	
 	@staticmethod
 	def _get_conjuncts(t: Union[Token,EToken]):
-		'''Returns all conjuncts dependent on the first in a coordinated phrase.'''
-		return [r for r in t.rights if r.dep_ == 'conj']
+		'''Yields all conjuncts dependent on the first in a coordinated phrase.'''
+		for r in t.rights:
+			if r.dep_ == 'conj':
+				yield EToken(r)
 	
 	# CONVENIENCE METHODS.
 	# These return new objects; they do NOT modify in-place.

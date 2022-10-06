@@ -4,6 +4,12 @@ useful across different languages
 '''
 import re
 
+from ..constants import (
+	EXCLUSION_CHARS, 
+	VALID_SENTENCE_ENDING_CHARS,
+	DELIMITERS
+)
+
 def string_conditions(s: str) -> bool:
 	'''
 	Does the string pass certain basic checks?
@@ -19,6 +25,10 @@ def string_conditions(s: str) -> bool:
 	if s[0].islower():
 		return False
 	
+	# don't start with an acronym/abbreviation
+	if s.split()[0].isupper():
+		return False
+	
 	# too long!
 	if len(s.split()) > 50:
 		return False
@@ -27,8 +37,22 @@ def string_conditions(s: str) -> bool:
 	# must not contain a quote (also two sentences)
 	# must not have spaces before commas and periods
 	# must not have a newline
-	if any(c in s for c in [';', '"', ' ,', ' .', '\n']):
+	if any(c in s for c in EXCLUSION_CHARS):
 		return False
+	
+	if any(s.endswith(c) for c in VALID_SENTENCE_ENDING_CHARS):
+		return False
+	
+	# must not contain an odd number of parentheses (partial sentences)
+	for d1, d2 in DELIMITERS:
+		if s.count(d1) != s.count(d2):
+			return False
+		
+		# the closing delimiter can't come before the first opening delimiter
+		# we're not doing anything fancier because it's more expensive
+		if d2 in s and d1 in s:
+			if s.index(d2) < s.index(d1):
+				return False
 	
 	# must not contain a colon separating two word characters (occurs in references lists)
 	if re.search(r'\w:\w', s):
