@@ -19,6 +19,22 @@ EN_STOP_CHARS: Set[str] = {
 	'—', # mdash, can separate two independent sentences
 }
 
+EN_ABBREVIATIONS: Set[str] = {
+	'Prof.',
+	'Blvd.',
+	'Mrs.',
+	'Ave.',
+	'Ltd.',
+	'Inc.',
+	'Mr.',
+	'Dr.',
+	'Ms.',
+	'St.',
+	'Av.',
+	'no.',
+	'No.'
+}
+
 def no_dist_conditions(s: str) -> bool:
 	'''
 	Applies conditions to en sentence in order.
@@ -43,14 +59,8 @@ def no_dist_conditions(s: str) -> bool:
 		if s[-2].isupper():
 			return False
 		
-		# must not end with a . preceded by an abbreviation
-		if s[-5:] in ['Prof.', 'Blvd.']:
-			return False
 		
-		if s[-4:] in ['Mrs.', 'Ave.', 'Ltd.', 'Inc.']:
-			return False
-		
-		if s[-3:] in ['Mr.', 'Dr.', 'Ms.', 'St.', 'Av.', 'no.', 'No.']:
+		if any(s.endswith(abb) for abb in EN_ABBREVIATIONS):
 			return False
 	
 	# now we have to parse
@@ -80,6 +90,7 @@ def no_dist_conditions(s: str) -> bool:
 			pass
 		
 		# surprisingly frequent typo of 'they' -> 'the'
+		# and missing subjects after 'the'
 		if isinstance(s.main_subject,list):
 			if s.main_subject[0].text.lower() == 'the':
 				return False

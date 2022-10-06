@@ -7,7 +7,10 @@ import re
 from ..constants import (
 	EXCLUSION_STRINGS, 
 	VALID_SENTENCE_ENDING_CHARS,
-	DELIMITERS
+	DELIMITERS,
+	MAX_SENTENCE_LENGTH_IN_WORDS,
+	MIN_SENTENCE_LENGTH_IN_CHARS,
+	EXCLUSION_REGEXES
 )
 
 def string_conditions(s: str) -> bool:
@@ -18,7 +21,7 @@ def string_conditions(s: str) -> bool:
 	'''
 	
 	# must be longer than a single character
-	if len(s) <= 1:
+	if len(s) < MIN_SENTENCE_LENGTH_IN_CHARS:
 		return False
 	
 	# must start with a capital letter
@@ -30,7 +33,7 @@ def string_conditions(s: str) -> bool:
 		return False
 	
 	# too long!
-	if len(s.split()) > 50:
+	if len(s.split()) > MAX_SENTENCE_LENGTH_IN_WORDS:
 		return False
 	
 	# must not contain a semicolon (i.e., two sentences)
@@ -55,8 +58,7 @@ def string_conditions(s: str) -> bool:
 			if s.index(d2) < s.index(d1):
 				return False
 	
-	# must not contain a colon separating two word characters (occurs in references lists)
-	if re.search(r'\w:\w', s):
+	if any(re.search(regex, s) for regex in EXCLUSION_REGEXES):
 		return False
 	
 	return True

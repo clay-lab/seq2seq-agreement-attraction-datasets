@@ -11,6 +11,9 @@ from pattern.en import PAST, PRESENT
 
 from word2number import w2n
 
+MIN_SENTENCE_LENGTH_IN_CHARS: int = 2
+MAX_SENTENCE_LENGTH_IN_WORDS: int = 50
+
 EXCLUSION_STRINGS: Set[str] = {
 	';', 
 	'"', 
@@ -20,6 +23,12 @@ EXCLUSION_STRINGS: Set[str] = {
 	'\\',
 	'_',
 	'\n'
+}
+
+# must not contain a colon surrounded by two word characters
+# (occurs in references lists)
+EXCLUSION_REGEXES: Set[str] = {
+	r'\w:\w'
 }
 
 VALID_SENTENCE_ENDING_CHARS: Set[str] = {
