@@ -40,7 +40,8 @@ def string_conditions(s: str) -> bool:
 	if any(c in s for c in EXCLUSION_CHARS):
 		return False
 	
-	if any(s.endswith(c) for c in VALID_SENTENCE_ENDING_CHARS):
+	# must end with a valid sentenec ending character
+	if not any(s.endswith(c) for c in VALID_SENTENCE_ENDING_CHARS):
 		return False
 	
 	# must not contain an odd number of parentheses (partial sentences)
