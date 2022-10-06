@@ -47,7 +47,8 @@ EXCLUSION_STRINGS: Set[str] = {
 # must not contain a colon surrounded by two word characters
 # (occurs in references lists)
 EXCLUSION_REGEXES: Set[str] = {
-	r'\w:\w'
+	r'\w:\w',
+	r'\w\.\w'
 }
 
 VALID_SENTENCE_ENDING_CHARS: Set[str] = {
