@@ -358,9 +358,8 @@ def create_t5_scripts(
 	eval_script = eval_script.replace('	--gradient_accumulation_steps=32 \\\n', '')
 	eval_script = eval_script.replace('\n	--num_train_epochs 10.0', '')
 	
-	config 		= load_config() if config is None else config
-	all_pairs 	= [tuple(pair) for pair in config['pairs']] if 'pairs' in config else []
-	langs 		= [(f'{name}',f'{name}') for dataset in config['sources'] for name in config['sources'][dataset]['names']] + all_pairs
+	config 	= load_config() if config is None else config
+	langs 	= [tuple(pair) for pair in config['pairs']] if 'pairs' in config else []
 	
 	# create directories if not existant
 	os.makedirs(os.path.join('scripts', 'finetune'), exist_ok=True)
