@@ -83,7 +83,9 @@ NOUN_POS_TAGS: Set[str] = {
 	'PROPN'
 }
 
+# mostly wh-words
 SUBJ_EXCL_TAGS: Set[str] = {
+	'WP',
 	'WD',
 	'WDT'
 }
@@ -267,6 +269,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'several':{'Number': 'Plur'},
 	'That': {'Number': 'Sing'},
 	'that': {'Number': 'Sing'},
+	'Another': {'Number': 'Sing'},
+	'another': {'Number': 'sing'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 
