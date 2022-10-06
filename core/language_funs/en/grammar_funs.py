@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 EN_STOP_CHARS: Set[str] = {
 	'-',
-	':'
+	':',
 	*[str(n) for n in range(10)],
 	'–', # ndash, separates numbers (which we don't want)
 	'—', # mdash, can separate two independent sentences
