@@ -70,14 +70,22 @@ def no_dist_conditions(s: str) -> bool:
 		# point number, exclude it
 		# this leads to all kinds of weird behavior
 		try:
-			float(s.main_subject.text.replace(',', ''))
+			if isinstance(s.main_subject,list):
+				float(s.main_subject[0].text.replace(',', ''))
+			else:
+				float(s.main_subject.text.replace(',', ''))
+			
 			return False
 		except ValueError:
 			pass
 		
 		# surprisingly frequent typo of 'they' -> 'the'
-		if s.main_subject.text.lower() == 'the':
-			return False
+		if isinstance(s.main_subject,list):
+			if s.main_subject[0].text.lower() == 'the':
+				return False
+		else:
+			if s.main_subject.text.lower() == 'the':
+				return False
 		
 		# if the main verb cannot be inflected, we don't want it
 		if not s.main_verb.can_be_inflected:
