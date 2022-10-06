@@ -79,6 +79,20 @@ class EToken():
 		
 		if self.text in INCORRECT_MORPHS:
 			self.set_morph(**INCORRECT_MORPHS[self.text])
+		elif (
+			self.text in INCORRECT_MORPHS_PRESENT_TENSE and 
+			self.get_morph('Tense') == 'Pres'
+		):
+			self.set_morph(**INCORRECT_MORPHS_PRESENT_TENSE[self.text])	
+		elif (
+			self.pos_ == 'VERB' and
+			self.get_morph('Tense') == 'Pres' and
+			self.lemma_ == self.text
+		):
+			# english hack: if we're a present tense
+			# verb whose lemma matches the text,
+			# we're plural!
+			self.set_morph(Number='Plur')
 		elif self.is_number:
 			if self.text.lower() == 'one':
 				self.set_morph(Number='Sing')
@@ -139,8 +153,11 @@ class EToken():
 	def can_be_inflected(self) -> bool:
 		'''Can the (VERB) token be reinflected?'''
 		return (
-			(self.is_verb and not self.tag_ == 'VBN') or 
-			(self.is_aux and self.lemma_ == 'be')
+			not self.tag_ in ['VBN', 'VBG'] and
+			(
+				self.is_verb or 
+				(self.is_aux and self.lemma_ == 'be')
+			)
 		)
 	
 	@property
@@ -737,10 +754,10 @@ class EDoc():
 		if s.text in PARTITIVES_WITH_INDEFINITE_ONLY:
 			s_det = [t for t in s.children if t.dep_ == 'det']
 			if s_det and s_det[0].get_morph('Definite') == 'Ind':
-				s_chi = [t for t in s.children if t.dep_ != 'det']
+				s_chi = [t for t in s.children if t.text == 'of']
 				if s_chi:
 					# first child not != 'det' is 'of', so get the children of that
-					s_chi = s_chi[0].children
+					s_chi = [t for t in s_chi[0].children]
 					if s_chi:
 						return process_head_noun(s_chi)
 			

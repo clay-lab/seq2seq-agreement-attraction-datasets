@@ -20,9 +20,28 @@ EXCLUSION_STRINGS: Set[str] = {
 	' ,', 
 	' .',
 	'/',
+	"' ",
 	'\\',
 	'_',
-	'\n'
+	'\n',
+	'.com',
+	'.gov',
+	'.edu',
+	'.net',
+	'@',
+	'#',
+	'^',
+	'*',
+	'+',
+	'~',
+	'`',
+	'<',
+	'>',
+	'{',
+	'}',
+	'[',
+	']',
+	'|'
 }
 
 # must not contain a colon surrounded by two word characters
@@ -55,6 +74,17 @@ OBJ_DEPS: Set[str] = {
 	"cobj", 
 	"nobj",
 	"dobj",
+}
+
+NOUN_POS_TAGS: Set[str] = {
+	'NOUN',
+	'PRON',
+	'PROPN'
+}
+
+SUBJ_EXCL_TAGS: Set[str] = {
+	'WD',
+	'WDT'
 }
 
 NUMBER_MAP: Dict[str,str] = {
@@ -232,7 +262,17 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'last': {'Number': 'Sing'},
 	'A'   : {'Number': 'Sing'},
 	'a'   : {'Number': 'Sing'},
-	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS}
+	'Several':{'Number': 'Plur'},
+	'several':{'Number': 'Plur'},
+	'That': {'Number': 'Sing'},
+	'that': {'Number': 'Sing'},
+	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
+}
+
+INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
+	'say': {'Number': 'Plur'},
+	'have':{'Number': 'Plur'},
+	'remain':{'Number': 'Plur'},
 }
 
 # partitives are things where the head noun of the subject

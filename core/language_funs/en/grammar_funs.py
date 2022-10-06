@@ -8,6 +8,7 @@ from typing import Dict, Set
 
 from ..language_funs import string_conditions
 from ...spacyutils import nlp, EDoc
+from ...constants import NOUN_POS_TAGS
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +60,6 @@ def no_dist_conditions(s: str) -> bool:
 		if s[-2].isupper():
 			return False
 		
-		
 		if any(s.endswith(abb) for abb in EN_ABBREVIATIONS):
 			return False
 	
@@ -73,6 +73,18 @@ def no_dist_conditions(s: str) -> bool:
 		
 		# if there is no subject, we don't want it
 		if not s.has_main_subject:
+			return False
+		
+		if isinstance(s.main_subject,list):
+			if not any(t.pos_ in NOUN_POS_TAGS for t in s.main_subject):
+				return False
+		elif not s.main_subject.pos_ in NOUN_POS_TAGS:
+			return False
+		
+		if isinstance(s.main_subject,list):
+			if any(t.tag_ in SUBJ_EXCL_TAGS for t in s.main_subject):
+				return False
+		elif s.main_subject.tag_ in SUBJ_EXCL_TAGS:
 			return False
 		
 		# if the main subject
@@ -110,7 +122,7 @@ def no_dist_conditions(s: str) -> bool:
 	except KeyboardInterrupt:
 		sys.exit('User terminated program.')	
 	except Exception as e:
-		log.warning(f'\n\nExample {s} ran into an error!:\n\n')
+		log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
 		log.warning(traceback.format_exc())
 		log.warning('\n\n')
 		return False
