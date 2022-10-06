@@ -11,11 +11,14 @@ from pattern.en import PAST, PRESENT
 
 from word2number import w2n
 
-EXCLUSION_CHARS: Set[str] = {
+EXCLUSION_STRINGS: Set[str] = {
 	';', 
 	'"', 
 	' ,', 
-	' .', 
+	' .',
+	'/',
+	'\\',
+	'_',
 	'\n'
 }
 

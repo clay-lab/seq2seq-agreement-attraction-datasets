@@ -5,7 +5,7 @@ useful across different languages
 import re
 
 from ..constants import (
-	EXCLUSION_CHARS, 
+	EXCLUSION_STRINGS, 
 	VALID_SENTENCE_ENDING_CHARS,
 	DELIMITERS
 )
@@ -37,7 +37,7 @@ def string_conditions(s: str) -> bool:
 	# must not contain a quote (also two sentences)
 	# must not have spaces before commas and periods
 	# must not have a newline
-	if any(c in s for c in EXCLUSION_CHARS):
+	if any(c in s for c in EXCLUSION_STRINGS):
 		return False
 	
 	# must end with a valid sentenec ending character
