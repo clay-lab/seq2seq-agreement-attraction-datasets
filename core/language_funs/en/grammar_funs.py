@@ -8,7 +8,7 @@ from typing import Dict, Set
 
 from ..language_funs import string_conditions
 from ...spacyutils import nlp, EDoc
-from ...constants import NOUN_POS_TAGS
+from ...constants import NOUN_POS_TAGS, SUBJ_EXCL_TAGS
 
 log = logging.getLogger(__name__)
 
