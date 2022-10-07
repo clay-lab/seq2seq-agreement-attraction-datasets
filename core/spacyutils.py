@@ -639,15 +639,47 @@ class EDoc():
 			# clausal subjects are not correctly associated
 			# with a Singular number feature
 			return 'Sing'
-		# when 'some' is a det, it can be singular or plural
-		# but when it is the head noun, it should be plural
 		elif s.text in ['Some', 'some'] and s.dep_ != 'det':
+			# when 'some' is a det, it can be singular or plural
+			# but when it is the head noun, it should be plural
 			return 'Plur'
 		elif s.text in ALL_PARTITIVES:
 			return self._get_partitive_subject_number(s)
-		elif self.main_subject_determiner and self.main_subject_determiner.get_morph('Number'):
-			# if there is a helpful determiner
+		elif (
+			self.main_subject_determiner and
+			isinstance(self.main_subject_determiner,list) and
+			any([t for t in self.main_subject_determiner if t.tag_ == 'DT']) and
+			[t for t in self.main_subject_determiner if t.tag_ == 'DT'][0].get_morph('Number') and
+			not [t for t in self.main_subject_determiner if t.tag_ == 'DT'][0] in ALL_PARTITIVES
+		):	# this happens with "all the ...", which tags 'all' as 'PDT'
+			# we also want to account for single cases of 'all ...', where it is partitive,
+			# so don't use a determiner if it is a partitive, even if it has a number feature
+			# in this case, we want to treat all as a partitive and NOT use its number
+			# as the number of the subject
+			return [t for t in self.main_subject_determiner if t.tag_ == 'DT'][0].get_morph('Number')
+		elif (
+			self.main_subject_determiner and 
+			not isinstance(self.main_subject_determiner,list) and 
+			self.main_subject_determiner.get_morph('Number') and 
+			self.main_subject_determiner.tag_ == 'DT' and 
+			not self.main_subject_determiner.text in ALL_PARTITIVES
+		):	# if there is a helpful determiner
 			return self.main_subject_determiner.get_morph('Number')
+		elif (
+			s.text in PLURALS_WITH_NO_DETERMINERS and 
+			(
+				not self.main_subject_determiner or 
+				(
+					not isinstance(self.main_subject_determiner,list) and 
+					self.main_subject_determiner.text == 'all'
+				)
+			)
+		):	# some nouns have the same singular and plural forms
+			# but when they have no determiner, they are always plural
+			# if they are a count noun. 'all' is exceptional
+			# because if it occurs with one of these special nouns, 
+			# it is always plural. 'some' is ambiguous
+			return 'Plur'
 		elif s.get_morph('Number'):
 			return s.get_morph('Number')
 		elif self.main_verb.get_morph('Number'):
