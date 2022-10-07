@@ -117,6 +117,9 @@ def create_seq2seq_dataset(
 		file_name 		= os.path.join('data', name, f'{name}_{split}.json.gz')
 		metadata_name 	= os.path.join('data', name, f'{name}_{split}_metadata.json.gz')
 		
+		# how often to update the progress bar
+		miniters = max(round(n/1000),1)
+		
 		# we don't just shuffle the dataset and choose the first n examples,
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
@@ -124,7 +127,7 @@ def create_seq2seq_dataset(
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		
 		with logging_redirect_tqdm():		
-			for i in tqdm(range(n), postfix=f'{split=}', miniters=max(round(n/1000),1)):
+			for i in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
 				ex = ''
 				while not ex:
 					ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
@@ -157,9 +160,9 @@ def create_seq2seq_dataset(
 				'\n'
 			)
 		
-		print(f'Writing out dataset {name} ({split}).')
+		log.info(f'Writing out dataset {name} ({split}).')
 		with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
-			for ex in tqdm(new_dataset):
+			for ex in tqdm(new_dataset, miniters=miniters):
 				json.dump(ex, out_file, ensure_ascii=False)
 				out_file.write('\n')
 		
@@ -179,9 +182,9 @@ def create_seq2seq_dataset(
 				'\n'
 			)	
 		
-		print(f'Writing out metadata for {name} ({split}).')
+		log.info(f'Writing out metadata for {name} ({split}).')
 		with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
-			for m in tqdm(new_metadata):
+			for m in tqdm(new_metadata, miniters=miniters):
 				json.dump(m, out_file, ensure_ascii=False)
 				out_file.write('\n')
 		
