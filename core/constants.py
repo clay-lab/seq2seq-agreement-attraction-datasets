@@ -44,8 +44,8 @@ EXCLUSION_STRINGS: Set[str] = {
 	'|'
 }
 
-# must not contain a colon surrounded by two word characters
-# (occurs in references lists)
+# must not contain a colon/period surrounded by two word characters
+# (occurs in references lists, URLs and emails)
 EXCLUSION_REGEXES: Set[str] = {
 	r'\w:\w',
 	r'\w\.\w'
@@ -286,6 +286,13 @@ INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
 PARTITIVES_WITH_OF: Set[str] = {
 	'Some',
 	'some',
+	# currently an edge case, marked as singular 
+	# even when partitives. though a search shows 
+	# that "neither of the two are" is way
+	# more common than "neither of the two is", 
+	# so maybe we want to add these ...
+	# 'Neither', 
+	# 'neither',
 }
 
 # partitives that optionally take of
