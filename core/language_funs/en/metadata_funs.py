@@ -14,7 +14,7 @@ def get_metadata(pair: Dict) -> Dict:
 		final_intervener_number = source.main_subject_verb_interveners[-1].get_morph('Number')
 	else:
 		final_intervener_number = None
-	
+			
 	metadata = dict(
 				subject_number=source.main_subject_number,
 				object_number=source.main_object_number,

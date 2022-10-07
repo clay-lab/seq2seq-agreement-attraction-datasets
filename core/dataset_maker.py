@@ -151,7 +151,7 @@ def create_seq2seq_dataset(
 				f'\n\nPr. of each prefix ({split}):\n\t' + 
 				'\n\t'.join([
 					f'{k:>{max(len(k) for k in prefixes)}}: {v/total:.04f} ({v:0{n}}/{total})'
-					for k, v in prefixes.most_common()
+					for k, v in sorted(prefixes.items(), key=lambda p: (-p[1], p[0]))
 				]) + 
 				'\n'
 			)
@@ -169,7 +169,7 @@ def create_seq2seq_dataset(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
 				'\n\t'.join([
 					f'{k>{max(len(k) for k in all_ks)}}: {v/total:.04f} ({v:0{n}}/{total})' 
-					for k, v in all_ks.most_common()
+					for k, v in sorted(all_ks, key=lambda p: (-p[1], p[0]))
 				]) + 
 				'\n'
 			)	
@@ -243,7 +243,6 @@ def create_datasets_from_config(
 	
 	:outputs: see outputs of create_tense_datasets and combine_language_datasets_for_tense.
 	'''
-	breakpoint()
 	config = load_config(config) if config is None or isinstance(config,str) else config
 		
 	for dataset in config['sources']:

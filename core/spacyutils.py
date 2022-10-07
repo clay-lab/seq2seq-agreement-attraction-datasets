@@ -63,7 +63,7 @@ class EToken():
 		self.tag_			= token.tag_
 		self.pos_			= token.pos_
 		self.morph 			= token.morph
-		self.lemma_			= token.lemma_
+		self.lemma_			= WRONG_LEMMAS.get(token.text, token.lemma_)
 		self.head 			= token.head
 		self.dep_ 			= token.dep_
 		self.is_sent_start 	= token.is_sent_start
@@ -88,8 +88,7 @@ class EToken():
 			self.pos_ == 'VERB' and
 			self.get_morph('Tense') == 'Pres' and
 			self.lemma_ == self.text
-		):
-			# english hack: if we're a present tense
+		):	# english hack: if we're a present tense
 			# verb whose lemma matches the text,
 			# we're plural!
 			self.set_morph(Number='Plur')
@@ -215,6 +214,32 @@ class EToken():
 		return self.is_past_tense or self.is_present_tense	
 	
 	@property
+	def determiner(self):
+		'''Returns the determiner(s) associated with the token.'''
+		d = [c for c in self.children if c.dep_ == 'det']
+		if len(d) == 1:
+			d = d[0]
+		elif len(d) == 0:
+			d = None
+		
+		return d
+	
+	@property
+	def objects(self):
+		'''Return the objects of the token.'''
+		return [t for t in self.children if t.dep_ in OBJ_DEPS]
+	
+	@property
+	def is_transitive(self):
+		'''Is the token transitive?'''
+		return True if self.objects else False
+	
+	@property
+	def is_intransitive(self):
+		'''Is the token intransitive?'''
+		return not self.is_transitive	
+	
+	@property
 	def _morph_to_dict(self) -> Dict:
 		'''Get the morphological information as a dictionary.'''
 		m = str(self.morph)
@@ -288,8 +313,8 @@ class EToken():
 		if number is None and tense is None:
 			raise ValueError("At least one of {number, tense} must not be None!")
 		
-		number 	= self.get_morph('Number') if number is None else number
-		tense 	= self.get_morph('Tense') if tense is None else tense
+		number = self.get_morph('Number') if number is None else number
+		tense  = self.get_morph('Tense') if tense is None else tense
 		
 		# we need to filter out Nones, in case the current word
 		# doesn't have these morphs
@@ -297,8 +322,15 @@ class EToken():
 		c_kwargs = {k: v for k, v in c_kwargs.items() if v is not None}
 		c_kwargs = {**c_kwargs, **kwargs}
 		
+		# first, see if the verb is in the map
+		# then, see if the verb's specific number is in the map
+		# if not, it's because it's None, so see if the verb's
+		# text is in the map with 'any' number (common for past tense)
+		# and then get the tense info if it's there 
 		if CONJUGATE_MAP.get(self.text, {}).get(c_kwargs['number'], {}).get(c_kwargs['tense'], {}):
 			self.text = CONJUGATE_MAP[self.text][c_kwargs['number']][c_kwargs['tense']]
+		elif CONJUGATE_MAP.get(self.text, {}).get('any', {}).get(c_kwargs['tense'], {}):
+			self.text = CONJUGATE_MAP[self.text]['any'][c_kwargs['tense']]
 		else:
 			self.text = conjugate(self.text, **c_kwargs)
 		
@@ -628,78 +660,13 @@ class EDoc():
 	@property
 	def main_subject_number(self) -> str:
 		'''Gets the number feature of the main clause subject.'''
-		s = self.main_subject
+		s = self.main_subject	
 		
 		if self.main_verb.get_morph('Number'):
 			# trust the inflection of the verb if it exists
 			return self.main_verb.get_morph('Number')
-		elif isinstance(s,list) and len(s) > 1:
-			# if the subject is a list, there could be many reasons
-			# so we have a special function to deal with that
-			return self._get_list_subject_number(s)
-		elif s.dep_ in ['csubj', 'csubjpass']:
-			# clausal subjects are not correctly associated
-			# with a Singular number feature
-			return 'Sing'
-		elif s.text in ['Some', 'some'] and s.dep_ != 'det':
-			# when 'some' is a det, it can be singular or plural
-			# but when it is the head noun, it should be plural
-			return 'Plur'
-		elif s.text in ALL_PARTITIVES:
-			# special logic here, so a separate function
-			return self._get_partitive_subject_number(s)
-		elif (
-			self.main_subject_determiner and
-			isinstance(self.main_subject_determiner,list) and
-			any([t for t in self.main_subject_determiner if t.tag_ == 'DT']) and
-			[t for t in self.main_subject_determiner if t.tag_ == 'DT'][0].get_morph('Number') and
-			not [t for t in self.main_subject_determiner if t.tag_ == 'DT'][0] in ALL_PARTITIVES
-		):	# this happens with "all the ...", which tags 'all' as 'PDT'
-			# we also want to account for single cases of 'all ...', where it is partitive,
-			# so don't use a determiner if it is a partitive, even if it has a number feature
-			# in this case, we want to treat all as a partitive and NOT use its number
-			# as the number of the subject
-			return [t for t in self.main_subject_determiner if t.tag_ == 'DT'][0].get_morph('Number')
-		elif (
-			self.main_subject_determiner and 
-			not isinstance(self.main_subject_determiner,list) and 
-			self.main_subject_determiner.get_morph('Number') and 
-			self.main_subject_determiner.tag_ == 'DT' and 
-			not self.main_subject_determiner.text in ALL_PARTITIVES
-		):	# if there is a helpful determiner that isn't a list
-			# that has a number feature (i.e., 'these')
-			# and it isn't a partitive (since some partitives)
-			# have default number features, which shouldn't override
-			# the nouns number
-			return self.main_subject_determiner.get_morph('Number')
-		elif (
-			s.text in PLURALS_WITH_NO_DETERMINERS and 
-			(
-				not self.main_subject_determiner or 
-				(
-					not isinstance(self.main_subject_determiner,list) and 
-					self.main_subject_determiner.text == 'all'
-				)
-			)
-		):	# some nouns have the same singular and plural forms
-			# but when they have no determiner, they are always plural
-			# if they are a count noun. 'all' is exceptional
-			# because if it occurs with one of these special nouns, 
-			# it is always plural. ('some' is ambiguous)
-			return 'Plur'
-		elif s.get_morph('Number'):
-			# turns out just about the last thing we want to do is trust
-			# the number feature spaCy assigns. go figure
-			return s.get_morph('Number')
 		else:
-			# usually we end up here because of adjectives serving
-			# as nouns (the latter, etc.), or genuine ambiguity 
-			# (neither is/are, etc.)
-			log.warning(
-				f'No number feature for "{s}" was found in "{self}"! '
-				 "I'm going to guess it's singular, but this may be wrong!"
-			)
-			return 'Sing'
+			return self._get_noun_number(s)
 	
 	@property
 	def _main_subject_index(self):
@@ -732,7 +699,248 @@ class EDoc():
 		
 		return False
 	
-	def _get_partitive_subject_number(self, s: EToken) -> str:
+	@property
+	def main_subject_determiner(self) -> Union[EToken,List[EToken]]:
+		'''Get the determiner(s) of the main subject.'''
+		s = self.main_subject
+		if isinstance(s, list):
+			d = [t.determiner for t in s]
+		else:
+			d = s.determiner
+		
+		return d
+	
+	@property
+	def main_subject_verb_interveners(self) -> List[EToken]:
+		'''
+		Get the tokens for the nouns that 
+		intervene between the head noun(s)
+		of the main subject and the main verb.
+		'''
+		s_loc = self._main_subject_index
+		v_loc = self.main_verb.i
+		interveners = [t for t in self[s_loc:v_loc]]
+		if interveners:
+			interveners += [None]
+			interveners = [
+				t for i, t in enumerate(interveners[:-1])
+				if (
+					interveners[i+1] is None or
+					interveners[i+1].tag_ != t.tag_
+				) and t.pos_ in ['NOUN', 'PROPN']
+			]
+		
+		return interveners
+	
+	@property
+	def has_main_subject_verb_interveners(self) -> bool:
+		'''Do any nouns come between the main subject and its verb?'''
+		return any(self.main_subject_verb_interveners)
+	
+	@property
+	def main_subject_verb_distractors(self) -> List[EToken]:
+		'''
+		Get the tokens for the interveners
+		between the subject and the main verb
+		that mismatch the head noun of the subject
+		in the number feature. Note that this
+		currently only works for distractors
+		that occur after the subject head noun
+		(i.e., not on Wagers et al. 2009) structures).
+		'''
+		n 			= self.main_subject_number
+		interveners = self.main_subject_verb_interveners
+		# assume singular if the morph for number doesn't exist
+		distractors = [t for t in interveners if (t.get_morph('Number') or 'Sing') != n]
+		return distractors
+	
+	@property
+	def has_main_subject_verb_distractors(self) -> bool:
+		'''Are there any distractors between the main clause subject and the main clause verb?'''
+		return any(self.main_subject_verb_distractors)
+	
+	@property
+	def main_subject_verb_distractor_structures(self) -> List[str]:
+		'''What structure is each distractor embedded in?'''
+		s_i = self._main_subject_index
+		d 	= self.main_subject_verb_distractors
+		if d:
+			# use get here to deal with cases we haven't mapped yet
+			d_dep_seqs 	= [STRUCTURE_MAP.get(t.head.dep_, t.head.dep_) for t in d]
+			d_dep_seqs  = [
+							'multiple' 
+								if not all([dep == d_dep_seqs[i] for dep in d_dep_seqs[:i]]) 
+								else d_dep_seqs[i] 
+							for i, _ in enumerate(d_dep_seqs)
+						]
+			
+			return d_dep_seqs
+	
+	@property
+	def main_subject_verb_final_distractor_structure(self) -> str:
+		'''What structure is the final distractor embedded in?'''
+		d = self.main_subject_verb_distractor_structures
+		if d:
+			return d[-1]	
+	
+	@property
+	def main_subject_verb_distractors_determiners(self) -> List[EToken]:
+		'''
+		Get the determiners for the interveners
+		between the subject and the main verb
+		that mismatch the head noun of the subject
+		in the number feature. Note that this
+		currently only works for distractors
+		that occur after the subject head noun
+		(i.e., not on Wagers et al. 2009) structures).
+		'''
+		n 			= self.main_subject_number
+		interveners = self.main_subject_verb_interveners
+		distractors = [t for t in interveners if t.get_morph('Number') != n]
+		distractors_d = [t for d in distractors for t in d.children if d.dep_ == 'det']
+		return distractors_d
+	
+	@property
+	def main_object(self) -> Union[EToken,List[EToken]]:
+		v = self.main_verb
+		s = [t for t in v.children if t.dep_ in OBJ_DEPS]
+		if s:
+			s.extend(t for t in self._get_conjuncts(s[0]))
+		
+		if len(s) == 1:
+			s = s[0]
+		
+		return s
+	
+	@property
+	def main_object_determiner(self) -> Union[EToken,List[EToken]]:
+		'''Get the determiner(s) of the main object.'''
+		o = self.main_object
+		if isinstance(o, list):
+			d = [t.determiner for t in o]
+		else:
+			d = o.determiner
+		
+		return d
+	
+	@property
+	def main_object_number(self) -> str:
+		'''
+		What is the number of the main object of the verb?
+		Returns None if there is no object.
+		'''
+		if self.has_main_object:
+			o = self.main_object
+			if isinstance(o,list) and len(o) > 1:
+				return self._get_list_noun_number(o, deps=OBJ_DEPS)
+			elif o.text in ALL_PARTITIVES:
+				return self._get_partitive_noun_number(o)
+			else:
+				return self._get_noun_number(o)
+	
+	@property
+	def has_main_object(self) -> bool:
+		'''Does the sentence have an object of the main verb?'''
+		return True if self.main_object else False
+	
+	@property
+	def is_transitive(self) -> bool:
+		'''Is the sentence('s main verb) transitive?'''
+		return self.has_main_object
+	
+	@property
+	def is_intransitive(self) -> bool:
+		'''Is the sentence('s main verb) intransitive?'''
+		return not self.is_transitive
+	
+	@property
+	def pos_seq(self) -> List[str]:
+		'''Get the part of speech sequence of the sentence.'''
+		return [t.pos_ for t in self] 
+	
+	@property
+	def tag_seq(self) -> List[str]:
+		'''Get the tag sequence of the sentence.'''
+		return [t.tag_ for t in self]
+	
+	@staticmethod
+	def _get_conjuncts(t: Union[Token,EToken]):
+		'''Yields all conjuncts dependent on the first in a coordinated phrase.'''
+		for r in t.rights:
+			if r.dep_ == 'conj':
+				yield EToken(r)
+	
+	def _get_noun_number(self, s: EToken, deps: List[str] = SUBJ_DEPS) -> str:
+		'''Handles special logic for getting noun number.'''
+		if isinstance(s,list) and len(s) > 1:
+			# if the subject is a list, there could be many reasons
+			# so we have a special function to deal with that
+			return self._get_list_noun_number(s, deps=deps)
+		elif s.dep_ in ['csubj', 'csubjpass']:
+			# clausal subjects are not correctly associated
+			# with a Singular number feature
+			return 'Sing'
+		elif s.text in ['Some', 'some'] and s.dep_ != 'det':
+			# when 'some' is a det, it can be singular or plural
+			# but when it is the head noun, it should be plural
+			return 'Plur'
+		elif s.text in ALL_PARTITIVES:
+			# special logic here, so a separate function
+			return self._get_partitive_noun_number(s)
+		elif (
+			s.determiner and
+			isinstance(s.determiner,list) and
+			any([t for t in s.determiner if t.tag_ == 'DT']) and
+			[t for t in s.determiner if t.tag_ == 'DT'][0].get_morph('Number') and
+			not [t for t in s.determiner if t.tag_ == 'DT'][0] in ALL_PARTITIVES
+		):	# this happens with "all the ...", which tags 'all' as 'PDT'
+			# we also want to account for single cases of 'all ...', where it is partitive,
+			# so don't use a determiner if it is a partitive, even if it has a number feature
+			# in this case, we want to treat all as a partitive and NOT use its number
+			# as the number of the subject
+			return [t for t in s.determiner if t.tag_ == 'DT'][0].get_morph('Number')
+		elif (
+			s.determiner and 
+			not isinstance(s.determiner,list) and 
+			s.determiner.get_morph('Number') and 
+			s.determiner.tag_ == 'DT' and 
+			not s.determiner.text in ALL_PARTITIVES
+		):	# if there is a helpful determiner that isn't a list
+			# that has a number feature (i.e., 'these')
+			# and it isn't a partitive (since some partitives)
+			# have default number features, which shouldn't override
+			# the nouns number
+			return s.determiner.get_morph('Number')
+		elif (
+			s.text in PLURALS_WITH_NO_DETERMINERS and 
+			(
+				not s.determiner or 
+				(
+					not isinstance(s.determiner,list) and 
+					s.determiner.text == 'all'
+				)
+			)
+		):	# some nouns have the same singular and plural forms
+			# but when they have no determiner, they are always plural
+			# if they are a count noun. 'all' is exceptional
+			# because if it occurs with one of these special nouns, 
+			# it is always plural. ('some' is ambiguous)
+			return 'Plur'
+		elif s.get_morph('Number'):
+			# turns out just about the last thing we want to do is trust
+			# the number feature spaCy assigns. go figure
+			return s.get_morph('Number')
+		else:
+			# usually we end up here because of adjectives serving
+			# as nouns (the latter, etc.), or genuine ambiguity 
+			# (neither is/are, etc.)
+			log.warning(
+				f'No number feature for "{s}" was found in "{self}"! '
+				 "I'm going to guess it's singular, but this may be wrong!"
+			)
+			return 'Sing'
+	
+	def _get_partitive_noun_number(self, s: EToken) -> str:
 		'''Returns the number of a partitive subject.'''
 		# this currently covers cases like "some of the (schools are/group is) unsure..."
 		def process_head_noun(head_noun: EToken) -> str:
@@ -745,7 +953,7 @@ class EDoc():
 			if len(head_noun) == 1:
 				return process_default(head_noun[0])
 			else:
-				return self._get_list_subject_number(head_noun)
+				return self._get_list_noun_number(head_noun)
 		
 		def process_default(s: EToken) -> str:
 			'''
@@ -806,11 +1014,11 @@ class EDoc():
 			return process_default(s)
 		
 		raise ValueError(
-			"_get_partitive_subject_number should only "
+			"_get_partitive_noun_number should only "
 			"be called with a subject that could be a partitive!"
 		)
 	
-	def _get_list_subject_number(self, s: List[EToken]) -> str:
+	def _get_list_noun_number(self, s: List[EToken], deps: List[str] = SUBJ_DEPS) -> str:
 		'''
 		We call this to get the number of the subject when
 		there are multiple subject dependencies in a sentence.
@@ -821,7 +1029,7 @@ class EDoc():
 		# happens with some dummy 'it' subject sentences
 		# and some copular sentences
 		# one subject and one attr
-		if tag_counts['nsubj'] == 1 and tag_counts['attr'] == 1:
+		if any(tag_counts[dep] == 1 for dep in deps) and tag_counts['attr'] == 1:
 			nums = [t.get_morph('Number') for t in s]
 			# if all the subjects are singular and we have one attr
 			# and one nsubj, then the subject is singular
@@ -836,7 +1044,7 @@ class EDoc():
 			# in a subject noun. If none exists, raise ValueError
 			else:
 				if s[0].text in ALL_PARTITIVES:
-					return self._get_partitive_subject_number(s[0])
+					return self._get_partitive_noun_number(s[0])
 				
 				if self.main_verb.get_morph('Number'):
 					return self.main_verb.get_morph('Number')
@@ -852,156 +1060,58 @@ class EDoc():
 			# conjoined subjects (i.e., and, or, etc.)
 			return 'Plur'
 	
-	@property
-	def main_subject_determiner(self) -> Union[EToken,List[EToken]]:
-		'''Get the determiner(s) of the main subject.'''
-		s = self.main_subject
-		if not isinstance(s, list):
-			s = [s]
-		
-		d = [c for subj in s for c in subj.children if c.dep_ == 'det']
-		if len(d) == 1:
-			d = d[0]
-		elif len(d) == 0:
-			d = None
-		
-		return d
-	
-	@property
-	def main_subject_verb_interveners(self) -> List[EToken]:
-		'''
-		Get the tokens for the nouns that 
-		intervene between the head noun(s)
-		of the main subject and the main verb.
-		'''
-		s_loc = self._main_subject_index
-		v_loc = self.main_verb.i
-		interveners = [t for t in self[s_loc:v_loc] if t.pos_ == 'NOUN']
-		
-		return interveners
-	
-	@property
-	def has_main_subject_verb_interveners(self) -> bool:
-		'''Do any nouns come between the main subject and its verb?'''
-		return any(self.main_subject_verb_interveners)
-	
-	@property
-	def main_subject_verb_distractors(self) -> List[EToken]:
-		'''
-		Get the tokens for the interveners
-		between the subject and the main verb
-		that mismatch the head noun of the subject
-		in the number feature. Note that this
-		currently only works for distractors
-		that occur after the subject head noun
-		(i.e., not on Wagers et al. 2009) structures).
-		'''
-		n 			= self.main_subject_number
-		interveners = self.main_subject_verb_interveners
-		distractors = [t for t in interveners if t.get_morph('Number') != n]
-		return distractors
-	
-	@property
-	def has_main_subject_verb_distractors(self) -> bool:
-		'''Are there any distractors between the main clause subject and the main clause verb?'''
-		return any(self.main_subject_verb_distractors)
-	
-	@property
-	def main_subject_verb_distractor_structures(self) -> List[str]:
-		'''What structure is each distractor embedded in?'''
-		s_i = self._main_subject_index
-		d 	= self.main_subject_verb_distractors
-		if d:
-			# use get here to deal with cases we haven't mapped yet
-			d_dep_seqs 	= [STRUCTURE_MAP.get(t.head.dep_, t.head.dep_) for t in d]
-			d_dep_seqs  = [
-							'multiple' 
-								if not all([dep == d_dep_seqs[i] for dep in d_dep_seqs[:i]]) 
-								else d_dep_seqs[i] 
-							for i, _ in enumerate(d_dep_seqs)
-						]
-			
-			return d_dep_seqs
-	
-	@property
-	def main_subject_verb_final_distractor_structure(self) -> str:
-		'''What structure is the final distractor embedded in?'''
-		d = self.main_subject_verb_distractor_structures
-		if d:
-			return d[-1]	
-	
-	@property
-	def main_subject_verb_distractors_determiners(self) -> List[EToken]:
-		'''
-		Get the determiners for the interveners
-		between the subject and the main verb
-		that mismatch the head noun of the subject
-		in the number feature. Note that this
-		currently only works for distractors
-		that occur after the subject head noun
-		(i.e., not on Wagers et al. 2009) structures).
-		'''
-		n 			= self.main_subject_number
-		interveners = self.main_subject_verb_interveners
-		distractors = [t for t in interveners if t.get_morph('Number') != n]
-		distractors_d = [t for d in distractors for t in d.children if d.dep_ == 'det']
-		return distractors_d
-	
-	@property
-	def has_main_object(self) -> bool:
-		'''Does the sentence have an object of the main verb?'''
-		return True if self.main_object else False
-	
-	@property
-	def main_object(self) -> Union[EToken,List[EToken]]:
-		v = self.main_verb
-		s = [t for t in v.children if t.dep_ in OBJ_DEPS]
-		if s:
-			s.extend(t for t in self._get_conjuncts(s[0]))
-		
-		if len(s) == 1:
-			s = s[0]
-		
-		return s
-	
-	@property
-	def main_object_number(self) -> str:
-		'''
-		What is the number of the main object of the verb?
-		Returns None if there is no object.
-		'''
-		if self.has_main_object:
-			o = self.main_object
-			if isinstance(o,list) and len(o) > 1:
-				return 'Plur'
-			else:
-				return o.get_morph('Number')
-	
-	@property
-	def pos_seq(self) -> List[str]:
-		'''Get the part of speech sequence of the sentence.'''
-		return [t.pos_ for t in self] 
-	
-	@property
-	def tag_seq(self) -> List[str]:
-		'''Get the tag sequence of the sentence.'''
-		return [t.tag_ for t in self]
-	
-	@staticmethod
-	def _get_conjuncts(t: Union[Token,EToken]):
-		'''Yields all conjuncts dependent on the first in a coordinated phrase.'''
-		for r in t.rights:
-			if r.dep_ == 'conj':
-				yield EToken(r)
-	
 	# CONVENIENCE METHODS.
 	# These return new objects; they do NOT modify in-place.
-	def reinflect_main_verb(self, number: str, tense: str, **kwargs) -> 'EDoc':
+	def reinflect_main_verb(
+		self, 
+		number: str, 
+		tense: str, 
+		conjoined: bool = True,
+		**kwargs
+	) -> 'EDoc':
 		'''Reinflect the main verb.'''
 		v = self.main_verb
-		v.reinflect(number, tense, **kwargs)
 		
-		return self.copy_with_replace(tokens=v)
+		# get conjoined verbs and reinflect those too
+		# this can be easily turned off
+		if conjoined:
+			all_vs = [v] + [t for t in v.rights if t.dep_ == 'conj']
+		else:
+			all_vs = [v]
+		
+		for v in all_vs:
+			if (v.text in HOMOPHONOUS_VERBS and HOMOPHONOUS_VERBS[v.text]['condition'](v)):
+				if any(kwargs.keys()):
+					log.warning(
+						f'{v.text} is homophonous to another verb. ' 
+						f'Kwargs {kwargs} will be not be used for '
+						 'reinflection to attempt to get the right behavior '
+						 'though they will be added to the morphology.'
+					)
+				
+				m_number = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
+				m_tense  = 'Pres' if TENSE_MAP.get(tense) == PRESENT else 'Past'
+				
+				d_number = 'singular' if number == 'Sing' else 'plural'
+				d_tense  = 'present' if tense == PRESENT else 'past'
+				
+				morph_kwargs = {'Number': m_number, 'Tense': m_tense, **kwargs}
+				morph_kwargs = {k: v for k, v in morph_kwargs.items() if v is not None}
+					
+				if HOMOPHONOUS_VERBS[v.text].get(d_number, {}).get(d_tense, {}):
+					v.text = HOMOPHONOUS_VERBS[v.text][d_number][d_tense]
+					v.set_morph(**morph_kwargs)
+				elif HOMOPHONOUS_VERBS[v.text].get('any', {}).get(d_tense, {}):
+					v.text = HOMOPHONOUS_VERBS[v.text]['any'][d_tense]
+					v.set_morph(**morph_kwargs)
+				else:
+					raise ParseError(
+					f'Couldn\'t figure out how to reinflect the verb "{v}" of "{self}" with {number=} and {tense=}!'
+				)
+			else:
+				v.reinflect(number, tense, **kwargs)
+			
+		return self.copy_with_replace(tokens=all_vs)
 	
 	def make_main_verb_past_tense(self) -> 'EDoc':
 		'''Convert the main verb to past tense.'''

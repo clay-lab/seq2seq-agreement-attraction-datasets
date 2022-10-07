@@ -37,6 +37,22 @@ EN_ABBREVIATIONS: Set[str] = {
 	'No.'
 }
 
+MISPARSED_AS_VERBS: Set[str] = {
+	'swans', # this should be a noun, but spaCy has misparsed it
+			 # as a verb in 'Trumpeter swans winter along the upper Stuart.'
+}
+
+COMMON_VERB_TYPOS: Set[str] = {
+	'where', # from were
+	'seee', # from seee
+	'lieas', # from lies
+	'a', # from are (only used if it's a verb, so no worries about determiners)
+	'ia' # from is
+	'vere', # from veer
+	'prevee', # ????
+	'tooj', # from took
+}
+
 def no_dist_conditions(s: str) -> bool:
 	'''
 	Applies conditions to en sentence in order.
@@ -70,6 +86,16 @@ def no_dist_conditions(s: str) -> bool:
 		
 		# if the root is not a verb, we don't want it
 		if not s.root_is_verb:
+			return False
+		
+		# disallow verbs with common typos
+		if any(t in s.main_verb.text for t in COMMON_VERB_TYPOS):
+			return False
+		
+		# spaCy has some trouble parsing certain rare verbs
+		# 'Trumpeter swans winter along the upper Stuart.' parsed
+		# 'swans' as the verb instead of winter
+		if any(s.main_verb.text == t for t in MISPARSED_AS_VERBS):
 			return False
 		
 		# if there is no subject, we don't want it

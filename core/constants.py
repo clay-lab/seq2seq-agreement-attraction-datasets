@@ -4,7 +4,10 @@ codify certain kinds of dependencies
 and make up for some deficiencies of
 pattern.en
 '''
-from typing import Set, Dict, List, Tuple
+from typing import (
+	Set, Dict, List, 
+	Tuple, Callable, Union
+)
 
 from pattern.en import SG, PL
 from pattern.en import PAST, PRESENT
@@ -132,28 +135,415 @@ PLURALIZE_MAP: Dict[str,str] = {
 }
 
 CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
+	# we don't have a corresponding entry for this
+	# in the present tense, because it will be parsed
+	# as the past tense of 'find'
 	'founded': {
 		'singular': {'present': 'founds'},
 		'plural'  : {'present': 'found'}, 
 	},
+	'leaves': {
+		'any': 		{'past': 'left'},
+	},
+	'leave': {
+		'any': 		{'past': 'left'},
+	},
+	'left' : {
+		'singular': {'present': 'leaves'},
+		'plural'  : {'present': 'leave'},
+	},
+	'bears': {
+		'any':		{'past': 'bore'},
+	},
+	'bear':  {
+		'any':		{'past': 'bore'},
+	},
+	'bore':  {
+		'singular': {'present': 'bears'},
+		'plural'  : {'present': 'bear'},
+	},
+	# pattern.en doesn't correctly recognize that
+	# this is already past tense, and produces "sanged"
+	# it also think the past tense is (incorrectly)
+	# 'sung' (the participle), instead of 'sang'
+	'sang':  {
+		'singular': {'present': 'sings'},
+		'plural': 	{'present': 'sing'},
+		'any':		{'past':    'sang'},
+	},
+	'sing':  {
+		'any':		{'past': 'sang'},
+	},
+	'sings': {
+		'any':		{'past': 'sang'},
+	},
+	# there is special logic to deal with
+	# the fact that this depends on transitivity
+	# and meaning in the spacyutils.EDoc class
+	'lay':   {
+		'singular': {'present': 'lays'},
+		'plural':	{'present': 'lay'},
+		'any':		{'past': 'laid'},
+	},
+	'lays':  {
+		'singular': {'present': 'lays'},
+		'plural': 	{'present': 'lay'},
+		'any':		{'past': 'laid'},
+	},
+	'laid':  {
+		'singular': {'present': 'lays'},
+		'plural':	{'present': 'lay'},
+		'any':		{'past': 'laid'},
+	},
+	'escapes': {
+		'any':	    {'past': 'escaped'},
+	},
+	'escape': {
+		'any': 		{'past': 'escaped'},
+	},
+	'escaped': {
+		'singular': {'present': 'escapes'},
+		'plural':	{'present': 'escape'},
+		'any':		{'past': 'escaped'},
+	},
+	'paid': {
+		'singular': {'present': 'pays'},
+		'plural':   {'present': 'pay'},
+		'any':		{'past': 'paid'},
+	},
+	'pay': {
+		'any':		{'past': 'paid'},
+	},
+	'pays': {
+		'any':		{'past': 'paid'},
+	},
+	'centered': {
+		'any': 		{'past': 'centered'},
+	},
+	'center': {
+		'any': 		{'past': 'centered'},
+	},
+	'centers': {
+		'any': 		{'past': 'centered'},
+	},
+	'quit': {
+		'any':		{'past': 'quit'},
+	},
+	'benefitted': {
+		'any':		{'past': 'benefitted'},
+	},
+	'benefit': {
+		'any':		{'past': 'benefitted'},
+	},
+	'benefits': {
+		'any': 		{'past': 'benefitted'},
+	},
+	'addressed': {
+		'any':		{'past': 'addressed'},
+	},
+	'address': {
+		'any':		{'past': 'addressed'},
+	},
+	'addresses': {
+		'any':		{'past': 'addressed'},
+	},
+	'paralleled': {
+		'singular': {'present': 'parallels'},
+		'plural':	{'plural': 'parallel'},
+	},
+	'parallel': {
+		'any': 		{'past': 'paralleled'},
+	},
+	'parallels': {
+		'any': 		{'past': 'paralleled'},
+	},
+	'sank': {
+		'singular': {'present': 'sinks'},
+		'plural': 	{'present': 'sink'},
+		'any':		{'past': 'sank'},
+	},
+	'sink': {
+		'any': 		{'past': 'sank'},
+	},
+	'sinks': {
+		'any': 		{'past': 'sank'},
+	},
+	'penned':{
+		'any':		{'past': 'penned'},
+	},
+	'pen': {
+		'any':		{'past': 'penned'},
+	},
+	'pens': {
+		'any': 		{'past': 'penned'},
+	},
+	'pleaded': {
+		'any': 		{'past': 'pleaded'},
+	},
+	'plead': {
+		'any':		{'past': 'pleaded'},
+	},
+	'pleads': {
+		'any':		{'past': 'pleaded'},
+	},
+	'fit': {
+		'any': 		{'past': 'fit'},
+	},
+	'cursed': {
+		'any':		{'past': 'cursed'},
+	},
+	'curse': {
+		'any':		{'past': 'cursed'},
+	},
+	'curses': {
+		'any':		{'past': 'cursed'},
+	},
+	'sprang': {
+		'singular': {'present': 'springs'},
+		'plural': 	{'present': 'spring'},
+		'any':		{'past': 'sprang'},
+	},
+	'spring': {
+		'any':		{'past': 'sprang'},
+	},
+	'springs': {
+		'any':		{'past': 'sprang'},
+	},
+	'swapped': {
+		'any':		{'past': 'swapped'},
+	},
+	'swap': {
+		'any':		{'past': 'swapped'},
+	},
+	'swaps': {
+		'any':		{'past': 'swapped'},
+	},
+	'favored': {
+		'singular': {'present': 'favors'},
+		'plural': 	{'present': 'favor'},
+	},
+	'favor': {
+		'any':		{'past': 'favored'},
+	},
+	'favors': {
+		'any':		{'past': 'favored'},
+	},
+	'blessed': {
+		'any':		{'past': 'blessed'},
+	},
+	'bless': {
+		'any':		{'past': 'blessed'},
+	},
+	'blesses': {
+		'any':		{'past': 'blessed'},
+	},
+	'brokered': {
+		'any':		{'past': 'brokered'},
+	},
+	'broker': {
+		'any':		{'past': 'brokered'},
+	},
+	'brokers': {
+		'any':		{'past': 'brokered'},
+	},
+	'endeavored': {
+		'singular': {'present': 'endeavors'},
+		'plural':	{'present': 'endeavor'},
+	},
+	'endeavor': {
+		'any':		{'past': 'endeavored'},
+	},
+	'endeavors': {
+		'any':		{'past': 'endeavored'},
+	},
+	'heated': {
+		'any':		{'past': 'heated'},
+	},
+	'heat': {
+		'any':		{'past': 'heated'},
+	},
+	'heats': {
+		'any':		{'past': 'heated'},
+	},
+	'shrank': {
+		'singular': {'present': 'shrinks'},
+		'plural':	{'present': 'shrink'},
+		'any':		{'past': 'shrank'},
+	},
+	'shrink': {
+		'any':		{'past': 'shrank'},
+	},
+	'shrinks': {
+		'any':		{'past': 'shrank'}
+	},
+	'bet': {
+		'any':		{'past': 'bet'},
+	},
+	'bets': {
+		'any':		{'past': 'bet'},
+	},
+	'shutout': {
+		'any':		{'past': 'shutout'},
+	},
+	'shutouts': {
+		'any':		{'past': 'shutout'},
+	},
+	'bit': {
+		'singular':	{'present': 'bites'},
+		'plural':	{'present': 'bite'},
+		'any':		{'past': 'bit'},
+	},
+	'bite': {
+		'any':		{'past': 'bit'},
+	},
+	'bites': {
+		'any':		{'past': 'bit'},
+	},
+	'bringest': {
+		'any':		{'past': 'broughtest'},
+	},
+	'setup': {
+		'any': 		{'past': 'setup'},
+	},
+	'setups': {
+		'any':		{'past': 'setup'},
+	},
+	'mentored': {
+		'singular': {'present': 'mentors'},
+		'plural':	{'present': 'mentor'},
+	},
+	'mentor': {
+		'any':		{'past': 'mentored'},
+	},
+	'mentors': {
+		'any':		{'past': 'mentored'},
+	},
+	'wrapped': {
+		'singular': {'present': 'wraps'},
+		'plural':	{'present': 'wrap'},
+		'any':		{'past': 'wrapped'},
+	},
+	'wraps': {
+		'singular': {'present': 'wraps'},
+		'plural':	{'present': 'wrap'},
+		'any':		{'past': 'wrapped'},
+	},
+	'felled': {
+		'singular': {'present': 'fells'},
+		'plural': 	{'present': 'fell'},
+	},
+	'secret': {
+		'any':		{'past': 'secreted'},
+	},
+	'secrets': {
+		'any':		{'past': 'secreted'},
+	},
+	'teared': {
+		'any':		{'past': 'teared'},
+	}
 }
 
-def word_is_number(s: str) -> bool:
-	'''
-	Return true if the word can be
-	converted to a number, else False.
-	'''
-	try:
-		w2n.word_to_num(s)
-		return True
-	except ValueError:
-		try:
-			float(s.replace(',', ''))
-			return True
-		except ValueError:
-			pass
-		
-		return False
+WRONG_LEMMAS: Dict[str,str] = {
+	'guested': 'guest',
+	'remedied': 'remedy',
+	'costarred': 'costar',
+	'rebranded': 'rebrand',
+	'bringest': 'bring',
+	'broughtest': 'bring',
+	'rerecorded': 'rerecord',
+	'photobleached': 'photobleach',
+	'photobleaches': 'photobleach',
+	'bogged': 'bog',
+	'recrossed': 'recross',
+	'recrosses': 'recross',
+	'gimballed': 'gimbal',
+	'overdubbed': 'overdub',
+	'homeschooled': 'homeschool',
+	'restudies': 'restudy',
+	'restudied': 'restudy',
+	'rematches': 'rematch',
+	'rematched': 'rematch',
+	'lifeguarded': 'lifeguard',
+	'focusses': 'focus',
+	'focussed': 'focus',
+	'trialled': 'trial',
+	'trialed': 'trial',
+	'redshirted': 'redshirt',
+	'fulfilled': 'fulfill',
+	'fulfils': 'fulfill',
+	'fulfil': 'fulfill',
+	# something special could be done for 
+	# transitive 'secrete' vs. intransitive 'secret (away)'
+	# but this is probably low frequency enough it doesn't matter
+	# also 'tear/tore (transitive)' and 'tear/teared (up) (intransitive)'
+	# as well as fall (intransitive) and fell (transitive)
+	'installed': 'install',
+	'enrolled': 'enroll',
+}
+
+HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
+	'lay': {
+		'singular': {'present': 'lies'}, 
+		'plural': 	{'present': 'lie'},
+		'condition': (lambda t: t.is_intransitive)
+	},
+	# TODO: exception for ccomp and prep = about,
+	# treat like a transitive in these cases
+	'lie': {
+		'any': 		{'past': 'lay'},
+		'condition': (
+			lambda t: 
+				t.is_intransitive and 
+				not [
+					to for to in t.children
+					# handle 'lie that' and 'lie about' as usual,
+					# even though they are intransitive
+					if 	(to.dep_ == 'prep' and to.text == 'about') or
+						(to.dep_ == 'ccomp')
+				]
+		)
+	},
+	'lies': {
+		'any': 		{'past': 'lay'},
+		'condition': (
+			lambda t: 
+				t.is_intransitive and 
+				not [
+					to for to in t.children
+					# handle 'lie that' and 'lie about' as usual,
+					# even though they are intransitive
+					if 	(to.dep_ == 'prep' and to.text == 'about') or
+						(to.dep_ == 'ccomp')
+				]
+		)
+	},
+	'secreted': {
+		'singular': {'present': 'secrets'},
+		'plural':	{'present': 'secret'},
+		'condition':(
+			lambda t: 
+				any(
+					to.dep_ == 'prt' and to.text == 'away' 
+					for to in t.children
+				)
+		)
+	},
+	'tear': {
+		'any':		{'past': 'teared'},
+		'condition':(lambda t: t.is_intransitive),
+	},
+	'tears': {
+		'any':		{'past': 'teared'},
+		'condition':(lambda t: t.is_intransitive),
+	},
+	'fell': {
+		'any':		{
+			'past': 'felled',
+			'present': 'fell',
+		},
+		'condition':(lambda t: t.is_transitive),
+	}
+}
 
 ORDINALS: Set[str] = {
 	'Second',
@@ -354,6 +744,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'that': {'Number': 'Sing'},
 	'Another': {'Number': 'Sing'},
 	'another': {'Number': 'sing'},
+	'They': {'Number': 'Plur'},
+	'they': {'Number': 'Plur'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 
@@ -433,3 +825,20 @@ DISTRACTOR_STRUCTURES: Set[str] = {
 VERB_PREFIXES: Set[str] = {
 	'co',
 }
+
+def word_is_number(s: str) -> bool:
+	'''
+	Returns true if the word can be
+	converted to a number, else False.
+	'''
+	try:
+		w2n.word_to_num(s)
+		return True
+	except ValueError:
+		try:
+			float(s.replace(',', ''))
+			return True
+		except ValueError:
+			pass
+		
+		return False
