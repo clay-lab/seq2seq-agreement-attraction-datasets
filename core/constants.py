@@ -83,14 +83,14 @@ OBJ_DEPS: Set[str] = {
 NOUN_POS_TAGS: Set[str] = {
 	'NOUN',
 	'PRON',
-	'PROPN'
+	'PROPN',
 }
 
 # mostly wh-words
 SUBJ_EXCL_TAGS: Set[str] = {
 	'WP',
 	'WD',
-	'WDT'
+	'WDT',
 }
 
 NUMBER_MAP: Dict[str,str] = {
