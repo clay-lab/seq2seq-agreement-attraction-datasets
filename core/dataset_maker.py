@@ -127,7 +127,7 @@ def create_seq2seq_dataset(
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		
 		with logging_redirect_tqdm():		
-			for i in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
+			for _ in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
 				ex = ''
 				while not ex:
 					ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
