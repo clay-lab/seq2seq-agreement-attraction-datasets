@@ -479,6 +479,7 @@ WRONG_LEMMAS: Dict[str,str] = {
 	# as well as fall (intransitive) and fell (transitive)
 	'installed': 'install',
 	'enrolled': 'enroll',
+	'got': 'get',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {

@@ -155,7 +155,7 @@ class EToken():
 			not self.tag_ in ['VBN', 'VBG'] and
 			(
 				self.is_verb or 
-				(self.is_aux and self.lemma_ in ['be', 'have'])
+				(self.is_aux and self.lemma_ in ['be', 'have', 'get'])
 			)
 		)
 	
