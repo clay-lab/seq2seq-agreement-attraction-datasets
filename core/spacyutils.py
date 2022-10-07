@@ -756,6 +756,23 @@ class EDoc():
 		return interveners
 	
 	@property
+	def main_subject_verb_intervener_structures(self) -> List[str]:
+		'''What structure is each distractor embedded in?'''
+		s_i = self._main_subject_index
+		d 	= self.main_subject_verb_interveners
+		if d:
+			# use get here to deal with cases we haven't mapped yet
+			d_dep_seqs 	= [STRUCTURE_MAP.get(t.head.dep_, t.head.dep_) for t in d]
+			d_dep_seqs  = [
+							'multiple' 
+								if not all([dep == d_dep_seqs[i] for dep in d_dep_seqs[:i]]) 
+								else d_dep_seqs[i] 
+							for i, _ in enumerate(d_dep_seqs)
+						]
+			
+			return d_dep_seqs
+	
+	@property
 	def has_main_subject_verb_interveners(self) -> bool:
 		'''Do any nouns come between the main subject and its verb?'''
 		return any(self.main_subject_verb_interveners)

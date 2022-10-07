@@ -21,6 +21,7 @@ def get_metadata(pair: Dict) -> Dict:
 				main_verb=source.main_verb.text,
 				main_verb_lemma=source.main_verb.lemma_,
 				n_interveners=len(source.main_subject_verb_interveners),
+				intervener_structures=source.main_subject_verb_intervener_structures,
 				final_intervener_number=final_intervener_number,
 				n_distractors=len(source.main_subject_verb_distractors),
 				distractor_structures=source.main_subject_verb_distractor_structures,
