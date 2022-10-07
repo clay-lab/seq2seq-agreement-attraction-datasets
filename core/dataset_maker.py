@@ -149,14 +149,10 @@ def create_seq2seq_dataset(
 			total = sum(prefixes.values())
 			log.info(
 				f'\n\nPr. of each prefix ({split}):\n\t' + 
-				'\n\t'.join(
-					[
-						': '.join(
-							[str(k),f'{v/total:.04f} ({v}/{total})']
-						) 
-						for k, v in prefixes.most_common()
-					]
-				) + 
+				'\n\t'.join([
+					f'{k:>{max(len(k) for k in prefixes)}}: {v/total:.04f} ({v}/{total})'
+					for k, v in prefixes.most_common()
+				]) + 
 				'\n'
 			)
 		
@@ -171,14 +167,10 @@ def create_seq2seq_dataset(
 			total = sum(all_ks.values())
 			log.info(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
-				'\n\t'.join(
-					[
-						': '.join(
-							[str(k),f'{v/total:.04f} ({v}/{total})']
-						) 
-						for k, v in all_ks.most_common()
-					]
-				) + 
+				'\n\t'.join([
+					f'{k>{max(len(k) for k in all_ks)}}: {v/total:.04f} ({v}/{total})' 
+					for k, v in all_ks.most_common()
+				]) + 
 				'\n'
 			)	
 		
@@ -251,6 +243,7 @@ def create_datasets_from_config(
 	
 	:outputs: see outputs of create_tense_datasets and combine_language_datasets_for_tense.
 	'''
+	breakpoint()
 	config = load_config(config) if config is None or isinstance(config,str) else config
 		
 	for dataset in config['sources']:
