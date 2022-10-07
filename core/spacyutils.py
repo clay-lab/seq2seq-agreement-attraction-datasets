@@ -1103,7 +1103,12 @@ class EDoc():
 			conj_vs = [
 				[v]
 				if v.can_be_inflected 
-				else [t for t in v.children if t.dep_ in ['aux', 'auxpass'] and not v.has_subject]
+				else [
+					t for t in v.children 
+					if 	t.dep_ in ['aux', 'auxpass'] and 
+						t.can_be_inflected and 
+						not v.has_subject
+					]
 				for v in conj_vs
 			]
 			all_vs = [v] + [i for s in conj_vs for i in s]
