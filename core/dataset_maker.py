@@ -123,9 +123,8 @@ def create_seq2seq_dataset(
 		# sentence from that row. we also don't want repeats that are identical except for case
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		
-		with tqdm(range(n)) as pbar, logging_redirect_tqdm():
-			pbar.set_postfix(split=split)
-			for i in pbar:
+		with logging_redirect_tqdm():		
+			for i in tqdm(range(n), postfix=f'{split=}', miniters=max(round(n/1000),1)):
 				ex = ''
 				while not ex:
 					ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
