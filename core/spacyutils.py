@@ -155,7 +155,7 @@ class EToken():
 			not self.tag_ in ['VBN', 'VBG'] and
 			(
 				self.is_verb or 
-				(self.is_aux and self.lemma_ == 'be')
+				(self.is_aux and self.lemma_ in ['be', 'have'])
 			)
 		)
 	
@@ -209,12 +209,12 @@ class EToken():
 		return t == 'Pres' if t else None
 	
 	@property
-	def is_inflected(self):
+	def is_inflected(self) -> bool:
 		'''Is the (VERB) token inflected?'''
 		return self.is_past_tense or self.is_present_tense	
 	
 	@property
-	def determiner(self):
+	def determiner(self) -> Union['EToken',List['EToken']]:
 		'''Returns the determiner(s) associated with the token.'''
 		d = [c for c in self.children if c.dep_ == 'det']
 		if len(d) == 1:
@@ -225,14 +225,37 @@ class EToken():
 		return d
 	
 	@property
-	def objects(self):
-		'''Return the objects of the token.'''
-		return [t for t in self.children if t.dep_ in OBJ_DEPS]
+	def object(self) -> Union['EToken',List['EToken']]:
+		'''Return the object(s) of the token.'''
+		o = [t for t in self.children if t.dep_ in OBJ_DEPS]
+		if len(o) == 1:
+			return o[0]
+		elif len(o) > 1:
+			return o
 	
+	@property
+	def subject(self) -> Union['EToken',List['EToken']]:
+		'''Return the subject(s) of the token.'''
+		s = [t for t in self.children if t.dep_ in SUBJ_DEPS]
+		if len(s) == 1:
+			return s[0]
+		elif len(s) > 1:
+			return s
+	
+	@property
+	def has_subject(self) -> bool:
+		'''Does the token have any subject(s)?'''
+		return True if self.subject else False
+	
+	@property
+	def has_object(self) -> bool:
+		'''Does the token have any object(s)?'''
+		return True if self.object else False
+
 	@property
 	def is_transitive(self):
 		'''Is the token transitive?'''
-		return True if self.objects else False
+		return True if self.has_subject and self.has_object else False
 	
 	@property
 	def is_intransitive(self):
@@ -1075,7 +1098,15 @@ class EDoc():
 		# get conjoined verbs and reinflect those too
 		# this can be easily turned off
 		if conjoined:
-			all_vs = [v] + [t for t in v.rights if t.dep_ == 'conj']
+			conj_vs = [t for t in v.children if t.dep_ == 'conj' and (t.is_verb or t.is_aux)]
+			# don't reinflect conjoined verbs if they have their own subjects
+			conj_vs = [
+				[v]
+				if v.can_be_inflected 
+				else [t for t in v.children if t.dep_ in ['aux', 'auxpass'] and not v.has_subject]
+				for v in conj_vs
+			]
+			all_vs = [v] + [i for s in conj_vs for i in s]
 		else:
 			all_vs = [v]
 		
@@ -1093,7 +1124,7 @@ class EDoc():
 				m_tense  = 'Pres' if TENSE_MAP.get(tense) == PRESENT else 'Past'
 				
 				d_number = 'singular' if number == 'Sing' else 'plural'
-				d_tense  = 'present' if tense == PRESENT else 'past'
+				d_tense = 'present' if tense == PRESENT else 'past'
 				
 				morph_kwargs = {'Number': m_number, 'Tense': m_tense, **kwargs}
 				morph_kwargs = {k: v for k, v in morph_kwargs.items() if v is not None}
@@ -1105,9 +1136,7 @@ class EDoc():
 					v.text = HOMOPHONOUS_VERBS[v.text]['any'][d_tense]
 					v.set_morph(**morph_kwargs)
 				else:
-					raise ParseError(
-					f'Couldn\'t figure out how to reinflect the verb "{v}" of "{self}" with {number=} and {tense=}!'
-				)
+					v.reinflect(number, tense, **kwargs)
 			else:
 				v.reinflect(number, tense, **kwargs)
 			
