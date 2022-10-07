@@ -150,7 +150,7 @@ def create_seq2seq_dataset(
 			log.info(
 				f'\n\nPr. of each prefix ({split}):\n\t' + 
 				'\n\t'.join([
-					f'{k:>{max(len(k) for k in prefixes)}}: {v/total:.04f} ({v}/{total})'
+					f'{k:>{max(len(k) for k in prefixes)}}: {v/total:.04f} ({v:0{n}}/{total})'
 					for k, v in prefixes.most_common()
 				]) + 
 				'\n'
@@ -168,7 +168,7 @@ def create_seq2seq_dataset(
 			log.info(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
 				'\n\t'.join([
-					f'{k>{max(len(k) for k in all_ks)}}: {v/total:.04f} ({v}/{total})' 
+					f'{k>{max(len(k) for k in all_ks)}}: {v/total:.04f} ({v:0{n}}/{total})' 
 					for k, v in all_ks.most_common()
 				]) + 
 				'\n'
