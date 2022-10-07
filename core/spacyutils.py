@@ -630,10 +630,12 @@ class EDoc():
 		'''Gets the number feature of the main clause subject.'''
 		s = self.main_subject
 		
-		# trust the inflection of the verb if it exists
 		if self.main_verb.get_morph('Number'):
+			# trust the inflection of the verb if it exists
 			return self.main_verb.get_morph('Number')
 		elif isinstance(s,list) and len(s) > 1:
+			# if the subject is a list, there could be many reasons
+			# so we have a special function to deal with that
 			return self._get_list_subject_number(s)
 		elif s.dep_ in ['csubj', 'csubjpass']:
 			# clausal subjects are not correctly associated
@@ -644,6 +646,7 @@ class EDoc():
 			# but when it is the head noun, it should be plural
 			return 'Plur'
 		elif s.text in ALL_PARTITIVES:
+			# special logic here, so a separate function
 			return self._get_partitive_subject_number(s)
 		elif (
 			self.main_subject_determiner and
@@ -663,7 +666,11 @@ class EDoc():
 			self.main_subject_determiner.get_morph('Number') and 
 			self.main_subject_determiner.tag_ == 'DT' and 
 			not self.main_subject_determiner.text in ALL_PARTITIVES
-		):	# if there is a helpful determiner
+		):	# if there is a helpful determiner that isn't a list
+			# that has a number feature (i.e., 'these')
+			# and it isn't a partitive (since some partitives)
+			# have default number features, which shouldn't override
+			# the nouns number
 			return self.main_subject_determiner.get_morph('Number')
 		elif (
 			s.text in PLURALS_WITH_NO_DETERMINERS and 
@@ -678,13 +685,16 @@ class EDoc():
 			# but when they have no determiner, they are always plural
 			# if they are a count noun. 'all' is exceptional
 			# because if it occurs with one of these special nouns, 
-			# it is always plural. 'some' is ambiguous
+			# it is always plural. ('some' is ambiguous)
 			return 'Plur'
 		elif s.get_morph('Number'):
+			# turns out just about the last thing we want to do is trust
+			# the number feature spaCy assigns. go figure
 			return s.get_morph('Number')
-		elif self.main_verb.get_morph('Number'):
-			return self.main_verb.get_morph('Number')
 		else:
+			# usually we end up here because of adjectives serving
+			# as nouns (the latter, etc.), or genuine ambiguity 
+			# (neither is/are, etc.)
 			log.warning(
 				f'No number feature for "{s}" was found in "{self}"! '
 				 "I'm going to guess it's singular, but this may be wrong!"
