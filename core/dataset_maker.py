@@ -14,11 +14,8 @@ import random
 import logging
 import traceback
 
-from pympler import muppy, summary
-
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
-from pprint import PrettyPrinter
 from typing import List, Callable, Tuple, Dict, Set
 from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
