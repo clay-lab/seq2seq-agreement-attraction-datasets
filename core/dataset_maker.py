@@ -168,7 +168,7 @@ def create_seq2seq_dataset(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
 				'\n\t'.join([
 					f'{k>{max(len(k) for k in all_ks)}}: {v/total:.04f} ({v:0{n}}/{total})' 
-					for k, v in sorted(all_ks, key=lambda p: (-p[1], p[0]))
+					for k, v in sorted(all_ks.items(), key=lambda p: (-p[1], p[0]))
 				]) + 
 				'\n'
 			)	
