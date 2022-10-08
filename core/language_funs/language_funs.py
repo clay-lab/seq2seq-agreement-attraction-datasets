@@ -53,9 +53,15 @@ def string_conditions(s: str) -> bool:
 			return False
 		
 		# the closing delimiter can't come before the first opening delimiter
-		# we're not doing anything fancier because it's more expensive
-		if d2 in s and d1 in s:
+		if d1 in s and d2 in s:
 			if s.index(d2) < s.index(d1):
+				return False
+		
+		# the opening delimiter can't follow the final closing delimiter
+		# we're not doing anything fancier than these because it's more annoying
+		# and doesn't really come up
+		if d2 in s and d1 in s:
+			if s[::-1].index(d1) < s[::-1].index(d2):
 				return False
 	
 	if any(re.search(regex, s) for regex in EXCLUSION_REGEXES):
