@@ -1120,11 +1120,11 @@ class EDoc():
 		# get conjoined verbs and reinflect those too
 		# this can be easily turned off
 		if conjoined:
-			conj_vs = [t for t in v.children if t.dep_ == 'conj' and (t.is_verb or t.is_aux)]
+			conj_vs = [t for t in v.children if t.dep_ == 'conj' and (t.can_be_inflected)]
 			# don't reinflect conjoined verbs if they have their own subjects
 			conj_vs = [
 				[v]
-				if v.can_be_inflected 
+				if v.can_be_inflected and not v.has_subject
 				else [
 					t for t in v.children 
 					if 	t.dep_ in ['aux', 'auxpass'] and 

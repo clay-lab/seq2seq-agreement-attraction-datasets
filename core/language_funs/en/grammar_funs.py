@@ -88,6 +88,10 @@ def no_dist_conditions(s: str) -> bool:
 		if not s.root_is_verb:
 			return False
 		
+		# no unidentified words or foreign words
+		if any(t.pos_ == 'X' or t.tag_ == 'FW' for t in s):
+			return False
+		
 		# disallow verbs with common typos
 		if any(t in s.main_verb.text for t in COMMON_VERB_TYPOS):
 			return False
@@ -143,6 +147,11 @@ def no_dist_conditions(s: str) -> bool:
 		
 		# if there are distractors, we don't want it for training
 		if s.has_main_subject_verb_distractors:
+			return False
+		
+		# a lot of these weird "The district covered about of Cambridge..."
+		# show up. weird!
+		if s.is_transitive and not isinstance(s.main_object,list) and s.main_object.text == 'about':
 			return False
 		
 		return s
