@@ -19,7 +19,7 @@ from pympler import muppy, summary
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from pprint import PrettyPrinter
-from typing import List, Callable, Tuple, Dict
+from typing import List, Callable, Tuple, Dict, Set
 from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
 
@@ -41,12 +41,12 @@ split_sentences.add_pipe('sentencizer')
 # this is a list of keys in the metadata dict
 # to exclude from printing (because there are
 # too many categories to be informative, etc.)
-DONT_PRINT: List[str] = [
+DONT_PRINT: Set[str] = {
 	'pos_sequence',
 	'tag_sequence',
 	'src_history',
 	'tgt_history',
-]
+}
 
 def create_seq2seq_dataset(
 	dataset: str,
@@ -124,8 +124,6 @@ def create_seq2seq_dataset(
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
-		os.makedirs(os.path.join('data', name), exist_ok=True)
-		
 		with logging_redirect_tqdm():		
 			for _ in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
 				ex = ''
@@ -156,6 +154,7 @@ def create_seq2seq_dataset(
 				'\n'
 			)
 		
+		os.makedirs(os.path.join('data', name), exist_ok=True)
 		log.info(f'Writing out dataset {name} ({split}).')
 		with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
 			for ex in tqdm(new_dataset, miniters=miniters):
