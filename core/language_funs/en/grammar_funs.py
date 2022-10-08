@@ -53,6 +53,16 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'tooj', # from took
 }
 
+# the wikipedia dump removes measure words
+# like, "The terrain occupies 464 acres adjacent to..."
+# becomes "The terrain occupies adjacent to..."
+# for whatever reason. spaCy parses these as weird objects
+# let's exclude them
+MEASURE_WORDS: Set[str] = {
+	'about',
+	'adjacent',
+}
+
 def no_dist_conditions(s: str) -> bool:
 	'''
 	Applies conditions to en sentence in order.
@@ -152,7 +162,7 @@ def no_dist_conditions(s: str) -> bool:
 		# a lot of these weird "The district covered about of Cambridge..."
 		# show up. it's bizarre and consistently odd. I guess the measure
 		# terms were removed from the dataset?
-		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text == 'about'):
+		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in MEASURE_WORDS):
 			return False
 		
 		return s
