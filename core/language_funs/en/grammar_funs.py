@@ -9,7 +9,7 @@ from typing import Dict, Set
 
 from ..language_funs import string_conditions
 from ...spacyutils import nlp, EDoc
-from ...constants import NOUN_POS_TAGS, SUBJ_EXCL_TAGS
+from ...constants import *
 
 log = logging.getLogger(__name__)
 
@@ -150,8 +150,9 @@ def no_dist_conditions(s: str) -> bool:
 			return False
 		
 		# a lot of these weird "The district covered about of Cambridge..."
-		# show up. weird!
-		if s.is_transitive and not isinstance(s.main_object,list) and s.main_object.text == 'about':
+		# show up. it's bizarre and consistently odd. I guess the measure
+		# terms were removed from the dataset?
+		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text == 'about'):
 			return False
 		
 		return s
