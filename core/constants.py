@@ -47,11 +47,11 @@ EXCLUSION_STRINGS: Set[str] = {
 	'|'
 }
 
-# must not contain a colon/period surrounded by two word characters
-# (occurs in references lists, URLs and emails)
+# must not contain a punctuation sandwiched
+# by two letters---however, this string EXCLUDES
+# the apostrophe, which is okay
 EXCLUSION_REGEXES: Set[str] = {
-	r'\w:\w',
-	r'\w\.\w'
+	r'\w[!"#$%&()*+,-./:;<=>?@[\\\]^_`{|}~]\w'
 }
 
 VALID_SENTENCE_ENDING_CHARS: Set[str] = {
