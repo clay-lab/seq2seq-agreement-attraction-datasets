@@ -58,9 +58,12 @@ COMMON_VERB_TYPOS: Set[str] = {
 # becomes "The terrain occupies adjacent to..."
 # for whatever reason. spaCy parses these as weird objects
 # let's exclude them
-MEASURE_WORDS: Set[str] = {
+BAD_OBJECTS: Set[str] = {
 	'about',
 	'adjacent',
+	'the',
+	'over',
+	'approximately',
 }
 
 def no_dist_conditions(s: str) -> bool:
@@ -162,7 +165,7 @@ def no_dist_conditions(s: str) -> bool:
 		# a lot of these weird "The district covered about of Cambridge..."
 		# show up. it's bizarre and consistently odd. I guess the measure
 		# terms were removed from the dataset?
-		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in MEASURE_WORDS):
+		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in BAD_OBJECTS):
 			return False
 		
 		return s
