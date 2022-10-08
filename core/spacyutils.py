@@ -921,8 +921,13 @@ class EDoc():
 			# if the subject is a list, there could be many reasons
 			# so we have a special function to deal with that
 			return self._get_list_noun_number(s, deps=deps)
-		elif s.dep_ in ['csubj', 'csubjpass']:
-			# clausal subjects are not correctly associated
+		elif s.is_verb and not s.can_be_inflected:
+			# gerunds and nominal verbs are grammatically singular
+			return 'Sing'
+		elif (
+			s.dep_ in ['csubj', 'csubjpass'] or 
+			(s.dep_ in OBJ_DEPS and s.tag_ in ['WP', 'WD', 'WDT'])
+		):	# clausal subjects/object are not correctly associated
 			# with a Singular number feature
 			return 'Sing'
 		elif s.text in ['Some', 'some'] and s.dep_ != 'det':
@@ -1014,6 +1019,9 @@ class EDoc():
 				# of a copular sentence. like "some were discarded buses,
 				# rais carriages."
 				return 'Plur'
+			elif s.is_verb and not s.can_be_inflected:
+				# gerunds and nominalized verbs are singular
+				return 'Sing'
 			else:
 				log.warning(
 					f'No number feature for "{s}" was found in "{self}"! '
@@ -1075,7 +1083,7 @@ class EDoc():
 		# and some copular sentences
 		# one subject and one attr
 		if any(tag_counts[dep] == 1 for dep in deps) and tag_counts['attr'] == 1:
-			nums = [t.get_morph('Number') for t in s]
+			nums = [t.get_morph('Number') if not (t.is_verb and t.can_be_inflected) else 'Sing' for t in s]
 			# if all the subjects are singular and we have one attr
 			# and one nsubj, then the subject is singular
 			if all([n == 'Sing' for n in nums]):
