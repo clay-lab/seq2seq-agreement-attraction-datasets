@@ -14,11 +14,8 @@ import random
 import logging
 import traceback
 
-from pympler import muppy, summary
-
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
-from pprint import PrettyPrinter
 from typing import List, Callable, Tuple, Dict, Set
 from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
@@ -145,10 +142,12 @@ def create_seq2seq_dataset(
 		if 'prefix' in new_dataset[0]['translation']:
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
+			pad_len = max(len(k) for k in prefixes)
+			pad_len2 = len(str(total))
 			log.info(
 				f'\n\nPr. of each prefix ({split}):\n\t' + 
 				'\n\t'.join([
-					f'{k:>{max(len(k) for k in prefixes)}}: {v/total:.04f} ({v:0{n}}/{total})'
+					f'{k:>{pad_len}}: {v/total:.04f} ({v:0{pad_len2}}/{total})'
 					for k, v in sorted(prefixes.items(), key=lambda p: (-p[1], p[0]))
 				]) + 
 				'\n'
@@ -164,11 +163,13 @@ def create_seq2seq_dataset(
 		for k in [k for k in new_metadata[0] if not k in DONT_PRINT]:
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
+			pad_len = max(len(k) for k in all_ks)
+			pad_len2 = len(str(total))
 			log.info(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
 				'\n\t'.join([
-					f'{k>{max(len(k) for k in all_ks)}}: {v/total:.04f} ({v:0{n}}/{total})' 
-					for k, v in sorted(all_ks, key=lambda p: (-p[1], p[0]))
+					f'{k>{pad_len}}: {v/total:.04f} ({v:0{pad_len2}}/{total})' 
+					for k, v in sorted(all_ks.items(), key=lambda p: (-p[1], p[0]))
 				]) + 
 				'\n'
 			)	
