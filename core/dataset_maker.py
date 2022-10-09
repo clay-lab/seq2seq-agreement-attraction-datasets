@@ -142,7 +142,7 @@ def create_seq2seq_dataset(
 		if 'prefix' in new_dataset[0]['translation']:
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
-			pad_len = max(len(k) for k in prefixes)
+			pad_len = max(len(str(k)) for k in prefixes)
 			pad_len2 = len(str(total))
 			log.info(
 				f'\n\nPr. of each prefix ({split}):\n\t' + 
@@ -163,7 +163,7 @@ def create_seq2seq_dataset(
 		for k in [k for k in new_metadata[0] if not k in DONT_PRINT]:
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
-			pad_len = max(len(k) for k in all_ks)
+			pad_len = max(len(str(k)) for k in all_ks)
 			pad_len2 = len(str(total))
 			log.info(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
