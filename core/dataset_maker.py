@@ -122,7 +122,7 @@ def create_seq2seq_dataset(
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
-		with logging_redirect_tqdm():		
+		with logging_redirect_tqdm():
 			for i in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
 				ex = ''
 				while not ex:
