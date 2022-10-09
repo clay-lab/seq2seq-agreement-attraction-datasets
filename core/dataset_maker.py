@@ -108,8 +108,9 @@ def create_seq2seq_dataset(
 		raise ValueError(f'Unable to load dataset {dataset} on huggingface!')
 	
 	for split, n in splits.items():
-		new_dataset 	= []
-		new_metadata 	= []
+		# preallocate
+		new_dataset 	= [None for _ in range(n)]
+		new_metadata 	= [None for _ in range(n)]
 		
 		file_name 		= os.path.join('data', name, f'{name}_{split}.json.gz')
 		metadata_name 	= os.path.join('data', name, f'{name}_{split}_metadata.json.gz')
@@ -122,14 +123,14 @@ def create_seq2seq_dataset(
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
 		with logging_redirect_tqdm():		
-			for _ in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
+			for i in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
 				ex = ''
 				while not ex:
 					ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
 					try:
 						pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
-						new_dataset.append({'translation': {k: str(v) for k, v in pair.items()}})
-						new_metadata.append(metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs))
+						new_dataset[i] = {'translation': {k: str(v) for k, v in pair.items()}}
+						new_metadata[i] = metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)
 					except KeyboardInterrupt:
 						sys.exit('User terminated program.')
 					except Exception as e:
