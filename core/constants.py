@@ -57,6 +57,7 @@ EXCLUSION_STRINGS: Set[str] = {
 	" d've ",
 	" ll've ",
 	'himthat',
+	'hilself',
 }
 
 # must not contain a punctuation sandwiched
@@ -761,6 +762,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'They': {'Number': 'Plur'},
 	'they': {'Number': 'Plur'},
 	'Luxembourg': {'Number': 'Sing'},
+	'Somewhere': {'Number': 'Sing'},
+	'somewhere': {'Number': 'Sing'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 
