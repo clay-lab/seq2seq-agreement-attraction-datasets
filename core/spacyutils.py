@@ -351,11 +351,21 @@ class EToken():
 		# text is in the map with 'any' number (common for past tense)
 		# and then get the tense info if it's there 
 		if CONJUGATE_MAP.get(self.text, {}).get(c_kwargs['number'], {}).get(c_kwargs['tense'], {}):
-			self.text = CONJUGATE_MAP[self.text][c_kwargs['number']][c_kwargs['tense']]
+			text = CONJUGATE_MAP[self.text][c_kwargs['number']][c_kwargs['tense']]
 		elif CONJUGATE_MAP.get(self.text, {}).get('any', {}).get(c_kwargs['tense'], {}):
-			self.text = CONJUGATE_MAP[self.text]['any'][c_kwargs['tense']]
+			text = CONJUGATE_MAP[self.text]['any'][c_kwargs['tense']]
 		else:
-			self.text = conjugate(self.text, **c_kwargs)
+			text = conjugate(self.text, **c_kwargs)
+		
+		# if conjugation has produced an empty 
+		# string, something has gone wrong
+		if not text:
+			raise ParseError(
+				f'Reinflection of "{self.text}" ({c_kwargs}) '
+				 'was unsuccessful!'
+			)
+		
+		self.text = text
 		
 		n = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
 		t = 'Past' if TENSE_MAP.get(tense) == PAST else 'Pres'
@@ -1145,7 +1155,12 @@ class EDoc():
 		else:
 			all_vs = [v]
 		
+		# this will allow us to account for contractions
+		whitespaces_modified = []
+		
 		for v in all_vs:
+			# handle contractions
+			starts_with_apostrophe = v.text.startswith("'")
 			if (v.text in HOMOPHONOUS_VERBS and HOMOPHONOUS_VERBS[v.text]['condition'](v)):
 				if any(kwargs.keys()):
 					log.warning(
@@ -1175,7 +1190,14 @@ class EDoc():
 			else:
 				v.reinflect(number, tense, **kwargs)
 			
-		return self.copy_with_replace(tokens=all_vs)
+			# if we've removed an apostrophe, we need 
+			# to add a space after the preceding word
+			if starts_with_apostrophe and not v.text.startswith("'"):
+				before_word = self[v.i-1]
+				before_word.whitespace_ = ' '
+				whitespaces_modified.append(before_word)
+			
+		return self.copy_with_replace(tokens=all_vs + whitespaces_modified)
 	
 	def make_main_verb_past_tense(self) -> 'EDoc':
 		'''Convert the main verb to past tense.'''

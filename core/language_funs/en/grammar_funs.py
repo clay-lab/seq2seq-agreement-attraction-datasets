@@ -64,6 +64,8 @@ BAD_OBJECTS: Set[str] = {
 	'the',
 	'over',
 	'approximately',
+	'came',
+	'an',
 }
 
 def no_dist_conditions(s: str) -> bool:

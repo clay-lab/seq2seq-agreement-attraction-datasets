@@ -9,4 +9,9 @@ if __name__ == '__main__':
 		from core.spacyutils import nlp
 		from core.constants import *
 		from core.language_funs.en.grammar_funs import *
+		from pattern.en import (
+			SG, PL, 
+			PAST, PRESENT, 
+			conjugate, singularize, pluralize
+		)
 		breakpoint()

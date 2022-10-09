@@ -44,14 +44,27 @@ EXCLUSION_STRINGS: Set[str] = {
 	'}',
 	'[',
 	']',
-	'|'
+	'|',
+	# account for missing apostrophes with contractions
+	' m ',
+	' re ',
+	' s ',
+	' d ',
+	' ve ',
+	' ll ',	
+	' t ',
+	" t've ",
+	" d've ",
+	" ll've ",
+	'himthat',
 }
 
 # must not contain a punctuation sandwiched
-# by two letters---however, this string EXCLUDES
-# the apostrophe, which is okay
+# by two letters---we are intentionally excluding
+# apostrophes, since they lead to difficulties with inflecting
+# the verb
 EXCLUSION_REGEXES: Set[str] = {
-	r'\w[!"#$%&()*+,-./:;<=>?@[\\\]^_`{|}~]\w'
+	r'\w[!\'"#$%&()*+,-./:;<=>?@[\\\]^_`{|}~]\w',
 }
 
 VALID_SENTENCE_ENDING_CHARS: Set[str] = {
@@ -787,7 +800,9 @@ PARTITIVES_OPTIONAL_OF: Set[str] = {
 	'First',
 	'first',
 	'Last',
-	'last'
+	'last',
+	'Any',
+	'any',
 }
 
 # these are partitives when they have an indefinite
