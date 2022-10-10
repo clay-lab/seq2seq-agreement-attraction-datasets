@@ -42,6 +42,12 @@ EN_ABBREVIATIONS: Set[str] = {
 MISPARSED_AS_VERBS: Set[str] = {
 	'swans', # this should be a noun, but spaCy has misparsed it
 			 # as a verb in 'Trumpeter swans winter along the upper Stuart.'
+	'it', # don't know, but clearly wrong
+	'debouche', # french
+	'o', # don't know, but it's clearly wrong
+	'in', # don't know, but it's clearly wrong
+	'erinnert', # german
+	'braucht', # german
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -53,6 +59,13 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'vere', # from veer
 	'prevee', # ????
 	'tooj', # from took
+	'wnt', # from want
+	'wonn', # from won
+	'competied', # from compete
+	'competies', # from compete
+	'competended', # no idea
+	'competends',
+	'competend',
 }
 
 # the wikipedia dump removes measure words
@@ -71,6 +84,7 @@ BAD_OBJECTS: Set[str] = {
 	'to',
 	'.',
 	'together',
+	'between',
 }
 
 def no_dist_conditions(s: str) -> bool:

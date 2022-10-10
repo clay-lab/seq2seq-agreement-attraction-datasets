@@ -154,7 +154,7 @@ def create_seq2seq_dataset(
 			log.info(
 				f'\n\nPr. of each prefix ({split}):\n\t' + 
 				'\n\t'.join([
-					f'{str(k):>{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})'
+					f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})'
 					for k, v in sorted(prefixes.items(), key=lambda p: (-p[1], p[0]))
 				]) + 
 				'\n'
@@ -183,7 +183,7 @@ def create_seq2seq_dataset(
 			log.info(
 				f'\n\nPr. of each {k} ({split}):\n\t' + 
 				'\n\t'.join([
-					f'{str(k):>{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})' 
+					f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})' 
 					for k, v in sorted(all_ks.items(), key=lambda p: (-p[1], p[0]))
 				]) + 
 				'\n'

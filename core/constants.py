@@ -33,6 +33,7 @@ EXCLUSION_STRINGS: Set[str] = {
 	'.net',
 	'@',
 	'#',
+	'%',
 	'^',
 	'*',
 	'+',
@@ -63,9 +64,10 @@ EXCLUSION_STRINGS: Set[str] = {
 # must not contain a punctuation sandwiched
 # by two letters---we are intentionally excluding
 # apostrophes, since they lead to difficulties with inflecting
-# the verb
+# the verb. also no punctuations two in a row
 EXCLUSION_REGEXES: Set[str] = {
 	r'\w[!\'"#$%&()*+,-./:;<=>?@[\\\]^_`{|}~]\w',
+	r'[!\'"#$%&()*+,-./:;<=>?@[\\\]^_`{|}~]{2}',
 }
 
 VALID_SENTENCE_ENDING_CHARS: Set[str] = {
@@ -240,9 +242,18 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'centers': {
 		'any': 		{'past': 'centered'},
 	},
+	'quitted': {
+		'any':		{'past': 'quit'},
+	},
 	'quit': {
 		'any':		{'past': 'quit'},
 	},
+	'quits': {
+		'any':		{'past': 'quit'},
+	},
+	'benefited': {
+		'any':		{'past': 'benefitted'},
+	}
 	'benefitted': {
 		'any':		{'past': 'benefitted'},
 	},
@@ -454,7 +465,125 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'teared': {
 		'any':		{'past': 'teared'},
-	}
+	},
+	'spirited': {
+		'singular': {'present': 'spirits'},
+		'plural':	{'present': 'spirit'},
+	},
+	'spirits': {
+		'any':		{'past': 'spirited'},
+	},
+	'spirit': {
+		'any':		{'past': 'spirited'},
+	},
+	'sped': {
+		'singular': {'present': 'speeds'},
+		'plural': 	{'present': 'speed'},
+		'any':		{'past': 'sped'},
+	},
+	'siphoned': {
+		'any':		{'past': 'siphoned'},
+	},
+	'siphons': {
+		'any':		{'past': 'siphoned'},
+	},
+	'siphon': {
+		'any':		{'past': 'siphoned'},
+	},
+	'rang': {
+		'singular': {'present': 'rings'},
+		'plural': 	{'present': 'ring'},
+		'any':		{'past': 'rang'},
+	},
+	'rings': {
+		'any':		{'past': 'rang'},
+	},
+	'ring': {
+		'any':		{'past': 'rang'},
+	},
+	'resubmitted': {
+		'any':		{'past': 'resubmitted'},
+	},
+	'resubmits': {
+		'any':		{'past': 'resubmitted'},
+	},
+	'resubmit': {
+		'any':		{'past': 'resubmitted'},
+	},
+	'rediscovered': {
+		'any': 		{'past': 'rediscovered'},
+	},
+	'rediscovers': {
+		'any':		{'past': 'rediscovered'},
+	},
+	'rediscover': {
+		'any':		{'past': 'rediscovered'},
+	},
+	'gripped': {
+		'any':		{'past': 'gripped'},
+	},
+	'grips': {
+		'any':		{'past': 'gripped'},
+	},
+	'grip': {
+		'any':		{'past': 'gripped'},
+	},
+	'sprung': {
+		'singular': {'present': 'springs'},
+		'plural': 	{'present': 'spring'},
+		'any':		{'past': 'sprang'},
+	},
+	'springs': {
+		'any':		{'past': 'sprang'},
+	},
+	'spring': {
+		'any':		{'past': 'sprang'},
+	},
+	'quoted': {
+		'any':		{'past': 'quoted'},
+	},
+	'quotes': {
+		'any':		{'past': 'quoted'},
+	},
+	'quote': {
+		'any':		{'past': 'quoted'},
+	},
+	'burned': {
+		'any':		{'past': 'burned'},
+	},
+	'burns': {
+		'any':		{'past': 'burned'},
+	},
+	'burn': {
+		'any':		{'past': 'burned'},
+	},
+	'focussed': {
+		'any': 		{'past': 'focused'},
+	},
+	'focused': {
+		'any':		{'past': 'focused'},
+	},
+	'focuses': {
+		'any':		{'past': 'focused'},
+	},
+	'focus': {
+		'any':		{'past': 'focus'},
+	},
+	'fed': {
+		'singular': {'present': 'feeds'},
+		'plural': 	{'present': 'feed'},
+		'any':		{'past': 'fed'},
+	},
+	'feeds': {
+		'singular': {'present': 'feeds'},
+		'plural':	{'present': 'feed'},
+		'any':		{'past': 'fed'},
+	},
+	'feed': {
+		'singular': {'present': 'feeds'},
+		'plural': 	{'present': 'feed'},
+		'any':		{'past': 'fed'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -486,14 +615,23 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'fulfilled': 'fulfill',
 	'fulfils': 'fulfill',
 	'fulfil': 'fulfill',
-	# something special could be done for 
-	# transitive 'secrete' vs. intransitive 'secret (away)'
-	# but this is probably low frequency enough it doesn't matter
-	# also 'tear/tore (transitive)' and 'tear/teared (up) (intransitive)'
-	# as well as fall (intransitive) and fell (transitive)
 	'installed': 'install',
 	'enrolled': 'enroll',
 	'got': 'get',
+	'resubmitted': 'resubmit',
+	'reentered': 'reenter',
+	'reconnected': 'reconnect',
+	'reburied': 'rebury',
+	'prepped': 'prep',
+	'petered': 'peter',
+	'overbilled': 'overbill',
+	'minored': 'minor',
+	'inclouded': 'incloud',
+	'comped': 'comp',
+	'cofounded': 'cofound',
+	'bricked': 'brick',
+	'blogged': 'blog',
+	'deeded': 'deed',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -758,7 +896,7 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'That': {'Number': 'Sing'},
 	'that': {'Number': 'Sing'},
 	'Another': {'Number': 'Sing'},
-	'another': {'Number': 'sing'},
+	'another': {'Number': 'Sing'},
 	'They': {'Number': 'Plur'},
 	'they': {'Number': 'Plur'},
 	'Luxembourg': {'Number': 'Sing'},
