@@ -18,7 +18,7 @@ from pattern.en import lexeme # just to deal with a bug
 from pattern.en import singularize, pluralize
 from pattern.en import conjugate
 from pattern.en import SG, PL
-from pattern.en import PAST, PRESENT
+from pattern.en import PAST, PRESENT, INFINITIVE
 
 from .constants import *
 from .timeout import timeout
@@ -47,7 +47,7 @@ class EToken():
 	'''
 	Wrapper around spaCy Token to implement useful methods.
 	'''
-	def __init__(self, token: Token) -> 'EToken':
+	def __init__(self, token: Token = None, d: Dict = None) -> 'EToken':
 		'''
 		Creates an EToken from a spaCy Token.
 		This has all the attributes needed to create
@@ -57,19 +57,32 @@ class EToken():
 		just what is needed to create something editable
 		to make a new EDoc.
 		'''
-		self._token 		= token
-		self.text 			= token.text
-		self.whitespace_	= token.whitespace_
-		self.tag_			= token.tag_
-		self.pos_			= token.pos_
-		self.morph 			= token.morph
-		self.lemma_			= WRONG_LEMMAS.get(token.text, token.lemma_)
-		self.head 			= token.head
-		self.dep_ 			= token.dep_
-		self.is_sent_start 	= token.is_sent_start
-		self.ent_iob_		= token.ent_iob_
-		self.i 				= token.i
+		if token is None and d is None:
+			raise ValueError('At least one of token or d must be provided!')
+			
+		if token is not None and d is not None:
+			raise ValueError('At most one of token or d may be provided!')
 		
+		if d is None:
+			self._token 		= token
+			self.text 			= token.text
+			self.whitespace_	= token.whitespace_
+			self.tag_			= token.tag_
+			self.pos_			= token.pos_
+			self.morph 			= token.morph
+			self.lemma_			= WRONG_LEMMAS.get(token.text, token.lemma_)
+			self.head 			= token.head
+			self.dep_ 			= token.dep_
+			self.is_sent_start 	= token.is_sent_start
+			self.ent_iob_		= token.ent_iob_
+			self.i 				= token.i
+		elif token is None:
+			for k in d:
+				setattr(self, k, d[k])
+		
+		self._format_token()
+
+	def _format_token(self) -> None:
 		# spaCy doesn't respect this property when
 		# we create a Doc manually using the constructor.
 		# I don't know why. But let's fix it here.
@@ -118,6 +131,36 @@ class EToken():
 		'''Returns the text of the token.'''
 		return self.__str__()
 	
+	@classmethod
+	def from_definition(
+		cls,
+		text: str,
+		whitespace_: str,
+		tag_: str = '',
+		pos_: str = '',
+		morph: str = '',
+		lemma_: str = '',
+		head: str = '',
+		dep_: str = '',
+		is_sent_start: bool = False,
+		ent_iob_: str = '',
+		i: int = None,
+	) -> 'EToken':
+		'''Manually create an EToken.'''
+		return EToken(d=dict(
+			text=text,
+			whitespace_=whitespace_,
+			tag_=tag_,
+			pos_=pos_,
+			morph=morph,
+			lemma_=lemma_,
+			head=head,
+			dep_=dep_,
+			is_sent_start=is_sent_start,
+			ent_iob_=ent_iob_,
+			i=i,
+		))
+	
 	@property
 	def rights(self) -> 'EToken':
 		'''Generator for the underlying Token's rights attribute.'''
@@ -155,7 +198,7 @@ class EToken():
 			not self.tag_ in ['VBN', 'VBG'] and
 			(
 				self.is_verb or 
-				(self.is_aux and self.lemma_ in ['be', 'have', 'get'])
+				(self.is_aux and self.lemma_ in INFLECTED_AUXES)
 			)
 		)
 	
@@ -277,7 +320,7 @@ class EToken():
 	def _dict_to_morph(d: Dict[str,str]) -> str:
 		'''Convert a dict to morph format.'''
 		d = {k: v for k, v in d.items() if v is not None}
-		return '|'.join(['='.join([k, v]) for k, v in d.items()])
+		return '|'.join(['='.join([str(k), str(v)]) for k, v in d.items()])
 	
 	def set_morph(self, **kwargs) -> Dict:
 		'''
@@ -286,6 +329,7 @@ class EToken():
 		'''
 		d = self._morph_to_dict
 		d = {**d, **kwargs}
+		d = {k: v for k, v in d.items() if v is not None}
 		self.morph = self._dict_to_morph(d)
 	
 	def get_morph(self, *args) -> Union[str,List[str]]:
@@ -350,9 +394,9 @@ class EToken():
 		# if not, it's because it's None, so see if the verb's
 		# text is in the map with 'any' number (common for past tense)
 		# and then get the tense info if it's there 
-		if CONJUGATE_MAP.get(self.text, {}).get(c_kwargs['number'], {}).get(c_kwargs['tense'], {}):
+		if CONJUGATE_MAP.get(self.text, {}).get(c_kwargs.get('number'), {}).get(c_kwargs.get('tense'), {}):
 			text = CONJUGATE_MAP[self.text][c_kwargs['number']][c_kwargs['tense']]
-		elif CONJUGATE_MAP.get(self.text, {}).get('any', {}).get(c_kwargs['tense'], {}):
+		elif CONJUGATE_MAP.get(self.text, {}).get('any', {}).get(c_kwargs.get('tense'), {}):
 			text = CONJUGATE_MAP[self.text]['any'][c_kwargs['tense']]
 		else:
 			text = conjugate(self.text, **c_kwargs)
@@ -367,11 +411,13 @@ class EToken():
 		
 		self.text = text
 		
-		n = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
-		t = 'Past' if TENSE_MAP.get(tense) == PAST else 'Pres'
+		n = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur' if NUMBER_MAP.get(number) == PL else None
+		t = 'Past' if TENSE_MAP.get(tense) == PAST else 'Pres' if TENSE_MAP.get(tense) == PRESENT else None
 		
 		m_kwargs = dict(Number=n, Tense=t)
-		m_kwargs = {k: v for k, v in m_kwargs.items() if v is not None}
+		if tense == INFINITIVE:
+			m_kwargs.update(dict(VerbForm='Inf'))
+		
 		m_kwargs = {**m_kwargs, **kwargs}
 		
 		self.set_morph(**m_kwargs)
@@ -383,6 +429,10 @@ class EToken():
 	def make_present_tense(self, number: str) -> None:
 		'''Make the (VERB) token present tense.'''
 		self.reinflect(number=number, tense=PRESENT)
+	
+	def make_infinitive(self) -> None:
+		'''Make the (VERB) token infinitive.'''
+		self.reinflect(tense=INFINITIVE)
 
 class EDoc():
 	'''
@@ -589,6 +639,53 @@ class EDoc():
 		deps 		= [t.dep_ for t in tokens]	
 		sent_starts = [t.is_sent_start for t in tokens]
 		sent_starts[0] = True # what if removing the first token?
+		ents 		= [t.ent_iob_ for t in tokens]
+		
+		new_s = Doc(
+			vocab=vocab,
+			words=words,
+			spaces=spaces,
+			user_data=user_data,
+			tags=tags,
+			pos=pos,
+			morphs=morphs,
+			lemmas=lemmas,
+			heads=heads,
+			deps=deps,
+			sent_starts=sent_starts,
+			ents=ents
+		)
+		
+		return EDoc(new_s, previous=self)
+	
+	def _copy_with_add(
+		self,
+		token: EToken,
+		index: int,
+	) -> 'EDoc':
+		'''
+		Creates a copy of the current doc with
+		the tokens at the indices removed.
+		Generally best to avoid; used internally
+		for conjunction reduction.
+		'''
+		tokens 		= self[:]
+		tokens.insert(index, token)
+		
+		vocab 		= self.vocab
+		words 		= [t.text for t in tokens]
+		spaces 		= [t.whitespace_ == ' ' for t in tokens]
+		user_data	= self.user_data
+		tags 		= [t.tag_ for t in tokens]
+		pos 		= [t.pos_ for t in tokens]
+		morphs 		= [str(t.morph) for t in tokens]
+		lemmas 		= [t.lemma_ for t in tokens]
+		heads 		= [t.head.i for t in tokens]
+		heads 		= [h + 1 if h > index else h for h in heads]
+		
+		deps 		= [t.dep_ for t in tokens]	
+		sent_starts = [t.is_sent_start for t in tokens]
+		sent_starts = [True] + [False for _ in range(len(tokens)-1)]
 		ents 		= [t.ent_iob_ for t in tokens]
 		
 		new_s = Doc(
@@ -1355,3 +1452,139 @@ class EDoc():
 		'''Make all distractor nouns match the main subject number.'''
 		n = NUMBER_MAP[self.main_subject_number]
 		return self.renumber_main_subject_verb_distractors(number=n)
+	
+	def make_sentence_polar_question(self) -> 'EDoc':
+		'''Convert a sentence EDoc into a polar question.'''
+		# the current way of doing this results in a weird-looking history, due to the fact
+		# we create a new object multiple times in this function. However, adding more
+		# than one token at a time is tricky and prone to error, so we'll have to deal with
+		# the oddity for now.
+		
+		# if we have conjoined multiple clauses, we need to make each a question separately
+		v = self.main_verb
+		vs = [v] + [t for t in self._get_conjuncts(v)]
+		
+		question = self
+		added = 0
+		
+		replacements = []
+		indices = []
+		
+		for v in vs:
+			# we find the earliest index associated with each subject phrase
+			has_subj = True
+			s = [t for t in v.children if t.dep_ in SUBJ_DEPS]
+			
+			if len(s) == 1:
+				s = s[0]
+			
+			if not s:
+				# the verb doesn't have its own subject,
+				# but we still want to use the subject for
+				# reinflection, so we set it here
+				has_subj = False
+				s = self.main_subject
+			
+			if has_subj:
+				if v.is_aux:
+					# if we are headed by an aux, we move that to the front
+					aux = v
+				else:
+					added += 1
+					
+					# otherwise, we use do-support
+					aux = EToken.from_definition(**{
+								**Q_DO, 
+								'whitespace_': ' ',
+								'head': v,
+							})
+					
+					if aux.can_be_inflected:
+						r_kwargs = dict(
+							number = s.get_morph('Number') if not isinstance(s,list) else self._get_list_noun_number(s),
+							tense = v.get_morph('Tense')
+						)
+						
+						if not isinstance(s,list):
+							person = s.get_morph('Person')
+							if person:
+								r_kwargs.update(dict(person=int(person)))
+						
+						aux.reinflect(**r_kwargs)
+				
+				if isinstance(s,list):
+					earliest_subject_index = min([t.i for t in s])
+					s = self[earliest_subject_index]
+					chi = [t for t in s.children]
+				else:
+					earliest_subject_index = s.i
+					chi = [t for t in s.children]
+				
+				if chi:
+					earliest_subject_index = min([earliest_subject_index, *[t.i for t in chi]])
+				
+				# if we are replacing the first token with aux
+				# we need to capitalize the aux
+				if earliest_subject_index == 0:
+					aux.text = aux.text.capitalize()
+					aux.is_sent_start = True
+				else:
+					aux.is_sent_start = False
+				
+				aux.i = earliest_subject_index
+				
+				# add the aux to the correct position
+				question = question._copy_with_add(token=aux, index=earliest_subject_index+added-1)
+				
+				# if we are replacing the first token with aux
+				# we need to decapitalize it if it is not a proper noun
+				initial = self[0]
+				if initial.pos_ != 'PROPN' and not initial.text == 'I' and earliest_subject_index == 0:
+					if len(initial.text) > 1:
+						initial.text = initial.text[0].lower() + initial.text[1:]
+					else:
+						initial.text = initial.text.lower()
+					
+					replacements.append(initial)
+					indices.append(initial.i+1+added-1)
+				
+			# remove the aux if we need to (not needed with do support)
+			if v.is_aux:
+				question = question._copy_with_remove(indices=v.i+1+added-1)
+			else:
+				# replace the main verb with the nonfinite form
+				v.reinflect(tense=INFINITIVE)
+				v.set_morph(Number=None, Tense=None, VerbForm='Inf')
+				replacements.append(v)
+				indices.append(v.i+1+added-1)
+			
+			# question = question.copy_with_replace(tokens=replacements, indices=indices)
+		
+		# remove extra crap from the history the accumulates during the loops above
+		question.caller = self.caller 
+		question.caller_args = self.caller_args
+		
+		# replace the final period with a question mark
+		final = question[-1]
+		if not final.text in ['!', '.']:
+			raise ParseError(
+				f'The sentence "{self}" does not end with an exclamation point or period! '
+				"It may already be a question, or it wasn't parsed correctly. I won't make it a question."
+			)
+		
+		final.text = '?'
+		
+		# question = question.copy_with_replace(tokens=[final], indices=[final.i])
+		replacements.append(final)
+		indices.append(final.i)
+		
+		question = question.copy_with_replace(tokens=replacements, indices=indices)
+		
+		# remove extra crap from the history that accumulates during the loops
+		question.previous = self
+		
+		return question
+	
+	def make_polar_question_sentence(self) -> 'EDoc':
+		'''Covert a question into a sentence.'''
+		raise NotImplementedError('Not currently doing this.')

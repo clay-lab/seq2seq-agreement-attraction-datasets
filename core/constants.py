@@ -10,7 +10,7 @@ from typing import (
 )
 
 from pattern.en import SG, PL
-from pattern.en import PAST, PRESENT
+from pattern.en import PAST, PRESENT, INFINITIVE
 
 from word2number import w2n
 
@@ -130,13 +130,21 @@ TENSE_MAP: Dict[str,str] = {
 	'PAST': PAST,
 	'Past': PAST,
 	'past': PAST,
+	'PST': PAST,
 	'Pst': PAST,
 	'pst': PAST,
 	'PRESENT': PRESENT,
 	'Present': PRESENT,
 	'present': PRESENT,
+	'PRES': PRESENT,
 	'Pres': PRESENT,
-	'pres': PRESENT
+	'pres': PRESENT,
+	'INF': INFINITIVE,
+	'Inf': INFINITIVE,
+	'inf': INFINITIVE,
+	'INFINITIVE': INFINITIVE,
+	'Infinitive': INFINITIVE,
+	'infinitive': INFINITIVE,
 }
 
 # cases that pattern.en doesn't handle correctly
@@ -1002,3 +1010,19 @@ def word_is_number(s: str) -> bool:
 			pass
 		
 		return False
+
+Q_DO = dict(
+	text 	= 'do',
+	tag_ 	= 'VBP',
+	pos_ 	= 'AUX',
+	morph 	= 'Mood=Ind|Tense=Pres|VerbForm=Fin|Number=Plur',
+	lemma_ 	= 'do',
+	dep_ 	= 'aux',
+)
+
+INFLECTED_AUXES: Set[str] = {
+	'be',
+	'have',
+	'get',
+	'do',
+}

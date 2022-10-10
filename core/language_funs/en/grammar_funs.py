@@ -202,6 +202,10 @@ def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
 	'''Generate a present tense or past tense pair, with p(past-to-pres) = pres_p.'''
 	return present_pair(s) if random.random() < pres_p else past_pair(s)
 
+def ques_or_past(s: EDoc, ques_p: float = 0.5) -> Dict:
+	'''Generate a present tense or past tense pair, with p(past-to-pres) = pres_p.'''
+	return question_pair(s) if random.random() < pres_p else past_pair(s)
+
 def present_pair(s: EDoc) -> Dict:
 	'''
 	Get a pair of sentenecs where the source is 
@@ -211,6 +215,17 @@ def present_pair(s: EDoc) -> Dict:
 		'src': s.make_main_verb_past_tense(),
 		'prefix': 'pres',
 		'tgt': s.make_main_verb_present_tense()	
+	}
+	
+def question_pair(s: EDoc) -> Dict:
+	'''
+	Get a pair of sentenecs where the source is 
+	past tense and the target is present tense.
+	''' 
+	return {
+		'src': s.make_main_verb_past_tense(),
+		'prefix': 'pres',
+		'tgt': s.make_main_verb_present_tense().make_sentence_polar_question()
 	}
 
 def past_pair(s: EDoc) -> Dict:
