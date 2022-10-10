@@ -253,7 +253,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'benefited': {
 		'any':		{'past': 'benefitted'},
-	}
+	},
 	'benefitted': {
 		'any':		{'past': 'benefitted'},
 	},
