@@ -19,6 +19,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from typing import List, Callable, Tuple, Dict, Set
 from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
+from collections.abc import Hashable
 
 from .spacyutils import nlp
 
@@ -39,6 +40,8 @@ split_sentences.add_pipe('sentencizer')
 # to exclude from printing (because there are
 # too many categories to be informative, etc.)
 DONT_PRINT: Set[str] = {
+	'intervener_structures',
+	'distractor_structures',
 	'pos_sequence',
 	'tag_sequence',
 	'src_history',
@@ -140,7 +143,10 @@ def create_seq2seq_dataset(
 						ex = ''
 						pass
 		
-		if 'prefix' in new_dataset[0]['translation']:
+		if (
+			'prefix' in new_dataset[0]['translation'] and 
+			isinstance(new_dataset[0]['translation']['prefix'], Hashable)
+		):
 			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
 			total = sum(prefixes.values())
 			pad_len = max(len(str(k)) for k in prefixes)
@@ -161,7 +167,15 @@ def create_seq2seq_dataset(
 				json.dump(ex, out_file, ensure_ascii=False)
 				out_file.write('\n')
 		
-		for k in [k for k in new_metadata[0] if not k in DONT_PRINT]:
+		print_keys = [
+			k 
+			for k in new_metadata[0] 
+				if not k in DONT_PRINT and 
+				isinstance(new_metadata[0][k], Hashable)
+		]
+		
+		for k in print_keys:
+			log.info(k)
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
 			pad_len = max(len(str(k)) for k in all_ks)

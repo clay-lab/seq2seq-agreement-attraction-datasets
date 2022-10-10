@@ -764,6 +764,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'Luxembourg': {'Number': 'Sing'},
 	'Somewhere': {'Number': 'Sing'},
 	'somewhere': {'Number': 'Sing'},
+	'rhyme': {'Number': 'Sing'},
+	'Rhyme': {'Number': 'Sing'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 

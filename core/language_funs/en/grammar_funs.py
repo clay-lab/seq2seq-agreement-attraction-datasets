@@ -34,7 +34,9 @@ EN_ABBREVIATIONS: Set[str] = {
 	'St.',
 	'Av.',
 	'no.',
-	'No.'
+	'No.',
+	'approx.',
+	'Approx.',
 }
 
 MISPARSED_AS_VERBS: Set[str] = {
@@ -68,6 +70,7 @@ BAD_OBJECTS: Set[str] = {
 	'an',
 	'to',
 	'.',
+	'together',
 }
 
 def no_dist_conditions(s: str) -> bool:
