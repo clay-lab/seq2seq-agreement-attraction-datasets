@@ -50,6 +50,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'braucht', # german
 	'te', # german
 	'up', # not actually wrong, but misparsed as the verb in "level up"
+	'between',
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -112,12 +113,8 @@ BAD_OBJECTS: Set[str] = {
 	'former',
 }
 
-def no_dist_conditions(s: str) -> Union[bool,EDoc]:
-	'''
-	Applies conditions to en sentence in order.
-	These are currently ordered by how long it takes
-	to perform each check, with shorter ones earlier.
-	'''
+def basic_conditions(s: str) -> Union[bool,EDoc]:
+	'''Basic conditions to clean up noisy data.'''
 	if not string_conditions(s):
 		return False
 	
@@ -211,16 +208,6 @@ def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 		if not s.main_verb.can_be_inflected:
 			return False
 		
-		# if there are distractors, we don't want it for training
-		if s.has_main_subject_verb_distractors:
-			return False
-		
-		# a lot of these weird "The district covered about of Cambridge..."
-		# show up. it's bizarre and consistently odd. I guess the measure
-		# terms were removed from the dataset?
-		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in BAD_OBJECTS):
-			return False
-		
 		return s
 	except KeyboardInterrupt:
 		sys.exit('User terminated program.')	
@@ -228,6 +215,62 @@ def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 		log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
 		log.warning(traceback.format_exc())
 		log.warning('\n\n')
+		return False
+
+def has_interveners_and_number_agreement_conditions(s: str) -> Union[bool,EDoc]:
+	'''Returns sentences with number agreement and interveners.'''
+	s = basic_conditions(s)
+	if s:
+		try:
+			v = s.main_verb
+			# was and were show agreement in the past tense,
+			# but otherwise no English verbs do
+			if v.get_morph('Tense') == 'Past' and not v.lemma_ == 'be':
+				return False
+			
+			if not s.has_main_subject_verb_interveners:
+				return False
+			
+			return s
+		except KeyboardInterrupt:
+			sys.exit('User terminated program.')	
+		except Exception as e:
+			log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
+			log.warning(traceback.format_exc())
+			log.warning('\n\n')
+			return False
+	else:
+		return False	
+
+def no_dist_conditions(s: str) -> Union[bool,EDoc]:
+	'''
+	If the sentence satisfies basic conditions and
+	has no distractor nouns, return the sentence.
+	Else, return False.
+	'''
+	s = basic_conditions(s)
+	
+	if s:	
+		try:
+			# if there are distractors, we don't want it for training
+			if s.has_main_subject_verb_distractors:
+				return False
+			
+			# a lot of these weird "The district covered about of Cambridge..."
+			# show up. it's bizarre and consistently odd. I guess the measure
+			# terms were removed from the dataset?
+			if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in BAD_OBJECTS):
+				return False
+			
+			return s
+		except KeyboardInterrupt:
+			sys.exit('User terminated program.')	
+		except Exception as e:
+			log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
+			log.warning(traceback.format_exc())
+			log.warning('\n\n')
+			return False
+	else:
 		return False
 
 def no_dist_no_presubject_modifiers_conditions(s: str) -> Union[bool,EDoc]:

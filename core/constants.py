@@ -164,8 +164,14 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	# as the past tense of 'find'
 	'founded': {
 		'singular': {'present': 'founds'},
-		'plural'  : {'present': 'found'}, 
+		'plural': 	{'present': 'found'},
+		'any': 		{'past': 'founded'},
 	},
+	'founds': {
+		'singular': {'present': 'founds'},
+		'plural': 	{'present': 'found'},
+		'any':		{'past': 'founded'},
+	}
 	'leaves': {
 		'any': 		{'past': 'left'},
 	},
@@ -581,13 +587,14 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'any':		{'past': 'focused'},
 	},
 	'focused': {
+		'plural':	{'present': 'focus'},
 		'any':		{'past': 'focused'},
 	},
 	'focuses': {
 		'any':		{'past': 'focused'},
 	},
 	'focus': {
-		'any':		{'past': 'focus'},
+		'any':		{'past': 'focused'},
 	},
 	'fed': {
 		'singular': {'present': 'feeds'},
@@ -706,6 +713,48 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'neighbor': {
 		'any':		{'past': 'neighbored'},
+	},
+	'delimited': {
+		'plural': 	{'present': 'delimit'},
+	},
+	'delimits': {
+		'plural': 	{'present': 'delimit'},
+	},
+	'delimit': {
+		'any':		{'past': 	'delimited'},
+	},
+	'spilled': {
+		'singular': {'present': 'spills'},
+		'plural': 	{'present': 'spill'},
+	},
+	'spills': {
+		'any': 		{'past': 'spilled'},
+	},
+	'spill': {
+		'any':		{'past': 'spilled'},
+	},
+	'sped': {
+		'singular': {'present': 'speeds'},
+		'plural':	{'present': 'speed'},
+		'any':		{'past': 'sped'},
+	},
+	'bound': {
+		'plural':	{'present': 'bind'},
+	},
+	'binds': {
+		'plural':	{'present': 'bind'},
+	},
+	'bind': {
+		'any':		{'past': 'bound'},
+	},
+	'enrolled': {
+		'singular': {'present': 'enrolls'},
+	},
+	'enrolls': {
+		'singular': {'present': 'enrolls'},
+	},
+	'enroll': {
+		'singular': {'present': 'enrolls'},
 	},
 }
 
@@ -833,6 +882,14 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 			'present': 'fell',
 		},
 		'condition':(lambda t: t.is_transitive),
+	},
+	'speed': {
+		'any': 		{'past': 'sped'},
+		'condition': (lambda t: t.is_intransitive)
+	},
+	'speeds': {
+		'any':		{'past': 'sped'},
+		'condition': (lambda t: t.is_intransitive)
 	}
 }
 

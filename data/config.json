@@ -34,6 +34,13 @@
 						"dev"  : {"ques_p": 0.5}
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata"
+				},
+				"en_wiki-interveners": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.has_interveners_and_number_agreement_conditions",
+					"splits": {
+						"train": 10000
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_source_metadata"
 				}
 			}
 		}
