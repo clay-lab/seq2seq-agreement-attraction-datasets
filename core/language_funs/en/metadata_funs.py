@@ -1,4 +1,4 @@
-from ..spacyutils import EDoc
+from ...spacyutils import EDoc
 
 from typing import Dict
 
