@@ -294,7 +294,7 @@ def create_datasets_from_config(
 			metadata_fun_args 	= config['sources'][dataset]['names'][name].get('metadata_fun_args', [])
 			metadata_fun_kwargs = config['sources'][dataset]['names'][name].get('metadata_fun_kwargs', {})
 			# dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
-							
+			
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects
 			if isinstance(conditions_fun, str):

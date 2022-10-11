@@ -2,13 +2,16 @@ from ...spacyutils import EDoc
 
 from typing import Dict
 
-def get_source_metadata(source: EDoc) -> Dict:
+def get_source_metadata(source: Union[Dict,EDoc]) -> Dict:
 	"""
 	Gets basic metadata about the passed EDoc example.
 	Does
 	:param pair: a dict mapping the keys 'src', 'prefix', and 'tgt' to an EDoc, a str, and an EDoc, respectively.
 	:returns dict: a dictionary recording metadata for the source and target examples 
 	"""
+	if isinstance(source,dict):
+		source = source[list(source.values())[0]]
+	
 	if source.has_main_subject_verb_interveners:
 		final_intervener_number = source.main_subject_verb_interveners[-1].get_morph('Number')
 	else:
