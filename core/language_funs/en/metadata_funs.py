@@ -1,6 +1,6 @@
 from ...spacyutils import EDoc
 
-from typing import Dict
+from typing import Dict, Union
 
 def get_source_metadata(source: Union[Dict,EDoc]) -> Dict:
 	"""
