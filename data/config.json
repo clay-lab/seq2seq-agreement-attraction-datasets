@@ -11,11 +11,27 @@
 					},
 					"splits_funs": {
 						"train": "core.language_funs.en.grammar_funs.pres_or_past",
-						"dev": "core.language_funs.en.grammar_funs.pres_or_past"
+						"dev"  : "core.language_funs.en.grammar_funs.pres_or_past"
 					},
 					"splits_funs_kwargs": {
 						"train": {"pres_p": 0.5},
 						"dev"  : {"pres_p": 0.5}
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata"
+				},
+				"en_wiki-nodist-ques-and-past": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.no_dist_no_presubject_modifiers_conditions",
+					"splits": {
+						"train": 100000,
+						"dev"  : 1000
+					},
+					"splits_funs": {
+						"train": "core.language_funs.en.grammar_funs.ques_or_past",
+						"dev"  : "core.language_funs.en.grammar_funs.ques_or_past"
+					},
+					"splits_funs_kwargs": {
+						"train": {"ques_p": 0.5},
+						"dev"  : {"ques_p": 0.5}
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata"
 				}
@@ -24,6 +40,7 @@
 	},
 	"pairs": [
 		["en_wiki-nodist-pres-and-past", "en_RC_PP-dist-pres"],
-		["en_wiki-nodist-pres-and-past", "en_RC_PP_gen-dist-pres"]
+		["en_wiki-nodist-pres-and-past", "en_RC_PP_gen-dist-pres"],
+		["en_wiki-nodist-ques-and-past", "en_VN_98-dist-ques"]
 	]
 }

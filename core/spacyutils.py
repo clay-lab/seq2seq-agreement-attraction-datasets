@@ -803,7 +803,7 @@ class EDoc():
 			return self._get_noun_number(s)
 	
 	@property
-	def _main_subject_index(self):
+	def _main_subject_index(self) -> int:
 		'''What is the final index of the main subject?'''
 		s = self.main_subject
 		if isinstance(s, list):
@@ -1459,7 +1459,6 @@ class EDoc():
 	
 	def make_sentence_polar_question(self) -> 'EDoc':
 		'''Convert a sentence EDoc into a polar question.'''
-		
 		# if we have conjoined multiple clauses, we need to make each a question separately
 		v = self.main_verb
 		vs = [v] + [t for t in self._get_conjuncts(v)]
@@ -1493,6 +1492,21 @@ class EDoc():
 			# we find the earliest index associated with each subject phrase
 			has_subj = True
 			s = v.subject
+			
+			# if we have a clausal subject for any verb we're converting, we
+			# cannot do that, so raise error if it's not a gerund (which we can do)
+			if (
+				(
+					isinstance(s,list) and 
+					any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ != 'VBG')
+				) or 
+				s.dep_ in ['csubj', 'csubjpass'] and s.tag_ != 'VBG'
+			):
+				raise ValueError(
+					f'Cannot covert "{self}" to a polar question, '
+					f'because it has a clausal subject with a non-gerund verb '
+					f"(\"{' '.join([t.text for t in sorted([t for t in s.children] + [s], key=lambda t: t.i)])}\")!"
+				)
 			
 			if s:
 				if len(s) == 1:

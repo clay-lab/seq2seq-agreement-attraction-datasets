@@ -243,7 +243,8 @@ def get_random_parsed_sentence(
 	return e
 
 def create_datasets_from_config(
-	config: Dict[str,List] = None, 
+	config: Dict[str,List] = None,
+	only: List[str] = None,
 	**kwargs
 ) -> None:
 	'''
@@ -258,12 +259,17 @@ def create_datasets_from_config(
 	:outputs: see outputs of create_tense_datasets and combine_language_datasets_for_tense.
 	'''
 	config = load_config(config) if config is None or isinstance(config,str) else config
-		
+	
+	if only is None:
+		only = [name for dataset in config['sources'] for name in config['sources'][dataset]['names']]
+	elif isinstance(only,str):
+		only = [only]
+	
 	for dataset in config['sources']:
 		dataset_args 	= config['sources'][dataset].get('dataset_args', [])
 		dataset_kwargs 	= config['sources'][dataset].get('dataset_kwargs', {})
 		
-		for name in config['sources'][dataset]['names']:
+		for name in only:
 			log.info(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
 			
 			# unpack the config
@@ -313,10 +319,11 @@ def create_datasets_from_config(
 			
 			log.info('')
 	
-	create_t5_scripts(config, **kwargs)
+	create_t5_scripts(config, only=only, **kwargs)
 
 def create_t5_scripts(
 	config: Dict = None, 
+	only: List[str] = None,
 	overwrite: bool = False
 ) -> None:
 	'''
@@ -370,7 +377,13 @@ def create_t5_scripts(
 	eval_script = eval_script.replace('\n	--num_train_epochs 10.0', '')
 	
 	config 	= load_config() if config is None else config
-	langs 	= [tuple(pair) for pair in config['pairs']] if 'pairs' in config else []
+	
+	if only is None:
+		only = [name for dataset in config['sources'] for name in config['sources'][dataset]['names']]
+	elif isinstance(only,str):
+		only = [only]
+	
+	langs 	= [tuple(pair) for pair in config['pairs'] if pairs[0] in only] if 'pairs' in config else []
 	
 	# create directories if not existant
 	os.makedirs(os.path.join('scripts', 'finetune'), exist_ok=True)

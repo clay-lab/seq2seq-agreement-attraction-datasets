@@ -5,7 +5,7 @@ import random
 import logging
 import traceback
 
-from typing import Dict, Set
+from typing import Dict, Set, Union
 
 from ..language_funs import string_conditions
 from ...spacyutils import nlp, EDoc
@@ -99,7 +99,7 @@ BAD_OBJECTS: Set[str] = {
 	'former',
 }
 
-def no_dist_conditions(s: str) -> bool:
+def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 	'''
 	Applies conditions to en sentence in order.
 	These are currently ordered by how long it takes
@@ -214,6 +214,23 @@ def no_dist_conditions(s: str) -> bool:
 		log.warning('\n\n')
 		return False
 
+def no_dist_no_presubject_modifiers_conditions(s: str) -> Union[bool,EDoc]:
+	'''No distractors, plus no presubject modifiers.'''
+	s = no_dist_conditions(s)
+	if s:
+		subject = s.main_subject
+		if isinstance(subject,list):
+			subject_position = min([t.i for t in subject])
+		else:
+			subject_position = subject.i
+		
+		if any(t.i < subject_position for t in s.main_verb.children):
+			return False
+		else:
+			return s		
+	else:
+		return False
+
 def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
 	'''Generate a present tense or past tense pair, with p(past-to-pres) = pres_p.'''
 	return present_pair(s) if random.random() < pres_p else past_pair(s)
@@ -232,7 +249,7 @@ def present_pair(s: EDoc) -> Dict:
 		'prefix': 'pres',
 		'tgt': s.make_main_verb_present_tense()	
 	}
-	
+
 def question_pair(s: EDoc) -> Dict:
 	'''
 	Get a pair of sentenecs where the source is 
@@ -240,7 +257,7 @@ def question_pair(s: EDoc) -> Dict:
 	''' 
 	return {
 		'src': s.make_main_verb_past_tense(),
-		'prefix': 'pres',
+		'prefix': 'ques_pres',
 		'tgt': s.make_main_verb_present_tense().make_sentence_polar_question()
 	}
 
