@@ -1534,11 +1534,18 @@ class EDoc():
 				if isinstance(s,list):
 					earliest_subject_index = min([t.i for t in s])
 					s = self[earliest_subject_index]
-					chi = [t for t in s.children]
 				else:
 					earliest_subject_index = s.i
-					chi = [t for t in s.children]
 				
+				# this might not work in the list case, but it probably will
+				chi = [t for t in s.children]
+				all_chi = chi
+				while chi:
+					chi = [t for ch in chi for t in ch.children]
+					all_chi = chi + all_chi
+				
+				chi = all_chi
+			
 				if chi:
 					earliest_subject_index = min([earliest_subject_index, *[t.i for t in chi]])
 				
