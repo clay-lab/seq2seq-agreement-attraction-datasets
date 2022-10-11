@@ -30,6 +30,4 @@ if __name__ == '__main__':
 			PAST, PRESENT, INFINITIVE,
 			conjugate, singularize, pluralize
 		)
-		s = nlp('He had done that and had caused a mess, and she liked it and appreciated it.')
-		s.make_sentence_polar_question()
 		breakpoint()
