@@ -1,3 +1,5 @@
+from ..spacyutils import EDoc
+
 from typing import Dict
 
 def get_source_metadata(source: EDoc) -> Dict:
