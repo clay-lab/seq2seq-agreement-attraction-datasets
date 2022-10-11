@@ -10,7 +10,7 @@ def get_source_metadata(source: Union[Dict,EDoc]) -> Dict:
 	:returns dict: a dictionary recording metadata for the source and target examples 
 	"""
 	if isinstance(source,dict):
-		source = source[list(source.values())[0]]
+		source = list(source.values())[0]
 	
 	if source.has_main_subject_verb_interveners:
 		final_intervener_number = source.main_subject_verb_interveners[-1].get_morph('Number')
