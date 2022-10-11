@@ -1500,7 +1500,7 @@ class EDoc():
 					isinstance(s,list) and 
 					any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ != 'VBG')
 				) or 
-				s.dep_ in ['csubj', 'csubjpass'] and s.tag_ != 'VBG'
+				not isinstance(s,list) and s.dep_ in ['csubj', 'csubjpass'] and s.tag_ != 'VBG'
 			):
 				raise ValueError(
 					f'Cannot covert "{self}" to a polar question, '
