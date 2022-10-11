@@ -237,7 +237,7 @@ def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
 
 def ques_or_past(s: EDoc, ques_p: float = 0.5) -> Dict:
 	'''Generate a present tense or past tense pair, with p(past-to-pres) = pres_p.'''
-	return question_pair(s) if random.random() < pres_p else past_pair(s)
+	return question_pair(s) if random.random() < ques_p else past_pair(s)
 
 def present_pair(s: EDoc) -> Dict:
 	'''
