@@ -280,6 +280,15 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'addresses': {
 		'any':		{'past': 'addressed'},
 	},
+	'Addressed': {
+		'any':		{'past': 'addressed'},
+	},
+	'Address': {
+		'any':		{'past': 'addressed'},
+	},
+	'Addresses': {
+		'any':		{'past': 'addressed'},
+	},
 	'paralleled': {
 		'singular': {'present': 'parallels'},
 		'plural':	{'plural': 'parallel'},
@@ -565,9 +574,12 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'burn': {
 		'any':		{'past': 'burned'},
 	},
-	'focussed': {
+	'focusses': {
 		'any': 		{'past': 'focused'},
 	},
+	'focussed': {
+		'any':		{'past': 'focused'},
+	}
 	'focused': {
 		'any':		{'past': 'focused'},
 	},
@@ -592,6 +604,59 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'plural': 	{'present': 'feed'},
 		'any':		{'past': 'fed'},
 	},
+	'recovered': {
+		'singular': {'present': 'recovers'},
+		'plural':	{'present': 'recover'},
+	},
+	'willed': {
+		'singular': {'present': 'wills'},
+		'plural': 	{'present': 'will'},
+	},
+	'wills': {
+		'singular': {'present': 'wills'},
+		'plural': 	{'present': 'will'},
+	},
+	'will': {
+		'singular': {'present': 'wills'},
+		'plural': 	{'present': 'will'},
+	},
+	'towered': {
+		'any':		{'past': 'towered'},
+	},
+	'towers': {
+		'any':		{'past': 'towered'},
+	},
+	'tower': {
+		'any':		{'past': 'towered'},
+	},
+	'spoiled': {
+		'any':		{'past': 'spoiled'},
+	},
+	'spoils': {
+		'any':		{'past': 'spoiled'},
+	},
+	'spoil': {
+		'any': 		{'past': 'spoiled'},
+	},
+	'spelled': {
+		'singular': {'present': 'spells'},
+		'plural':	{'present': 'spell'},
+	},
+	'spells': {
+		'any':		{'past': 'spelled'},
+	},
+	'spell': {
+		'any':		{'past': 'spelled'},
+	},
+	'smelled': {
+		'any':		{'past': 'smelled'},
+	},
+	'smells': {
+		'any':		{'past': 'smelled'},
+	},
+	'smell': {
+		'any':		{'past': 'smelled'},
+	}
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -640,6 +705,14 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'bricked': 'brick',
 	'blogged': 'blog',
 	'deeded': 'deed',
+	'shinnied': 'shinny',
+	'remodelled': 'remodel',
+	'reenvisioned': 'reenvision',
+	'recommissioned': 'recommission',
+	'powerbombed': 'powerbomb',
+	'ingressed': 'ingress',
+	'extoll': 'extol',
+	'bidded': 'bid', # wrong, but we'll fix the lemma
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {

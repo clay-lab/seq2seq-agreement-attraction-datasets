@@ -1459,11 +1459,7 @@ class EDoc():
 	
 	def make_sentence_polar_question(self) -> 'EDoc':
 		'''Convert a sentence EDoc into a polar question.'''
-		# the current way of doing this results in a weird-looking history, due to the fact
-		# we create a new object multiple times in this function. However, adding more
-		# than one token at a time is tricky and prone to error, so we'll have to deal with
-		# the oddity for now.
-		breakpoint()
+		
 		# if we have conjoined multiple clauses, we need to make each a question separately
 		v = self.main_verb
 		vs = [v] + [t for t in self._get_conjuncts(v)]

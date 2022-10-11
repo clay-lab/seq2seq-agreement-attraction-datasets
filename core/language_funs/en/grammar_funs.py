@@ -66,6 +66,16 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'competended', # no idea
 	'competends',
 	'competend',
+	'thik', # for think
+	'residens', # for reside
+	'liesin', # for lies in
+	'legendnto', # for ???
+	'Its', # for It's
+	'isis', # for is
+	'comprices', # for comprises
+	'cincludes', # for includes
+	'buit', # for built
+	'bidded', # for bid
 }
 
 # the wikipedia dump removes measure words
@@ -126,6 +136,10 @@ def no_dist_conditions(s: str) -> bool:
 		
 		# no unidentified words or foreign words
 		if any(t.pos_ == 'X' or t.tag_ == 'FW' for t in s):
+			return False
+		
+		# main verb cannot start with a capital letter
+		if s.main_verb.text[0].isupper():
 			return False
 		
 		# disallow verbs with common typos

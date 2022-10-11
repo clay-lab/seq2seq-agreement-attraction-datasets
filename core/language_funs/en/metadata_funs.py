@@ -18,8 +18,9 @@ def get_metadata(pair: Dict) -> Dict:
 	metadata = dict(
 				subject_number=source.main_subject_number,
 				object_number=source.main_object_number,
-				main_verb=source.main_verb.text,
-				main_verb_lemma=source.main_verb.lemma_,
+				source_main_verb=source.main_verb.text,
+				target_main_verb=target.main_verb.text,
+				main_verb_lemma=','.join(list(dict.fromkeys([source.main_verb.lemma_, target.main_verb.lemma_]))),
 				n_interveners=len(source.main_subject_verb_interveners),
 				intervener_structures=source.main_subject_verb_intervener_structures,
 				final_intervener_number=final_intervener_number,
