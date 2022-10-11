@@ -160,6 +160,18 @@ def create_seq2seq_dataset(
 				'\n'
 			)
 		
+		if (
+			'src' in new_dataset[0]['translation'] and 
+			isinstance(new_dataset[0]['translation']['src'], Hashable)
+		):
+			counts = Counter([d['src'] for d in new_dataset])
+			counts = {k: v for k, v in counts.items() if v > 1}
+			v = sum(counts.values())
+			pad_len = len('Number of duplicated sentences')
+			pad_len2 = len(new_dataset)
+			log.info(f'Number of duplicated sentences: {len(counts)}')
+			log.info(f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{len(new_dataset)}')
+		
 		os.makedirs(os.path.join('data', name), exist_ok=True)
 		log.info(f'Writing out dataset {name} ({split}).')
 		with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:

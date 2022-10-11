@@ -48,6 +48,8 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'in', # don't know, but it's clearly wrong
 	'erinnert', # german
 	'braucht', # german
+	'te', # german
+	'up', # not actually wrong, but misparsed as the verb in "level up"
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -76,6 +78,17 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'cincludes', # for includes
 	'buit', # for built
 	'bidded', # for bid
+	'wereFK', # for were
+	'superwised', # for supervised
+	'ses', # for sees
+	'reregisted', # for reregistered
+	'getup', # for get up
+	'though', # for 'thought'
+	'sung', # for 'sang'
+}
+
+BAD_VERB_LEMMAS: Set[str] = {
+	'focu', # due to a typo of "focuses"
 }
 
 # the wikipedia dump removes measure words
@@ -150,6 +163,9 @@ def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 		# 'Trumpeter swans winter along the upper Stuart.' parsed
 		# 'swans' as the verb instead of winter
 		if any(s.main_verb.text == t for t in MISPARSED_AS_VERBS):
+			return False
+		
+		if any(s.main_verb.lemma_ == l for l in BAD_VERB_LEMMAS):
 			return False
 		
 		# if there is no subject, we don't want it

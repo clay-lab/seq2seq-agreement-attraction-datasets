@@ -656,7 +656,57 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'smell': {
 		'any':		{'past': 'smelled'},
-	}
+	},
+	'slimmed': {
+		'any':		{'past': 'slimmed'},
+	},
+	'slims': {
+		'any':		{'past': 'slimmed'},
+	},
+	'slim': {
+		'any':		{'past': 'slimmed'},
+	},
+	'onsold': {
+		'singular': {'present': 'onsells'},
+		'plural':	{'present': 'onsell'},
+		'any':		{'past': 'onsold'},
+	},
+	'onsells': {
+		'any':		{'past': 'onsold'},
+	},
+	'onsell': {
+		'any':		{'past': 'onsold'},
+	},
+	'roped': {
+		'singular': {'present': 'ropes'},
+		'plural': 	{'present': 'rope'},
+		'any':		{'past': 'roped'},
+	},
+	'redrew': {
+		'singular': {'present': 'redraws'},
+		'plural': 	{'present': 'redraw'},
+		'any':		{'past': 'redrew'},
+	},
+	'redraws': {
+		'any': 		{'past': 'redrew'},
+	},
+	'redraw': {
+		'any':		{'past': 'redrew'},
+	},
+	'reformed': {
+		'singular':	{'present': 'reforms'},
+		'plural': 	{'present': 'reform'},
+	},
+	'neighbored': {
+		'singular': {'present': 'neighbors'},
+		'plural':	{'present': 'neighbor'},
+	},
+	'neighbors': {
+		'any':		{'past': 'neighbored'},
+	},
+	'neighbor': {
+		'any':		{'past': 'neighbored'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -712,7 +762,14 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'powerbombed': 'powerbomb',
 	'ingressed': 'ingress',
 	'extoll': 'extol',
-	'bidded': 'bid', # wrong, but we'll fix the lemma
+	'bidded': 'bid', # wrong in the dataset, but we'll fix the lemma
+	'wove': 'weave',
+	'slimmed': 'slim',
+	'remixed': 'remix',
+	'optioned': 'option',
+	'interwove': 'interweave',
+	'outgunned': 'outgun',
+	'reused': 'reuse',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
