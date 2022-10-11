@@ -286,11 +286,11 @@ def create_datasets_from_config(
 			
 			# unpack the config
 			conditions_fun		= config['sources'][dataset]['names'][name].get('conditions_fun', lambda s: nlp(s))
-			splits 				= config['sources'][dataset]['names'][name]['splits']
-			splits_funs 		= config['sources'][dataset]['names'][name]['splits_funs']
-			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', {})
+			splits 				= config['sources'][dataset]['names'][name].get('splits', {})
+			splits_funs 		= config['sources'][dataset]['names'][name].get('splits_funs')
+			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', [])
 			splits_funs_kwargs 	= config['sources'][dataset]['names'][name].get('splits_funs_kwargs', {})
-			metadata_fun 		= config['sources'][dataset]['names'][name]['metadata_fun']
+			metadata_fun 		= config['sources'][dataset]['names'][name].get('metadata_fun')
 			metadata_fun_args 	= config['sources'][dataset]['names'][name].get('metadata_fun_args', [])
 			metadata_fun_kwargs = config['sources'][dataset]['names'][name].get('metadata_fun_kwargs', {})
 			# dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
