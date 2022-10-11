@@ -579,7 +579,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'focussed': {
 		'any':		{'past': 'focused'},
-	}
+	},
 	'focused': {
 		'any':		{'past': 'focused'},
 	},
