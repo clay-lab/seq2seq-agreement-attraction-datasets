@@ -171,7 +171,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'singular': {'present': 'founds'},
 		'plural': 	{'present': 'found'},
 		'any':		{'past': 'founded'},
-	}
+	},
 	'leaves': {
 		'any': 		{'past': 'left'},
 	},
