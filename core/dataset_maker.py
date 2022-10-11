@@ -287,7 +287,7 @@ def create_datasets_from_config(
 			# unpack the config
 			conditions_fun		= config['sources'][dataset]['names'][name].get('conditions_fun', lambda s: nlp(s))
 			splits 				= config['sources'][dataset]['names'][name].get('splits', {})
-			splits_funs 		= config['sources'][dataset]['names'][name].get('splits_funs')
+			splits_funs 		= config['sources'][dataset]['names'][name].get('splits_funs', {})
 			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', [])
 			splits_funs_kwargs 	= config['sources'][dataset]['names'][name].get('splits_funs_kwargs', {})
 			metadata_fun 		= config['sources'][dataset]['names'][name].get('metadata_fun')
