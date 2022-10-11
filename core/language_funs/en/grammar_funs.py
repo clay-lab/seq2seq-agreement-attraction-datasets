@@ -85,6 +85,8 @@ BAD_OBJECTS: Set[str] = {
 	'.',
 	'together',
 	'between',
+	'served',
+	'former',
 }
 
 def no_dist_conditions(s: str) -> bool:

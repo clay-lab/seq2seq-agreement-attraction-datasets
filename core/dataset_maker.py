@@ -175,7 +175,6 @@ def create_seq2seq_dataset(
 		]
 		
 		for k in print_keys:
-			log.info(k)
 			all_ks = Counter([m[k] for m in new_metadata])
 			total = sum(all_ks.values())
 			pad_len = max(len(str(k)) for k in all_ks)

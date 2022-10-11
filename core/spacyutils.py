@@ -280,6 +280,10 @@ class EToken():
 	def subject(self) -> Union['EToken',List['EToken']]:
 		'''Return the subject(s) of the token.'''
 		s = [t for t in self.children if t.dep_ in SUBJ_DEPS]
+		
+		if not s and self.is_aux:
+			return EToken(self.head).subject
+		
 		if len(s) == 1:
 			return s[0]
 		elif len(s) > 1:
@@ -1459,10 +1463,29 @@ class EDoc():
 		# we create a new object multiple times in this function. However, adding more
 		# than one token at a time is tricky and prone to error, so we'll have to deal with
 		# the oddity for now.
-		
+		breakpoint()
 		# if we have conjoined multiple clauses, we need to make each a question separately
 		v = self.main_verb
 		vs = [v] + [t for t in self._get_conjuncts(v)]
+		if self.main_verb.is_aux:
+			vs = vs + [t for t in self._get_conjuncts(self.root)]
+		
+		for i, v in enumerate(vs):
+			if any(t for t in v.children if t.dep_ == 'aux'):
+				vs[i] = [t for t in v.children if t.dep_ =='aux'][0]
+		
+		# we need to distinguish between main verbs and auxiliaries here
+		all_v_lemmas = list(dict.fromkeys([
+			f'{v.lemma_}_{v.pos_}'
+			if v.is_aux
+			else 'do_AUX' for v in vs
+		]))
+		
+		if len(all_v_lemmas) > 1:
+			raise ValueError(
+				f'"{self}" cannot be made into a question '
+				f'because multiple auxiliaries would be required ({", ".join(all_v_lemmas)})!'
+			)
 		
 		question = self
 		added = 0
@@ -1473,44 +1496,44 @@ class EDoc():
 		for v in vs:
 			# we find the earliest index associated with each subject phrase
 			has_subj = True
-			s = [t for t in v.children if t.dep_ in SUBJ_DEPS]
+			s = v.subject
 			
-			if len(s) == 1:
-				s = s[0]
-			
-			if not s:
+			if s:
+				if len(s) == 1:
+					s = s[0]
+			else:
 				# the verb doesn't have its own subject,
 				# but we still want to use the subject for
 				# reinflection, so we set it here
 				has_subj = False
 				s = self.main_subject
 			
+			original_v_index = v.i
+			
 			if has_subj:
 				if v.is_aux:
 					# if we are headed by an aux, we move that to the front
 					aux = v
 				else:
-					added += 1
-					
 					# otherwise, we use do-support
 					aux = EToken.from_definition(**{
 								**Q_DO, 
 								'whitespace_': ' ',
 								'head': v,
 							})
+				
+				if aux.can_be_inflected:
+					r_kwargs = dict(
+						number = s.get_morph('Number') if not isinstance(s,list) else self._get_list_noun_number(s),
+						tense = v.get_morph('Tense')
+					)
 					
-					if aux.can_be_inflected:
-						r_kwargs = dict(
-							number = s.get_morph('Number') if not isinstance(s,list) else self._get_list_noun_number(s),
-							tense = v.get_morph('Tense')
-						)
-						
-						if not isinstance(s,list):
-							person = s.get_morph('Person')
-							if person:
-								r_kwargs.update(dict(person=int(person)))
-						
-						aux.reinflect(**r_kwargs)
+					if not isinstance(s,list):
+						person = s.get_morph('Person')
+						if person:
+							r_kwargs.update(dict(person=int(person)))
+					
+					aux.reinflect(**r_kwargs)
 				
 				if isinstance(s,list):
 					earliest_subject_index = min([t.i for t in s])
@@ -1534,7 +1557,8 @@ class EDoc():
 				aux.i = earliest_subject_index
 				
 				# add the aux to the correct position
-				question = question._copy_with_add(token=aux, index=earliest_subject_index+added-1)
+				question = question._copy_with_add(token=aux, index=earliest_subject_index+added)
+				added += 1
 				
 				# if we are replacing the first token with aux
 				# we need to decapitalize it if it is not a proper noun
@@ -1546,17 +1570,25 @@ class EDoc():
 						initial.text = initial.text.lower()
 					
 					replacements.append(initial)
-					indices.append(initial.i+1+added-1)
-				
+					# if the position of the initial thing is before
+					# the index of the original verb, it means that 
+					# we need to shift it forward. if it isn't, then
+					# it means that 
+					if initial.i < original_v_index:
+						indices.append(initial.i+added)
+					else:
+						indices.append(initial.i)
+			
 			# remove the aux if we need to (not needed with do support)
 			if v.is_aux:
-				question = question._copy_with_remove(indices=v.i+1+added-1)
+				question = question._copy_with_remove(indices=original_v_index+added)
+				added -= 1
 			else:
 				# replace the main verb with the nonfinite form
 				v.reinflect(tense=INFINITIVE)
 				v.set_morph(Number=None, Tense=None, VerbForm='Inf')
 				replacements.append(v)
-				indices.append(v.i+1+added-1)
+				indices.append(original_v_index+added)
 			
 			# question = question.copy_with_replace(tokens=replacements, indices=indices)
 		
