@@ -97,7 +97,7 @@ def create_seq2seq_dataset(
 	
 	conditions_fun 		= (lambda s: nlp(s)) if conditions_fun is None else conditions_fun
 	
-	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': str(s)}) if not splits_funs else splits_funs
+	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': s}) if not splits_funs else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if not splits_funs_kwargs else splits_funs_kwargs
 	
