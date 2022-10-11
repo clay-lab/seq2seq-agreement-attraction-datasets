@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=make-seq2seq-datasets
+#SBATCH --job-name=make-seq2seq-datasets-t
 #SBATCH --output=joblogs/%x_%j.txt
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -16,4 +16,4 @@ module load miniconda
 
 source activate /gpfs/gibbs/project/frank/ref4/conda_envs/seq2seq-datasets
 
-python make_datasets.py
+python make_datasets.py -o en_wiki-nodist-pres-and-past
