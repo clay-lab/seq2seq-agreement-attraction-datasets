@@ -22,7 +22,7 @@ if __name__ == '__main__':
 		
 		create_datasets_from_config(only=args.only)
 	else:
-		from core.spacyutils import nlp
+		from core.spacyutils import nlp, EToken, EDoc
 		from core.constants import *
 		from core.language_funs.en.grammar_funs import *
 		from pattern.en import (
@@ -30,4 +30,6 @@ if __name__ == '__main__':
 			PAST, PRESENT, INFINITIVE,
 			conjugate, singularize, pluralize
 		)
+		s = nlp('He had done that and had caused a mess, and she liked it and appreciated it.')
+		s.make_sentence_polar_question()
 		breakpoint()

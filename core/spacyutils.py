@@ -1465,22 +1465,44 @@ class EDoc():
 		if self.main_verb.is_aux:
 			vs = vs + [t for t in self._get_conjuncts(self.root)]
 		
+		for v in vs:
+			vs.extend(self._get_conjuncts(v))
+		
+		vs = list(dict.fromkeys(vs))
+		
 		for i, v in enumerate(vs):
 			if any(t for t in v.children if t.dep_ == 'aux'):
 				vs[i] = [t for t in v.children if t.dep_ =='aux'][0]
 		
-		# we need to distinguish between main verbs and auxiliaries here
-		all_v_lemmas = list(dict.fromkeys([
-			f'{v.lemma_}_{v.pos_}'
-			if v.is_aux
-			else 'do_AUX' for v in vs
-		]))
+		all_v_lemmas = {}
+		for v in vs:
+			tmp_v = v
+			while not tmp_v.subject:
+				tmp_v = EToken(tmp_v.head)
+			
+			if tmp_v.subject.i in all_v_lemmas:
+				all_v_lemmas[tmp_v.subject.i] = all_v_lemmas[tmp_v.subject.i].union({f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'})
+			else:
+				all_v_lemmas[tmp_v.subject.i] = {f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'}
 		
-		if len(all_v_lemmas) > 1:
-			raise ValueError(
-				f'"{self}" cannot be made into a question '
-				f'because multiple auxiliaries would be required ({", ".join(all_v_lemmas)})!'
-			)
+		# all_v_lemmas = [
+		# 	(
+		# 		v.subject if v.subject else EToken(v.head).subject,
+		# 		f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'
+		# 	)
+		# 	for v in vs
+		# ]
+		
+		#if any(len(all_v_lemmas[i]) > 1 for i in all_v_lemmas):
+		# we can do this if we have a different subject for each verb lemma
+		# if any(v.subject is None for v in vs):
+		for i in all_v_lemmas:
+			if len(all_v_lemmas[i]) > 1:
+				raise ValueError(
+					f'"{self}" cannot be made into a question '
+					f'because multiple auxiliaries would be required for '
+					f'subject "{self[i]}" at position {i} ({", ".join(all_v_lemmas[i])})!'
+				)
 		
 		question = self
 		added = 0
@@ -1495,18 +1517,19 @@ class EDoc():
 			
 			# if we have a clausal subject for any verb we're converting, we
 			# cannot do that, so raise error if it's not a gerund (which we can do)
-			if (
-				(
-					isinstance(s,list) and 
-					any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ != 'VBG')
-				) or 
-				not isinstance(s,list) and s.dep_ in ['csubj', 'csubjpass'] and s.tag_ != 'VBG'
-			):
-				raise ValueError(
-					f'Cannot covert "{self}" to a polar question, '
-					f'because it has a clausal subject with a non-gerund verb '
-					f"(\"{' '.join([t.text for t in sorted([t for t in s.children] + [s], key=lambda t: t.i)])}\")!"
-				)
+			if s:
+				if (
+					(
+						isinstance(s,list) and 
+						any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ != 'VBG')
+					) or 
+					not isinstance(s,list) and s.dep_ in ['csubj', 'csubjpass'] and s.tag_ != 'VBG'
+				):
+					raise ValueError(
+						f'Cannot covert "{self}" to a polar question, '
+						f'because it has a clausal subject with a non-gerund verb '
+						f"(\"{' '.join([t.text for t in sorted([t for t in s.children] + [s], key=lambda t: t.i)])}\")!"
+					)
 			
 			if s:
 				if len(s) == 1:
