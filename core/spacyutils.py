@@ -622,27 +622,44 @@ class EDoc():
 	
 	def _copy_with_remove(
 		self,
-		indices: Union[int,List[int]]
+		indices: Union[int,List[int]],
+		move_deps_to: Union[int,List[int]],
 	) -> 'EDoc':
 		'''
 		Creates a copy of the current doc with
 		the tokens at the indices removed.
+		Dependencies associated with the removed indices
+		are update to the location specified in move_deps_to.
 		Generally best to avoid; used internally
 		for conjunction reduction.
 		'''
-		indices 	= [indices] if not isinstance(indices,(list,range)) else indices
-				
-		if any(i > (len(self) - 1) for i in indices):
+		indices 	 = [indices] if not isinstance(indices,(list,range)) else indices
+		move_deps_to = [move_deps_to] if not isinstance(move_deps_to,(list,range)) else indices
+			
+		if any(i > (len(self) - 1) for i in indices + move_deps_to):
 			raise IndexError(
 				f'The current doc is length {len(self)}, so '
 				f'there is no token to remove at index >{len(self) - 1}!'
 			)
 		
 		tokens 		= [t for t in self.doc if not t.i in indices]
-		
 		vocab 		= self.vocab
 		words 		= [t.text for t in tokens]
-		spaces 		= [t.whitespace_ == ' ' for t in tokens]
+		
+		# if we removed the first token, capitalize the new first token
+		if not words[0][0].isupper():
+			words[0] = words[0][0].upper() + words[0][1:]
+		
+		spaces = []
+		for t in tokens:
+			# if the removed token has no whitespace,
+			# we need to remove it from the token that 
+			# will now take its place
+			if t.i + 1 in indices:
+				spaces.append(self[t.i+1].whitespace_ == ' ')
+			else:
+				spaces.append(t.whitespace_ == ' ')
+		
 		user_data	= self.user_data
 		tags 		= [t.tag_ for t in tokens]
 		pos 		= [t.pos_ for t in tokens]
@@ -651,8 +668,8 @@ class EDoc():
 		heads 		= [t.head.i for t in tokens]
 		
 		# have to reduce the head indices for each index we remove
-		for i in indices:
-			heads 	= [h - 1 if h > i else h for h in heads]
+		for i, move_to in zip(indices, move_deps_to):
+			heads 	= [h - 1 if h > i else move_to if h == i else h for h in heads]
 		
 		deps 		= [t.dep_ for t in tokens]	
 		sent_starts = [t.is_sent_start for t in tokens]
@@ -688,20 +705,37 @@ class EDoc():
 		for conjunction reduction.
 		'''
 		tokens 		= self[:]
+		heads 		= [t.head.i for t in tokens]
+		heads 		= [h + 1 if h > index else h for h in heads]
+		
 		tokens.insert(index, token)
+		heads.insert(index, token.head.i)
 		
 		vocab 		= self.vocab
 		words 		= [t.text for t in tokens]
-		spaces 		= [t.whitespace_ == ' ' for t in tokens]
+		
+		# if we have added to the beginning of the sentence
+		# we capitalize the token added and 
+		# then decapitalize the next token if possible
+		if index == 0:
+			words[0] = words[0][0].upper() + words[0][1:]
+			if tokens[1].can_be_decapitalized:
+				words[1] = words[1][0].lower() + words[1][1:]
+		
+		# if we have added to a position preceding a no whitespace,
+		# remove the punctuation of the added token
+		if self[index].whitespace_ == '':
+			spaces 	= [t.whitespace_ == ' ' or t.i != index for t in tokens]
+		else:
+			spaces 	= [t.whitespace_ == ' ' for t in tokens]
+		
 		user_data	= self.user_data
 		tags 		= [t.tag_ for t in tokens]
 		pos 		= [t.pos_ for t in tokens]
 		morphs 		= [str(t.morph) for t in tokens]
 		lemmas 		= [t.lemma_ for t in tokens]
-		heads 		= [t.head.i for t in tokens]
-		heads 		= [h + 1 if h > index else h for h in heads]
 		
-		deps 		= [t.dep_ for t in tokens]	
+		deps 		= [t.dep_ for t in tokens]
 		sent_starts = [t.is_sent_start for t in tokens]
 		sent_starts = [True] + [False for _ in range(len(tokens)-1)]
 		ents 		= [t.ent_iob_ for t in tokens]
@@ -1540,7 +1574,8 @@ class EDoc():
 	
 	def make_sentence_polar_question(self) -> 'EDoc':
 		'''Convert a sentence EDoc into a polar question.'''
-		# if we have conjoined multiple clauses, we need to make each a question separately
+		# if we have conjoined multiple clauses, 
+		# we need to make each a question separately
 		if not self.can_form_polar_question:
 			raise ValueError(
 				f'"{self}" cannot form a polar question!'
@@ -1560,13 +1595,6 @@ class EDoc():
 		# properly adjust the positions
 		# of everything else
 		added = 0
-		
-		# this holds the tokens that will
-		# need to be moved around because
-		# of subject-aux inversion
-		replacements = []
-		
-		breakpoint()
 		
 		for v in vs:
 			# if the verb has its own subject, we
@@ -1593,6 +1621,7 @@ class EDoc():
 			# do aux inversion or do-support
 			if v_has_subject:
 				aux = self._get_aux(v)
+				aux.whitespace_ = ' '
 				
 				# inflect the aux
 				if aux.can_be_inflected:
@@ -1611,98 +1640,21 @@ class EDoc():
 				# at the earliest position of the subject
 				aux.i = self._get_subject_initial_index(s)
 				
-				# if the aux is inverted to position one, we need to capitalize it
-				# and decapitalize the former initial token
-				if aux.i == 0:
-					aux.text = aux.text.capitalize()
-					aux.is_sent_start = True
-					initial = self[0]
-					if initial.can_be_decapitalized:
-						initial.text = initial.text[0].lower() + initial.text[1:]
-						# if the subject initial index is 0 and the verb is an aux
-						# we have done aux inversion. This means that we want the index
-						# of the head of the subject to be the inserted aux @ 0
-						if v.is_aux:
-							initial.head = aux
-						else:
-							initial.head = self[initial.head.i+added]
-						# we add an additional one here because we haven't actually
-						# updated the added tokens yet, but we will be adding one
-						# later on. we don't want to add it yet because we need to 
-						# add the aux at this position later
-						replacements.append([initial, initial.i+added+1])
-				else:
-					aux.is_sent_start = False
-				
-				# if the verb is an aux, we want to set the dependencies
-				# of the tokens that originally depended on it to the new position
-				# we also want to set the head of aux to itself and its dep to root
-				# since it is the main head of the sentence
-				# if not, then it should refer to the verb,
-				# which will work correctly
+				# if the verb is an aux already, we
+				# need to set the dependencies of the
+				# added aux accordingly
 				if v.is_aux:
-					aux.head = aux
-					aux.dep_ = 'ROOT'
-					for t in self:
-						if any(token[0].i == t.i for token in replacements):
-							token_exists = True
-							t = [token for token in replacements if token[0].i == t.i][0][0]
-						else:
-							token_exists = False
-						
-						# we have modified the v, so we check if the head is
-						# the original position of the verb
-						if t.head.i == v_original_index and not t.i == v_original_index:
-							t.head = aux
-							if not token_exists:
-								replacements.append([t,t.i+added])
-				else:
-					# otherwise, we have added an aux, and we need
-					# to push forward the dependencies of everything 
-					# following the added aux by one
-					for t in self[aux.i:]:
-						if any(token[0].i == t.i for token in replacements):
-							token_exists = True
-							t = [token for token in replacements if token[0].i == t.i][0][0]
-						else:
-							token_exists = False
-						
-						# we need to replace the verb with its infinitive form
-						# when using do-support
-						if t.i == v_original_index:
-							t.reinflect(tense=INFINITIVE)
-							t.set_morph(Number=None, Tense=None, VerbForm='Inf')
-						
-						# push the dependency location of the tokens 
-						# moved by the aux forward by one
-						# this looks weird because the dependencies
-						# get reconstructed by the doc constructor
-						# based on the index, not based on the actual head
-						t.head = self[t.head.i+added+1]
-						if not token_exists:
-							replacements.append([t,t.i+added+1])
-				
-				# if the aux preceded a punctuation, we need to add its whitespace
-				# back and remove the whitespace from the preceding token
-				if aux.whitespace_ == '':
-					before_verb_index = v_original_index - 1
-					# if the index before the verb is 0, we want to modify the initial
-					# token that we already added to the replacements above
-					if before_verb_index == 0:
-						preceding_exists  = True
-						before_verb_token = [t[0] for t in replacements if t[0].i == before_verb_index][0]
+					# if the verb is the head, then
+					# set the head of aux to itself and
+					# it is the root node
+					if v.head.i == v_original_index:
+						aux.head = aux
+						aux.dep_ = 'ROOT'
 					else:
-						preceding_exists  = False
-						before_verb_token = self[before_verb_index]
-					
-					aux.whitespace_ = ' '
-					before_verb_token.whitespace_ = ''
-					before_verb_token.head = self[before_verb_token.head.i+added]
-					
-					# if we didn't pull the token from the 
-					# replacements list, we need to add it
-					if not preceding_exists:
-						replacements.append([before_verb_token, before_verb_index+added])
+						# account for passive auxiliaries,
+						# which have existing dependencies
+						aux.head = self[v.head.i+added+1]
+						aux.dep_ = v.dep_
 				
 				# insert the auxiliary
 				question =  question._copy_with_add(token=aux, index=aux.i+added)
@@ -1711,20 +1663,17 @@ class EDoc():
 			# if the verb was already an aux, we need to remove
 			# the aux in the original position
 			if v.is_aux:
-				question =  question._copy_with_remove(indices=v_original_index+added)
+				question =  question._copy_with_remove(indices=v_original_index+added, move_deps_to=aux.i)
 				added 	 -= 1
 		
-		replacements.append(self._get_question_punctuation(question))
-		
-		indices 		= [t[1] for t in replacements]
-		replacements 	= [t[0] for t in replacements]
+		q_mark, q_mark_i = self._get_question_punctuation(question)
 		
 		# remove extra stuff from the history 
 		# that accumulates during the loops above
 		question.caller = self.caller 
 		question.caller_args = self.caller_args
 		
-		question = question.copy_with_replace(tokens=replacements, indices=indices)
+		question = question.copy_with_replace(tokens=q_mark, indices=q_mark_i)
 		
 		question.previous = self
 		
