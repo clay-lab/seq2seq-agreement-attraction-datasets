@@ -273,10 +273,16 @@ def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 	else:
 		return False
 
-def no_dist_no_presubject_modifiers_conditions(s: str) -> Union[bool,EDoc]:
-	'''No distractors, plus no presubject modifiers.'''
+def question_conditions(s: str) -> Union[bool,EDoc]:
+	'''
+	No distractors, plus no presubject modifiers.
+	Also main verbs must not be an aux. (We want do-support.)
+	'''
 	s = no_dist_conditions(s)
 	if s:
+		if any(v.is_aux for v in s.main_clause_verbs):
+			return False
+		
 		subject = s.main_subject
 		if isinstance(subject,list):
 			subject_position = min([t.i for t in subject])

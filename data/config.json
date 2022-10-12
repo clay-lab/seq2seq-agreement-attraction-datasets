@@ -20,7 +20,7 @@
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata"
 				},
 				"en_wiki-nodist-ques-and-past": {
-					"conditions_fun": "core.language_funs.en.grammar_funs.no_dist_no_presubject_modifiers_conditions",
+					"conditions_fun": "core.language_funs.en.grammar_funs.question_conditions",
 					"splits": {
 						"train": 100000,
 						"dev"  : 1000

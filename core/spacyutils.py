@@ -161,6 +161,13 @@ class EToken():
 			i=i,
 		))
 	
+	def to_dict(self) -> dict:
+		'''
+		Return a dict that can be modified to construct an EToken
+		from definition.
+		'''
+		return {k: v for k, v in vars(self) if not k.startswith('_')}		
+	
 	@property
 	def rights(self) -> 'EToken':
 		'''Generator for the underlying Token's rights attribute.'''
@@ -201,6 +208,12 @@ class EToken():
 				(self.is_aux and self.lemma_ in INFLECTED_AUXES)
 			)
 		)
+	
+	@property
+	def can_be_decapitalized(self) -> bool:
+		'''Can the token be safely decapitalized?'''
+		# proper nouns and I (PRON) cannot be decapitalized
+		return self.pos_ != 'PROPN' and not self.text == 'I'
 	
 	@property
 	def is_expl(self):
@@ -413,7 +426,8 @@ class EToken():
 				 'was unsuccessful!'
 			)
 		
-		self.text = text
+		# capitalize if we're at the beginning of a sentence
+		self.text = text if not self.is_sent_start else (text[0].upper() + text[1:])
 		
 		n = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur' if NUMBER_MAP.get(number) == PL else None
 		t = 'Past' if TENSE_MAP.get(tense) == PAST else 'Pres' if TENSE_MAP.get(tense) == PRESENT else None
@@ -1019,6 +1033,73 @@ class EDoc():
 		'''Get the tag sequence of the sentence.'''
 		return [t.tag_ for t in self]
 	
+	@property
+	def main_clause_verbs(self) -> List[EToken]:
+		'''Get all the verbs in the main clause of the sentence.'''
+		v = self.main_verb
+		vs = [v] + [t for t in self._get_conjuncts(v)]
+		if self.main_verb.is_aux:
+			vs = vs + [t for t in self._get_conjuncts(self.root)]
+		
+		for v in vs:
+			vs.extend(self._get_conjuncts(v))
+		
+		for i, v in enumerate(vs):
+			if any(t for t in v.children if t.dep_ in ['aux', 'auxpass']):
+				vs[i] = [t for t in v.children if t.dep_ in ['aux', 'auxpass']][0]
+		
+		# remove any duplicates by indices
+		unique_indices = set(t.i for t in vs)
+		deduped_vs = []
+		for i in unique_indices:
+			verbs = [t for t in vs if t.i == i and (t.is_aux or t.is_verb)]
+			if verbs and not any(t.i == i for t in deduped_vs):
+				deduped_vs.append(verbs[0])
+		
+		vs = deduped_vs
+		
+		return vs
+		
+	@property
+	def can_form_polar_question(self) -> bool:
+		'''Can the sentence form a polar question?'''
+		vs = self.main_clause_verbs
+		
+		# we need to make sure that all of the main clause
+		# verbs that share a subject would use the same auxiliary
+		# to form a question
+		all_v_lemmas = {}
+		for v in vs:
+			# run up the tree until we find the verb's subject
+			tmp_v = v
+			while not tmp_v.subject:
+				tmp_v = EToken(tmp_v.head)
+			
+			# get the first subject position for that verb
+			tmp_subject = tmp_v.subject
+			if isinstance(tmp_subject,list):
+				tmp_subject = sorted(tmp_subject, key=lambda t: t.i)[0]
+			
+			# record the position of that subject 
+			# and the auxiliary associated with its verb
+			all_v_lemmas[tmp_subject.i] = all_v_lemmas.get(tmp_subject.i, set()).union({f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'})
+		
+		# if any one subject would require more than
+		# one aux, we cannot form a polar question
+		# e.g., He can go and would be happy. -/-> *Can he go and would be happy?
+		# in this case, it would have to be He can go and he would be happy. --->
+		# Can he go and would he be happy?
+		for i in all_v_lemmas:
+			if len(all_v_lemmas[i]) > 1:
+				log.info(
+					f'"{self}" cannot be made into a question '
+					f'because multiple auxiliaries would be required for '
+					f'subject "{self[i]}" at position {i} ({", ".join(all_v_lemmas[i])})!'
+				)
+				return False
+		
+		return True
+	
 	@staticmethod
 	def _get_conjuncts(t: Union[Token,EToken]):
 		'''Yields all conjuncts dependent on the first in a coordinated phrase.'''
@@ -1460,199 +1541,191 @@ class EDoc():
 	def make_sentence_polar_question(self) -> 'EDoc':
 		'''Convert a sentence EDoc into a polar question.'''
 		# if we have conjoined multiple clauses, we need to make each a question separately
-		v = self.main_verb
-		vs = [v] + [t for t in self._get_conjuncts(v)]
-		if self.main_verb.is_aux:
-			vs = vs + [t for t in self._get_conjuncts(self.root)]
+		if not self.can_form_polar_question:
+			raise ValueError(
+				f'"{self}" cannot form a polar question!'
+			)
 		
-		for v in vs:
-			vs.extend(self._get_conjuncts(v))
+		# get the main clause verbs
+		# we will loop through them
+		# and add/replace each aux as needed
+		vs = self.main_clause_verbs
 		
-		vs = list(dict.fromkeys(vs))
-		
-		for i, v in enumerate(vs):
-			if any(t for t in v.children if t.dep_ == 'aux'):
-				vs[i] = [t for t in v.children if t.dep_ =='aux'][0]
-		
-		all_v_lemmas = {}
-		for v in vs:
-			tmp_v = v
-			while not tmp_v.subject:
-				tmp_v = EToken(tmp_v.head)
-			
-			if tmp_v.subject.i in all_v_lemmas:
-				all_v_lemmas[tmp_v.subject.i] = all_v_lemmas[tmp_v.subject.i].union({f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'})
-			else:
-				all_v_lemmas[tmp_v.subject.i] = {f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'}
-		
-		# all_v_lemmas = [
-		# 	(
-		# 		v.subject if v.subject else EToken(v.head).subject,
-		# 		f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'
-		# 	)
-		# 	for v in vs
-		# ]
-		
-		#if any(len(all_v_lemmas[i]) > 1 for i in all_v_lemmas):
-		# we can do this if we have a different subject for each verb lemma
-		# if any(v.subject is None for v in vs):
-		for i in all_v_lemmas:
-			if len(all_v_lemmas[i]) > 1:
-				raise ValueError(
-					f'"{self}" cannot be made into a question '
-					f'because multiple auxiliaries would be required for '
-					f'subject "{self[i]}" at position {i} ({", ".join(all_v_lemmas[i])})!'
-				)
-		
+		# we start by copying self,
+		# and will modify it to make a question	
 		question = self
+		
+		# this keeps track of how many 
+		# tokens we've added so we can
+		# properly adjust the positions
+		# of everything else
 		added = 0
 		
+		# this holds the tokens that will
+		# need to be moved around because
+		# of subject-aux inversion
 		replacements = []
-		indices = []
+		
+		breakpoint()
 		
 		for v in vs:
-			# we find the earliest index associated with each subject phrase
-			has_subj = True
+			# if the verb has its own subject, we
+			# need to invert them. if not, we don't
+			# need to do inversion, just reinflection
+			v_has_subject = True
 			s = v.subject
 			
-			# if we have a clausal subject for any verb we're converting, we
-			# cannot do that, so raise error if it's not a gerund (which we can do)
-			if s:
-				if (
-					(
-						isinstance(s,list) and 
-						any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ != 'VBG')
-					) or 
-					not isinstance(s,list) and s.dep_ in ['csubj', 'csubjpass'] and s.tag_ != 'VBG'
-				):
-					raise ValueError(
-						f'Cannot covert "{self}" to a polar question, '
-						f'because it has a clausal subject with a non-gerund verb '
-						f"(\"{' '.join([t.text for t in sorted([t for t in s.children] + [s], key=lambda t: t.i)])}\")!"
-					)
-			
-			if s:
-				if len(s) == 1:
+			if s and self._can_be_inverted_subject(s):
+				if isinstance(s,list):
 					s = s[0]
 			else:
-				# the verb doesn't have its own subject,
-				# but we still want to use the subject for
-				# reinflection, so we set it here
-				has_subj = False
-				s = self.main_subject
-			
-			original_v_index = v.i
-			
-			if has_subj:
-				if v.is_aux:
-					# if we are headed by an aux, we move that to the front
-					aux = v
-				else:
-					# otherwise, we use do-support
-					aux = EToken.from_definition(**{
-								**Q_DO, 
-								'whitespace_': ' ',
-								'head': v,
-							})
+				v_has_subject = False
+				next_v = v
+				while not next_v.subject:
+					next_v = EToken(next_v.head)
 				
+				s = next_v.subject
+			
+			# save this so we can put the preceding token here
+			v_original_index = v.i
+			
+			# if the verb has a subject,
+			# do aux inversion or do-support
+			if v_has_subject:
+				aux = self._get_aux(v)
+				
+				# inflect the aux
 				if aux.can_be_inflected:
-					r_kwargs = dict(
-						number = s.get_morph('Number') if not isinstance(s,list) else self._get_list_noun_number(s),
-						tense = v.get_morph('Tense')
-					)
-					
-					if not isinstance(s,list):
+					if isinstance(s,list):
+						number = self._get_list_noun_number(s)
+						person = 3
+					else:
+						number = s.get_morph('Number')
 						person = s.get_morph('Person')
-						if person:
-							r_kwargs.update(dict(person=int(person)))
+						person = int(person) if person else 3
 					
-					aux.reinflect(**r_kwargs)
+					tense = v.get_morph('Tense')
+					aux.reinflect(number=number, person=person, tense=tense)
 				
-				if isinstance(s,list):
-					earliest_subject_index = min([t.i for t in s])
-					s = self[earliest_subject_index]
-				else:
-					earliest_subject_index = s.i
+				# inversion means putting inserting the aux
+				# at the earliest position of the subject
+				aux.i = self._get_subject_initial_index(s)
 				
-				# this might not work in the list case, but it probably will
-				chi = [t for t in s.children]
-				all_chi = chi
-				while chi:
-					chi = [t for ch in chi for t in ch.children]
-					all_chi = chi + all_chi
-				
-				chi = all_chi
-			
-				if chi:
-					earliest_subject_index = min([earliest_subject_index, *[t.i for t in chi]])
-				
-				# if we are replacing the first token with aux
-				# we need to capitalize the aux
-				if earliest_subject_index == 0:
+				# if the aux is inverted to position one, we need to capitalize it
+				# and decapitalize the former initial token
+				if aux.i == 0:
 					aux.text = aux.text.capitalize()
 					aux.is_sent_start = True
+					initial = self[0]
+					if initial.can_be_decapitalized:
+						initial.text = initial.text[0].lower() + initial.text[1:]
+						# if the subject initial index is 0 and the verb is an aux
+						# we have done aux inversion. This means that we want the index
+						# of the head of the subject to be the inserted aux @ 0
+						if v.is_aux:
+							initial.head = aux
+						else:
+							initial.head = self[initial.head.i+added]
+						# we add an additional one here because we haven't actually
+						# updated the added tokens yet, but we will be adding one
+						# later on. we don't want to add it yet because we need to 
+						# add the aux at this position later
+						replacements.append([initial, initial.i+added+1])
 				else:
 					aux.is_sent_start = False
 				
-				aux.i = earliest_subject_index
+				# if the verb is an aux, we want to set the dependencies
+				# of the tokens that originally depended on it to the new position
+				# we also want to set the head of aux to itself and its dep to root
+				# since it is the main head of the sentence
+				# if not, then it should refer to the verb,
+				# which will work correctly
+				if v.is_aux:
+					aux.head = aux
+					aux.dep_ = 'ROOT'
+					for t in self:
+						if any(token[0].i == t.i for token in replacements):
+							token_exists = True
+							t = [token for token in replacements if token[0].i == t.i][0][0]
+						else:
+							token_exists = False
+						
+						# we have modified the v, so we check if the head is
+						# the original position of the verb
+						if t.head.i == v_original_index and not t.i == v_original_index:
+							t.head = aux
+							if not token_exists:
+								replacements.append([t,t.i+added])
+				else:
+					# otherwise, we have added an aux, and we need
+					# to push forward the dependencies of everything 
+					# following the added aux by one
+					for t in self[aux.i:]:
+						if any(token[0].i == t.i for token in replacements):
+							token_exists = True
+							t = [token for token in replacements if token[0].i == t.i][0][0]
+						else:
+							token_exists = False
+						
+						# we need to replace the verb with its infinitive form
+						# when using do-support
+						if t.i == v_original_index:
+							t.reinflect(tense=INFINITIVE)
+							t.set_morph(Number=None, Tense=None, VerbForm='Inf')
+						
+						# push the dependency location of the tokens 
+						# moved by the aux forward by one
+						# this looks weird because the dependencies
+						# get reconstructed by the doc constructor
+						# based on the index, not based on the actual head
+						t.head = self[t.head.i+added+1]
+						if not token_exists:
+							replacements.append([t,t.i+added+1])
 				
-				# add the aux to the correct position
-				question = question._copy_with_add(token=aux, index=earliest_subject_index+added)
-				added += 1
-				
-				# if we are replacing the first token with aux
-				# we need to decapitalize it if it is not a proper noun
-				initial = self[0]
-				if initial.pos_ != 'PROPN' and not initial.text == 'I' and earliest_subject_index == 0:
-					if len(initial.text) > 1:
-						initial.text = initial.text[0].lower() + initial.text[1:]
+				# if the aux preceded a punctuation, we need to add its whitespace
+				# back and remove the whitespace from the preceding token
+				if aux.whitespace_ == '':
+					before_verb_index = v_original_index - 1
+					# if the index before the verb is 0, we want to modify the initial
+					# token that we already added to the replacements above
+					if before_verb_index == 0:
+						preceding_exists  = True
+						before_verb_token = [t[0] for t in replacements if t[0].i == before_verb_index][0]
 					else:
-						initial.text = initial.text.lower()
+						preceding_exists  = False
+						before_verb_token = self[before_verb_index]
 					
-					replacements.append(initial)
-					# if the position of the initial thing is before
-					# the index of the original verb, it means that 
-					# we need to shift it forward. if it isn't, then
-					# it means that 
-					if initial.i < original_v_index:
-						indices.append(initial.i+added)
-					else:
-						indices.append(initial.i)
+					aux.whitespace_ = ' '
+					before_verb_token.whitespace_ = ''
+					before_verb_token.head = self[before_verb_token.head.i+added]
+					
+					# if we didn't pull the token from the 
+					# replacements list, we need to add it
+					if not preceding_exists:
+						replacements.append([before_verb_token, before_verb_index+added])
+				
+				# insert the auxiliary
+				question =  question._copy_with_add(token=aux, index=aux.i+added)
+				added 	 += 1
 			
-			# remove the aux if we need to (not needed with do support)
+			# if the verb was already an aux, we need to remove
+			# the aux in the original position
 			if v.is_aux:
-				question = question._copy_with_remove(indices=original_v_index+added)
-				added -= 1
-			else:
-				# replace the main verb with the nonfinite form
-				v.reinflect(tense=INFINITIVE)
-				v.set_morph(Number=None, Tense=None, VerbForm='Inf')
-				replacements.append(v)
-				indices.append(original_v_index+added)
-			
-			# question = question.copy_with_replace(tokens=replacements, indices=indices)
+				question =  question._copy_with_remove(indices=v_original_index+added)
+				added 	 -= 1
 		
-		# remove extra crap from the history the accumulates during the loops above
+		replacements.append(self._get_question_punctuation(question))
+		
+		indices 		= [t[1] for t in replacements]
+		replacements 	= [t[0] for t in replacements]
+		
+		# remove extra stuff from the history 
+		# that accumulates during the loops above
 		question.caller = self.caller 
 		question.caller_args = self.caller_args
 		
-		# replace the final period with a question mark
-		final = question[-1]
-		if not final.text in ['!', '.']:
-			raise ParseError(
-				f'The sentence "{self}" does not end with an exclamation point or period! '
-				"It may already be a question, or it wasn't parsed correctly. I won't make it a question."
-			)
-		
-		final.text = '?'
-		
-		# question = question.copy_with_replace(tokens=[final], indices=[final.i])
-		replacements.append(final)
-		indices.append(final.i)
-		
 		question = question.copy_with_replace(tokens=replacements, indices=indices)
 		
-		# remove extra crap from the history that accumulates during the loops
 		question.previous = self
 		
 		return question
@@ -1660,3 +1733,79 @@ class EDoc():
 	def make_polar_question_sentence(self) -> 'EDoc':
 		'''Covert a question into a sentence.'''
 		raise NotImplementedError('Not currently doing this.')
+	
+	def _get_question_punctuation(self, question: 'EDoc') -> Tuple:
+		# replace the final punct with a question mark
+		final = question[-1]
+		if not final.text in ['!', '.'] or not final.dep_ == 'punct':
+			raise ParseError(
+				f'The sentence "{self}" does not end with '
+				'an exclamation point or period! '
+				"It may already be a question, or it wasn't "
+				"parsed correctly. I won't make it a question."
+			)
+		
+		final.text = '?'
+		
+		return final, final.i
+	
+	def _can_be_inverted_subject(self, s: Union[EToken,List[EToken]]) -> bool:
+		'''Can the passed subject be inverted with an aux?'''
+		if not isinstance(s,list):
+			s = [s]
+		
+		# a subject cannot be inverted with an aux
+		# if it is clausal and the verb is not a gerund
+		# (i.e., if it is headed by "that" or "to")
+		if any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ != 'VBG'):
+			clausal_subject_text = ' '.join(
+				[
+					t.text 
+					for t in sorted([t for t in s.children] + [s], key=lambda t: t.i)
+				]
+			)
+			
+			log.info(
+				f'Cannot covert "{self}" to a polar question, because '
+				 'it has a clausal subject with a non-gerund verb '
+				f'("{clausal_subject_text}")!'
+			)
+			return False
+		
+		return True
+	
+	@staticmethod
+	def _get_aux(v: EToken) -> EToken:
+		'''Get the appropriate auxiliary for forming a question.'''
+		if v.is_aux:
+			return v
+		else:
+			return EToken.from_definition(**{
+				**Q_DO,
+				'whitespace_': ' ',
+				'head': v,
+			})
+	
+	@staticmethod
+	def _get_subject_initial_index(s: Union[EToken,List[EToken]]) -> int:
+		'''Get the earliest index in the phrase of the subject.'''
+		if isinstance(s,list):
+			earliest_subject_index = min([t.i for t in s])
+		else:
+			earliest_subject_index = s.i
+			s = [s]
+		
+		# recursive go through the children of the subject
+		# until no more are found, and get the lowest index
+		children = [t for n in s for t in n.children]
+		all_children = children
+		while children:
+			children = [t for child in children for t in child.children]
+			all_children = children + all_children
+		
+		children = all_children
+		
+		if children:
+			earliest_subject_index = min([earliest_subject_index, *[t.i for t in children]])
+		
+		return earliest_subject_index

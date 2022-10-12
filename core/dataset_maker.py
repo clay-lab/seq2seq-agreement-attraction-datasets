@@ -229,7 +229,7 @@ def get_random_parsed_sentence(
 	nrows = len(dataset)-1
 	while not e:
 		# pick a random example/page
-		r  = int(round(random.random() * nrows,0))
+		r  = int(random.random() * nrows)
 		ex = dataset[r]['text']
 		
 		# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
@@ -239,7 +239,7 @@ def get_random_parsed_sentence(
 		# because most sentences will meet our criteria
 		# this way we don't parse all of them. 
 		# this should speed things up considerably
-		r2 = int(round(random.random() * (len(ex)-1),0))
+		r2 = int(random.random() * (len(ex)-1))
 		s  = ex[r2]
 		
 		# replace nbsp
