@@ -31,5 +31,4 @@ if __name__ == '__main__':
 			conjugate, singularize, pluralize
 		)
 		from spacy import displacy
-		nlp('Tincup Lake Water Aerodrome located on Tincup Lake, Yukon, Canada is open during the summer months and prior notice is required to land.').make_sentence_polar_question()
 		breakpoint()
