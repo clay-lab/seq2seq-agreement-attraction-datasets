@@ -111,6 +111,7 @@ BAD_OBJECTS: Set[str] = {
 	'between',
 	'served',
 	'former',
+	'of',
 }
 
 def basic_conditions(s: str) -> Union[bool,EDoc]:
