@@ -1267,10 +1267,13 @@ class EDoc():
 		if s.text in PARTITIVES_OPTIONAL_OF:
 			# next(s.children) == [of], so we get the children of that
 			if any(s.children):
-				head_noun = [t for t in s.children]
+				head_noun = list(s.children)
 				if any(t.text == 'of' for t in head_noun):
 					head_noun = [t for t in head_noun if t.text == 'of'][0]
-					head_noun = [t for t in head_noun.children]
+					head_noun = list(head_noun.children)
+					 # use slice here since we are modifying the list
+					for t in head_noun[:]:
+						head_noun.extend(self._get_conjuncts(t))
 				else:
 					head_noun = [s]
 			else:
@@ -1655,6 +1658,13 @@ class EDoc():
 						# which have existing dependencies
 						aux.head = self[v.head.i+added+1]
 						aux.dep_ = v.dep_
+				else:
+					# if the verb is not an aux, we need to
+					# replace it with the infinitival form
+					aux.head = self[aux.head.i+added+1]
+					v.reinflect(tense=INFINITIVE)
+					v.set_morph(Number=None, Tense=None, VerbForm='Inf')
+					question = question.copy_with_replace(tokens=v, indices=v.i+added)
 				
 				# insert the auxiliary
 				question =  question._copy_with_add(token=aux, index=aux.i+added)

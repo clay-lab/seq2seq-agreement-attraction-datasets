@@ -19,7 +19,8 @@ MAX_SENTENCE_LENGTH_IN_WORDS: int = 50
 
 EXCLUSION_STRINGS: Set[str] = {
 	';', 
-	'"', 
+	'"',
+	"'",
 	' ,', 
 	' .',
 	'/',
@@ -1099,6 +1100,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'somewhere': {'Number': 'Sing'},
 	'rhyme': {'Number': 'Sing'},
 	'Rhyme': {'Number': 'Sing'},
+	'Diverse': {'Number': 'Plur'},
+	'diverse': {'Number': 'Plur'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 
