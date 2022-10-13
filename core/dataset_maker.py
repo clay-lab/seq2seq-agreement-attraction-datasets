@@ -164,7 +164,7 @@ def create_seq2seq_dataset(
 			'src' in new_dataset[0]['translation'] and 
 			isinstance(new_dataset[0]['translation']['src'], Hashable)
 		):
-			counts = Counter([d['src'] for d in new_dataset])
+			counts = Counter([d['translation']['src'] for d in new_dataset])
 			counts = {k: v for k, v in counts.items() if v > 1}
 			v = sum(counts.values())
 			pad_len = len('Number of duplicated sentences')
