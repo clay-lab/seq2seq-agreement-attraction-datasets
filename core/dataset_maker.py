@@ -398,7 +398,7 @@ def create_t5_scripts(
 	elif isinstance(only,str):
 		only = [only]
 	
-	langs 	= [tuple(pair) for pair in config['pairs'] if pairs[0] in only] if 'pairs' in config else []
+	langs 	= [tuple(pair) for pair in config['pairs'] if pair[0] in only] if 'pairs' in config else []
 	
 	# create directories if not existant
 	os.makedirs(os.path.join('scripts', 'finetune'), exist_ok=True)
