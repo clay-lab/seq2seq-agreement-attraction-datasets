@@ -168,10 +168,11 @@ def create_seq2seq_dataset(
 				counts = Counter([d['translation']['src'] for d in new_dataset])
 				counts = {k: v for k, v in counts.items() if v > 1}
 				v = sum(counts.values())
+				total = len(new_dataset)
 				pad_len = len('Number of duplicated sentences')
-				pad_len2 = len(new_dataset)
+				pad_len2 = len(str(total))
 				log.info(f'Number of duplicated sentences: {len(counts)}')
-				log.info(f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{len(new_dataset)}')
+				log.info(f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total}')
 			
 			os.makedirs(os.path.join('data', name), exist_ok=True)
 			log.info(f'Writing out dataset {name} ({split}).')
