@@ -45,7 +45,7 @@
 				"en_wiki-salts": {
 					"conditions_fun": "core.language_funs.en.grammar_funs.salts_conditions",
 					"splits": {
-						"eval": 20000
+						"eval": 30000
 					},
 					"splits_funs": {
 						"eval": "core.language_funs.en.grammar_funs.simple"
