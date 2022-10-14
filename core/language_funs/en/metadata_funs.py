@@ -1,6 +1,19 @@
+import string
+
 from ...spacyutils import EDoc
+from .grammar_funs import SALTS_WORDS
 
 from typing import Dict, Union
+
+def get_salts_metadata(d: Dict) -> Dict:
+	'''Get the word(s) in salts that occur(s) in the sentence.'''
+	s = d['text']
+	s = s.translate(s.maketrans('', '', string.punctuation)).split()
+	
+	words = [word in for word in SALTS_WORDS if word in s]
+	words = ','.join(words)
+	
+	return dict(salts_word=words)
 
 def get_source_metadata(source: Union[Dict,EDoc]) -> Dict:
 	"""

@@ -21,7 +21,7 @@ from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
 from collections.abc import Hashable
 
-from .spacyutils import nlp
+from .spacyutils import nlp, EDoc
 
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -143,75 +143,77 @@ def create_seq2seq_dataset(
 						ex = ''
 						pass
 		
-		if (
-			'prefix' in new_dataset[0]['translation'] and 
-			isinstance(new_dataset[0]['translation']['prefix'], Hashable)
-		):
-			prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
-			total = sum(prefixes.values())
-			pad_len = max(len(str(k)) for k in prefixes)
-			pad_len2 = len(str(total))
-			log.info(
-				f'\n\nPr. of each prefix ({split}):\n\t' + 
-				'\n\t'.join([
-					f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})'
-					for k, v in sorted(prefixes.items(), key=lambda p: (-p[1], p[0]))
-				]) + 
-				'\n'
-			)
+		if any(new_dataset):
+			if (
+				'prefix' in new_dataset[0]['translation'] and 
+				isinstance(new_dataset[0]['translation']['prefix'], Hashable)
+			):
+				prefixes = Counter([e['translation']['prefix'] for e in new_dataset])
+				total = sum(prefixes.values())
+				pad_len = max(len(str(k)) for k in prefixes)
+				pad_len2 = len(str(total))
+				log.info(
+					f'\n\nPr. of each prefix ({split}):\n\t' + 
+					'\n\t'.join([
+						f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})'
+						for k, v in sorted(prefixes.items(), key=lambda p: (-p[1], p[0]))
+					]) + 
+					'\n'
+				)
+			
+			if (
+				'src' in new_dataset[0]['translation'] and 
+				isinstance(new_dataset[0]['translation']['src'], Hashable)
+			):
+				counts = Counter([d['translation']['src'] for d in new_dataset])
+				counts = {k: v for k, v in counts.items() if v > 1}
+				v = sum(counts.values())
+				pad_len = len('Number of duplicated sentences')
+				pad_len2 = len(new_dataset)
+				log.info(f'Number of duplicated sentences: {len(counts)}')
+				log.info(f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{len(new_dataset)}')
+			
+			os.makedirs(os.path.join('data', name), exist_ok=True)
+			log.info(f'Writing out dataset {name} ({split}).')
+			with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
+				for ex in tqdm(new_dataset, miniters=miniters):
+					json.dump(ex, out_file, ensure_ascii=False)
+					out_file.write('\n')
 		
-		if (
-			'src' in new_dataset[0]['translation'] and 
-			isinstance(new_dataset[0]['translation']['src'], Hashable)
-		):
-			counts = Counter([d['translation']['src'] for d in new_dataset])
-			counts = {k: v for k, v in counts.items() if v > 1}
-			v = sum(counts.values())
-			pad_len = len('Number of duplicated sentences')
-			pad_len2 = len(new_dataset)
-			log.info(f'Number of duplicated sentences: {len(counts)}')
-			log.info(f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{len(new_dataset)}')
-		
-		os.makedirs(os.path.join('data', name), exist_ok=True)
-		log.info(f'Writing out dataset {name} ({split}).')
-		with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
-			for ex in tqdm(new_dataset, miniters=miniters):
-				json.dump(ex, out_file, ensure_ascii=False)
-				out_file.write('\n')
-		
-		print_keys = [
-			k 
-			for k in new_metadata[0] 
-				if not k in DONT_PRINT and 
-				isinstance(new_metadata[0][k], Hashable)
-		]
-		
-		for k in print_keys:
-			all_ks = Counter([m[k] for m in new_metadata])
-			total = sum(all_ks.values())
-			pad_len = max(len(str(k)) for k in all_ks)
-			pad_len2 = len(str(total))
-			log.info(
-				f'\n\nPr. of each {k} ({split}):\n\t' + 
-				'\n\t'.join([
-					f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})' 
-					for k, v in sorted(all_ks.items(), key=lambda p: (-p[1], p[0]))
-				]) + 
-				'\n'
-			)	
-		
-		log.info(f'Writing out metadata for {name} ({split}).')
-		with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
-			for m in tqdm(new_metadata, miniters=miniters):
-				json.dump(m, out_file, ensure_ascii=False)
-				out_file.write('\n')
+		if any(new_metadata):
+			print_keys = [
+				k 
+				for k in new_metadata[0] 
+					if not k in DONT_PRINT and 
+					isinstance(new_metadata[0][k], Hashable)
+			]
+			
+			for k in print_keys:
+				all_ks = Counter([m[k] for m in new_metadata])
+				total = sum(all_ks.values())
+				pad_len = max(len(str(k)) for k in all_ks)
+				pad_len2 = len(str(total))
+				log.info(
+					f'\n\nPr. of each {k} ({split}):\n\t' + 
+					'\n\t'.join([
+						f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})' 
+						for k, v in sorted(all_ks.items(), key=lambda p: (-p[1], p[0]))
+					]) + 
+					'\n'
+				)	
+			
+			log.info(f'Writing out metadata for {name} ({split}).')
+			with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
+				for m in tqdm(new_metadata, miniters=miniters):
+					json.dump(m, out_file, ensure_ascii=False)
+					out_file.write('\n')
 		
 		log.info('\n\n')
 
 def get_random_parsed_sentence(
 	dataset: Dataset, 
 	conditions_fun: Callable = None,
-) -> str:
+) -> Union[EDoc,str]:
 	'''
 	Generates a random example from the dataset.
 	
@@ -223,7 +225,7 @@ def get_random_parsed_sentence(
 										  as an EDoc, else False
 		
 		returns:
-			EDoc 						: a random sentence pulled from the dataset, parsed
+			EDoc, str					: a random sentence pulled from the dataset, parsed or not
 	'''
 	e = ''
 	nrows = len(dataset)-1

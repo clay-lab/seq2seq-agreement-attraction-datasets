@@ -41,6 +41,16 @@
 						"train": 10000
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_source_metadata"
+				},
+				"en_wiki-salts": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.salts_conditions",
+					"splits": {
+						"eval": 1000
+					},
+					"splits_funs": {
+						"eval": "core.language_funs.en.grammar_funs.simple"
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_salts_metadata"
 				}
 			}
 		}

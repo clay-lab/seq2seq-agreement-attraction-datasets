@@ -154,6 +154,198 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'focu', # due to a typo of "focuses"
 }
 
+SALTS_WORDS: Set[str] = {
+	'processing',
+	'versions',
+	'gaming',
+	'breeding',
+	'layer',
+	'spec',
+	'methyl',
+	'section',
+	'haven',
+	'communications',
+	'research',
+	'wing',
+	'percent',
+	'sports',
+	'tier',
+	'regulation',
+	'relations',
+	'gram',
+	'cent',
+	'puff',
+	'bytes',
+	'commerce',
+	'scan',
+	'series',
+	'health',
+	'pause',
+	'tech',
+	'chrome',
+	'phase',
+	'projects',
+	'liter',
+	'nutrition',
+	'sector',
+	'byte',
+	'podcast',
+	'java',
+	'noon',
+	'science',
+	'boarding',
+	'levels',
+	'biology',
+	'beta',
+	'miss',
+	'styles',
+	'pixel',
+	'rave',
+	'context',
+	'security',
+	'prints',
+	'version',
+	'flash',
+	'rule',
+	'jobs',
+	'campus',
+	'nature',
+	'products',
+	'nexus',
+	'paragraph',
+	'politics',
+	'node',
+	'lies',
+	'bits',
+	'justice',
+	'ling',
+	'harm',
+	'terrorism',
+	'lime',
+	'class',
+	'lore',
+	'tick',
+	'lace',
+	'storage',
+	'register',
+	'spawn',
+	'command',
+	'circle',
+	'counter',
+	'sect',
+	'life',
+	'chief',
+	'stairs',
+	'site',
+	'buff',
+	'bench',
+	'limits',
+	'park',
+	'moon',
+	'stories',
+	'lust',
+	'compliance',
+	'detail',
+	'combat',
+	'behavior',
+	'mount',
+	'sale',
+	'blocks',
+	'self',
+	'generation',
+	'chapter',
+	'lane',
+	'ridge',
+	'properties',
+	'performance',
+	'display',
+	'carbon',
+	'mode',
+	'control',
+	'caliber',
+	'micro',
+	'development',
+	'notes',
+	'stress',
+	'corn',
+	'treatment',
+	'trace',
+	'production',
+	'clips',
+	'tones',
+	'cases',
+	'million',
+	'shirts',
+	'dollar',
+	'paste',
+	'rows',
+	'fest',
+	'ward',
+	'blood',
+	'pine',
+	'venture',
+	'foot',
+	'header',
+	'division',
+	'member',
+	'vent',
+	'review',
+	'thanks',
+	'relative',
+	'custom',
+	'shift',
+	'sections',
+	'contact',
+	'missions',
+	'lambda',
+	'poly',
+	'girlfriend',
+	'post',
+	'mint',
+	'base',
+	'ping',
+	'template',
+	'source',
+	'gall',
+	'sync',
+	'definition',
+	'center',
+	'punk',
+	'radio',
+	'camera',
+	'writ',
+	'ventures',
+	'radius',
+	'vantage',
+	'description',
+	'comments',
+	'faith',
+	'light',
+	'dash',
+	'population',
+	'flame',
+	'ghost',
+	'fiction',
+	'success',
+	'monster',
+	'fire',
+	'mining',
+	'chin',
+	'slice',
+	'stroke',
+	'cycle',
+	'rock',
+	'piracy',
+	'mouse',
+	'brain',
+	'rail',
+	'flight',
+	'prep',
+	'board',
+	'mouth',
+	'cart',
+}
+
 # the wikipedia dump removes measure words
 # like, "The terrain occupies 464 acres adjacent to..."
 # becomes "The terrain occupies adjacent to..."
@@ -176,8 +368,8 @@ BAD_OBJECTS: Set[str] = {
 	'of',
 }
 
-def basic_conditions(s: str) -> Union[bool,EDoc]:
-	'''Basic conditions to clean up noisy data.'''
+def en_string_conditions(s: str) -> Union[bool,str]:
+	'''Conditions that strings of English must meet.'''
 	if not string_conditions(s):
 		return False
 	
@@ -198,6 +390,15 @@ def basic_conditions(s: str) -> Union[bool,EDoc]:
 		
 		if any(s.endswith(abb) for abb in EN_ABBREVIATIONS):
 			return False
+	
+	return s
+
+def basic_conditions(s: str) -> Union[bool,EDoc]:
+	'''Basic conditions to clean up noisy data.'''
+	s = en_string_conditions(s):
+	
+	if not s:
+		return False
 	
 	# now we have to parse
 	try:
@@ -313,27 +514,27 @@ def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 	'''
 	s = basic_conditions(s)
 	
-	if s:	
-		try:
-			# if there are distractors, we don't want it for training
-			if s.has_main_subject_verb_distractors:
-				return False
-			
-			# a lot of these weird "The district covered about of Cambridge..."
-			# show up. it's bizarre and consistently odd. I guess the measure
-			# terms were removed from the dataset?
-			if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in BAD_OBJECTS):
-				return False
-			
-			return s
-		except KeyboardInterrupt:
-			sys.exit('User terminated program.')	
-		except Exception as e:
-			log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
-			log.warning(traceback.format_exc())
-			log.warning('\n\n')
+	if not s:
+		return False
+		
+	try:
+		# if there are distractors, we don't want it for training
+		if s.has_main_subject_verb_distractors:
 			return False
-	else:
+		
+		# a lot of these weird "The district covered about of Cambridge..."
+		# show up. it's bizarre and consistently odd. I guess the measure
+		# terms were removed from the dataset?
+		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in BAD_OBJECTS):
+			return False
+		
+		return s
+	except KeyboardInterrupt:
+		sys.exit('User terminated program.')	
+	except Exception as e:
+		log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
+		log.warning(traceback.format_exc())
+		log.warning('\n\n')
 		return False
 
 def question_conditions(s: str) -> Union[bool,EDoc]:
@@ -342,22 +543,47 @@ def question_conditions(s: str) -> Union[bool,EDoc]:
 	Also main verbs must not be an aux. (We want do-support.)
 	'''
 	s = no_dist_conditions(s)
-	if s:
-		if any(v.is_aux for v in s.main_clause_verbs):
-			return False
-		
-		subject = s.main_subject
-		if isinstance(subject,list):
-			subject_position = min([t.i for t in subject])
-		else:
-			subject_position = subject.i
-		
-		if any(t.i < subject_position for t in s.main_verb.children):
-			return False
-		else:
-			return s		
-	else:
+	if not s:
 		return False
+	
+	if any(v.is_aux for v in s.main_clause_verbs):
+		return False
+	
+	subject = s.main_subject
+	if isinstance(subject,list):
+		subject_position = min([t.i for t in subject])
+	else:
+		subject_position = subject.i
+	
+	if any(t.i < subject_position for t in s.main_verb.children):
+		return False
+	else:
+		return s
+
+def salts_conditions(s: str) -> Union[bool,str]:
+	'''
+	Sentences for the salts must have one
+	of a number of predefined words to be
+	useful. They must also meet the EN
+	string conditions.
+	'''
+	s = en_string_conditions(s)
+	if not s:
+		return False
+	
+	# the salts words have to be after the first word
+	# because they need to have a space before them in
+	# RoBERTa
+	split_s = set(s.translate(s.maketrans('', '', string.punctuation)).split()[1:])
+	
+	if not any(word in split_s for word in SALTS_WORDS):
+		return False
+	
+	return s
+
+def simple(s: str) -> str:
+	'''Puts a sentence into a dict.'''
+	return {'src': s}
 
 def pres_or_past(s: EDoc, pres_p: float = 0.5) -> Dict:
 	'''Generate a present tense or past tense pair, with p(past-to-pres) = pres_p.'''
