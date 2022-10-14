@@ -7,7 +7,7 @@ from typing import Dict, Union
 
 def get_salts_metadata(d: Dict) -> Dict:
 	'''Get the word(s) in salts that occur(s) in the sentence.'''
-	s = d['text']
+	s = d['src']
 	s = set(s.translate(s.maketrans('', '', string.punctuation)).split()[1:])
 	
 	words = [word for word in SALTS_WORDS if word in s]
