@@ -16,7 +16,7 @@ import traceback
 
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
-from typing import List, Callable, Tuple, Dict, Set
+from typing import List, Callable, Tuple, Dict, Set, Union
 from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
 from collections.abc import Hashable
