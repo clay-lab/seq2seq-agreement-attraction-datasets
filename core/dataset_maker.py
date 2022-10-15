@@ -136,7 +136,7 @@ def create_seq2seq_dataset(
 				ex = ''
 				while not ex:
 					ex = get_random_parsed_sentence(
-						dataset['train'], -
+						dataset['train'],
 						conditions_fun=conditions_fun,
 						conditions_fun_args=conditions_fun_args,
 						conditions_fun_kwargs=conditions_fun_kwargs,
