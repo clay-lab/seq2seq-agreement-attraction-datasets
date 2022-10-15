@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=make-datasets-salts-missing
+#SBATCH --job-name=make-datasets-salts
 #SBATCH --output=joblogs/%x_%j.txt
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -14,4 +14,4 @@ module load miniconda
 
 source activate /gpfs/gibbs/project/frank/ref4/conda_envs/seq2seq-datasets
 
-python make_datasets.py -o en_wiki-salts-missing
+python make_datasets.py -o en_wiki-salts
