@@ -346,6 +346,47 @@ SALTS_WORDS: Set[str] = {
 	'cart',
 }
 
+SALTS_MISSING_WORDS: Set[str] = {
+	'bits',
+	'byte',
+	'bytes',
+	'caliber',
+	'cart',
+	'cent',
+	'chrome',
+	'fest',
+	'java',
+	'lambda',
+	'ling',
+	'liter',
+	'lore',
+	'lust',
+	'methyl',
+	'nexus',
+	'noon',
+	'paragraph',
+	'pause',
+	'ping',
+	'piracy',
+	'pixel',
+	'poly',
+	'prep',
+	'puff',
+	'radius',
+	'rave',
+	'shirts',
+	'slice',
+	'spawn',
+	'spec',
+	'sync',
+	'template',
+	'tick',
+	'tones',
+	'translation',
+	'vantage',
+	'vent',
+}
+
 # the wikipedia dump removes measure words
 # like, "The terrain occupies 464 acres adjacent to..."
 # becomes "The terrain occupies adjacent to..."
@@ -560,13 +601,16 @@ def question_conditions(s: str) -> Union[bool,EDoc]:
 	else:
 		return s
 
-def salts_conditions(s: str) -> Union[bool,str]:
+def salts_conditions(s: str, words: Set[str] = SALTS_WORDS) -> Union[bool,str]:
 	'''
 	Sentences for the salts must have one
 	of a number of predefined words to be
 	useful. They must also meet the EN
 	string conditions.
 	'''
+	if words in ['SALTS_WORDS', 'SALTS_MISSING_WORDS']:
+		words = eval(words)
+	
 	s = en_string_conditions(s)
 	if not s:
 		return False
@@ -576,7 +620,7 @@ def salts_conditions(s: str) -> Union[bool,str]:
 	# RoBERTa
 	split_s = set(s.translate(s.maketrans('', '', string.punctuation)).split()[1:])
 	
-	if not any(word in split_s for word in SALTS_WORDS):
+	if not any(word in split_s for word in words):
 		return False
 	
 	return s

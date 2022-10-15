@@ -45,10 +45,25 @@
 				"en_wiki-salts": {
 					"conditions_fun": "core.language_funs.en.grammar_funs.salts_conditions",
 					"splits": {
-						"eval": 20000
+						"eval": 30000
 					},
 					"splits_funs": {
 						"eval": "core.language_funs.en.grammar_funs.simple"
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_salts_metadata"
+				},
+				"en_wiki-salts-missing": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.salts_conditions",
+					"splits": {
+						"eval": 30000
+					},
+					"splits_funs": {
+						"eval": "core.language_funs.en.grammar_funs.simple"
+					},
+					"splits_funs_kwargs": {
+						"eval": {
+							"words": "SALTS_MISSING_WORDS"
+						}
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_salts_metadata"
 				}
