@@ -54,16 +54,14 @@
 				},
 				"en_wiki-salts-missing": {
 					"conditions_fun": "core.language_funs.en.grammar_funs.salts_conditions",
+					"conditions_fun_kwargs": {
+						"words": "SALTS_MISSING_WORDS"
+					},
 					"splits": {
 						"eval": 30000
 					},
 					"splits_funs": {
 						"eval": "core.language_funs.en.grammar_funs.simple"
-					},
-					"splits_funs_kwargs": {
-						"eval": {
-							"words": "SALTS_MISSING_WORDS"
-						}
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_salts_metadata"
 				}

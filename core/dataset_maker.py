@@ -50,10 +50,12 @@ DONT_PRINT: Set[str] = {
 
 def create_seq2seq_dataset(
 	dataset: str,
-	dataset_args: tuple = None,
-	dataset_kwargs: tuple = None,
+	dataset_args: Tuple = None,
+	dataset_kwargs: Tuple = None,
 	name: str = None,
 	conditions_fun: Callable = None,
+	conditions_fun_args: Tuple = None,
+	conditions_fun_kwargs: Dict = None,
 	splits: Dict[str,int] = dict(
 		train 	= 100000,
 		dev 	= 1000,
@@ -81,7 +83,9 @@ def create_seq2seq_dataset(
 										  on the huggingface name will be used
 			conditions_fun (callable)	: a function to apply to each sentence.
 										  must return an EDoc or False.
-			metadata_fun (callable)		: used to get metadata for a sentences parsed with spaCy
+			conditions_fun_args (Tuple) : passed to conditions_fun
+			conditions_fun_kwargs (Dict): passed to conditions_fun
+			metadata_fun (callable)		: used to get metadata for a sentence
 			metadata_fun_args (Tuple)	: args for metadata_fun
 			metadata_fun_kwargs (Dict)	: kwargs for metadata_fun
 			splits (dict)				: mapping between split names and n_examples for that split
@@ -95,7 +99,9 @@ def create_seq2seq_dataset(
 	dataset_args 		= () if not dataset_args else dataset_args
 	dataset_kwargs 		= {} if not dataset_kwargs else dataset_kwargs
 	
-	conditions_fun 		= (lambda s: nlp(s)) if conditions_fun is None else conditions_fun
+	conditions_fun 		= (lambda s, *args, **kwargs: nlp(s)) if conditions_fun is None else conditions_fun
+	conditions_fun_args = () if not conditions_fun_args else conditions_fun_args
+	conditions_fun_kwargs = {} if not conditions_fun_kwargs else conditions_fun_kwargs
 	
 	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': s}) if not splits_funs else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
@@ -129,7 +135,13 @@ def create_seq2seq_dataset(
 			for i in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
 				ex = ''
 				while not ex:
-					ex = get_random_parsed_sentence(dataset['train'], conditions_fun=conditions_fun)
+					ex = get_random_parsed_sentence(
+						dataset['train'], -
+						conditions_fun=conditions_fun,
+						conditions_fun_args=conditions_fun_args,
+						conditions_fun_kwargs=conditions_fun_kwargs,
+					)
+					
 					try:
 						pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
 						new_dataset[i] = {'translation': {k: str(v) for k, v in pair.items()}}
@@ -214,6 +226,8 @@ def create_seq2seq_dataset(
 def get_random_parsed_sentence(
 	dataset: Dataset, 
 	conditions_fun: Callable = None,
+	conditions_fun_args: Tuple = None,
+	conditions_fun_kwargs: Dict = None,
 ) -> Union[EDoc,str]:
 	'''
 	Generates a random example from the dataset.
@@ -224,10 +238,15 @@ def get_random_parsed_sentence(
 										  out unwanted examples. in case the sentence
 										  passes all checks, it should return the parsed sentence
 										  as an EDoc, else False
+			conditions_fun_args (Tuple)	: passed to conditions_fun
+			conditions_fun_kwargs (Dict): passed to conditions_fun
 		
 		returns:
 			EDoc, str					: a random sentence pulled from the dataset, parsed or not
 	'''
+	conditions_fun_args = () if conditions_fun_args is None else conditions_fun_args
+	conditions_fun_kwargs = {} if conditions_fun_kwargs is None else conditions_fun_kwargs
+	
 	e = ''
 	nrows = len(dataset)-1
 	while not e:
@@ -252,7 +271,7 @@ def get_random_parsed_sentence(
 		while '  ' in s:
 			s = s.replace('  ', ' ')
 		
-		if (s := conditions_fun(s)):
+		if (s := conditions_fun(s, *conditions_fun_args, **conditions_fun_kwargs)):
 			e = s
 		
 	return e
@@ -289,6 +308,8 @@ def create_datasets_from_config(
 			
 			# unpack the config
 			conditions_fun		= config['sources'][dataset]['names'][name].get('conditions_fun', lambda s: nlp(s))
+			conditions_fun_args = config['sources'][dataset]['names'][name].get('conditions_fun_args', ())
+			conditions_fun_kwargs = config['sources'][dataset]['names'][name].get('conditions_fun_kwargs', {})
 			splits 				= config['sources'][dataset]['names'][name].get('splits', {})
 			splits_funs 		= config['sources'][dataset]['names'][name].get('splits_funs', {})
 			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', [])
@@ -322,6 +343,8 @@ def create_datasets_from_config(
 				dataset_kwargs=dataset_kwargs,
 				name=name,
 				conditions_fun=conditions_fun,
+				conditions_fun_args=conditions_fun_args,
+				conditions_fun_kwargs=conditions_fun_kwargs,
 				splits=splits,
 				splits_funs=splits_funs,
 				splits_funs_args=splits_funs_args,
