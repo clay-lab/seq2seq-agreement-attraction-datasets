@@ -1,6 +1,5 @@
 __pycache__/
 joblogs/
-joblogs.tar.gz
-data/
+data/*/
 
 debugutils.py
