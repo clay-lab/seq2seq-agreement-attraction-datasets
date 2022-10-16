@@ -103,7 +103,7 @@ def create_seq2seq_dataset(
 	conditions_fun_args = () if not conditions_fun_args else conditions_fun_args
 	conditions_fun_kwargs = {} if not conditions_fun_kwargs else conditions_fun_kwargs
 	
-	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'text': s}) if not splits_funs else splits_funs
+	splits_funs 		= defaultdict(lambda: lambda s, *args, **kwargs: {'src': s}) if not splits_funs else splits_funs
 	splits_funs_args 	= defaultdict(lambda: ()) if not splits_funs_args else splits_funs_args
 	splits_funs_kwargs 	= defaultdict(lambda: {}) if not splits_funs_kwargs else splits_funs_kwargs
 	
@@ -181,10 +181,12 @@ def create_seq2seq_dataset(
 				counts = {k: v for k, v in counts.items() if v > 1}
 				v = sum(counts.values())
 				total = len(new_dataset)
-				pad_len = len('Number of duplicated sentences')
+				pad_len = len('Number of sentences with >1 occurrence')
 				pad_len2 = len(str(total))
-				log.info(f'Number of duplicated sentences: {len(counts)}')
-				log.info(f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total}')
+				log.info(
+					f'\n\nNumber of sentences with >1 occurrence: {len(counts)}\n'
+					f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})\n\n'
+				)
 			
 			os.makedirs(os.path.join('data', name), exist_ok=True)
 			log.info(f'Writing out dataset {name} ({split}).')
@@ -206,11 +208,18 @@ def create_seq2seq_dataset(
 				total = sum(all_ks.values())
 				pad_len = max(len(str(k)) for k in all_ks)
 				pad_len2 = len(str(total))
+				# we want to sort numeric variables by keys
+				# but non-numeric variables by values
+				if not isinstance(list(all_ks.keys())[0],(int,float)):
+					all_ks = dict(sorted(all_ks.items(), key=lambda p: (-p[1], p[0])))
+				else:
+					all_ks = dict(sorted(all_ks.items(), key=lambda p: (p[0], -p[1])))
+				
 				log.info(
 					f'\n\nPr. of each {k} ({split}):\n\t' + 
 					'\n\t'.join([
 						f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})' 
-						for k, v in sorted(all_ks.items(), key=lambda p: (-p[1], p[0]))
+						for k, v in all_ks.items()
 					]) + 
 					'\n'
 				)	

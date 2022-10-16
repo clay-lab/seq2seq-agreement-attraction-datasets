@@ -34,7 +34,7 @@ def get_source_metadata(source: Union[Dict,EDoc]) -> Dict:
 				subject_number=source.main_subject_number,
 				object_number=source.main_object_number,
 				source_main_verb=source.main_verb.text,
-				main_verb_lemma=source.main_verb.lemma_,
+				source_main_verb_lemma=source.main_verb.lemma_,
 				n_interveners=len(source.main_subject_verb_interveners),
 				intervener_structures=source.main_subject_verb_intervener_structures,
 				final_intervener_number=final_intervener_number,
@@ -61,9 +61,15 @@ def get_metadata(pair: Dict) -> Dict:
 	
 	metadata = get_source_metadata(source)
 	
+	if metadata['source_main_verb_lemma'] != target.main_verb.lemma_:
+		main_verb_lemmas = ','.join(list(dict.fromkeys([source.main_verb.lemma_, target.main_verb.lemma_])))
+	else:
+		main_verb_lemmas = 'both_ident'		
+	
 	metadata.update(dict(
 		target_main_verb=target.main_verb.text,
-		main_verb_lemma=','.join(list(dict.fromkeys([source.main_verb.lemma_, target.main_verb.lemma_]))),
+		target_main_verb_lemma=target.main_verb_lemma,
+		main_verb_lemmas=main_verb_lemmas,
 		tense=prefix,
 		tgt_history=target._history,
 	))

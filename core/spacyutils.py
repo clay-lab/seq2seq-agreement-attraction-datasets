@@ -295,12 +295,20 @@ class EToken():
 		s = [t for t in self.children if t.dep_ in SUBJ_DEPS]
 		
 		if not s and self.is_aux:
-			return EToken(self.head).subject
+			s = EToken(self.head).subject
+		
+		# attrs only really count as subjects
+		# if they have a correlate with a real
+		# subject. so if everything is attr,
+		# then we don't really have a subject
+		# but instead a SC or something like that
+		if all(t.dep_ == 'attr' for t in s):
+			return None
 		
 		if len(s) == 1:
 			return s[0]
 		elif len(s) > 1:
-			return s
+			return sorted(s, key=lambda t: t.i)
 	
 	@property
 	def has_subject(self) -> bool:
@@ -361,7 +369,7 @@ class EToken():
 	def renumber(self, number: str) -> None:
 		'''Renumber the token (if it is a noun).'''
 		if not self.can_be_numbered:
-			raise ValueError(f"'{self.text}' can't be renumbered; it's a {self.pos_}, not a det/noun!")
+			raise ValueError(f"'{self.text}' can't be renumbered; it's a {self.pos_} ({self.tag_}), not a numbered det/noun!")
 		
 		if NUMBER_MAP[number] == SG:
 			self.singularize()
@@ -392,7 +400,7 @@ class EToken():
 	) -> None:
 		'''Reinflect the (VERB) token.'''
 		if not self.can_be_inflected:
-			raise ValueError(f"'{self.text}' can't be reinflected; it's a {self.pos_}, not a verb!")
+			raise ValueError(f"'{self.text}' can't be reinflected; it's a {self.pos_} ({self.tag_}), not a finite verb!")
 		
 		if number is None and tense is None:
 			raise ValueError("At least one of {number, tense} must not be None!")
@@ -585,7 +593,7 @@ class EDoc():
 		pos 		= [t.pos_ for t in self.doc]
 		morphs 		= [str(t.morph) for t in self.doc]
 		lemmas 		= [t.lemma_ for t in self.doc]
-		heads 		= [t.head.i for t in self.doc]
+		heads 		= [t.head.i if not hasattr(t, 'head_i') else t.head_i for t in self]
 		deps 		= [t.dep_ for t in self.doc]	
 		sent_starts = [t.is_sent_start for t in self.doc]
 		ents 		= [t.ent_iob_ for t in self.doc]
@@ -598,7 +606,7 @@ class EDoc():
 			pos[i]			= t.pos_
 			morphs[i]		= str(t.morph)
 			lemmas[i] 		= t.lemma_
-			heads[i]		= t.head.i
+			heads[i]		= t.head.i if not hasattr(t, 'head_i') else t.head_i
 			deps[i]			= t.dep_
 			sent_starts[i] 	= t.is_sent_start
 			ents[i]			= t.ent_iob_
@@ -665,7 +673,7 @@ class EDoc():
 		pos 		= [t.pos_ for t in tokens]
 		morphs 		= [str(t.morph) for t in tokens]
 		lemmas 		= [t.lemma_ for t in tokens]
-		heads 		= [t.head.i for t in tokens]
+		heads 		= [t.head.i if not has_attr(t, 'head_i') else t.head_i for t in self]
 		
 		# have to reduce the head indices for each index we remove
 		for i, move_to in zip(indices, move_deps_to):
@@ -700,12 +708,12 @@ class EDoc():
 	) -> 'EDoc':
 		'''
 		Creates a copy of the current doc with
-		the tokens at the indices removed.
-		Generally best to avoid; used internally
-		for conjunction reduction.
+		tokens added. Generally best to avoid;
+		used internally for adding auxes to 
+		questions.
 		'''
 		tokens 		= self[:]
-		heads 		= [t.head.i for t in tokens]
+		heads 		= [t.head.i if not hasattr(t, 'head_i') else t.head_i for t in tokens]
 		heads 		= [h + 1 if h > index else h for h in heads]
 		
 		tokens.insert(index, token)
@@ -1090,7 +1098,7 @@ class EDoc():
 			if verbs and not any(t.i == i for t in deduped_vs):
 				deduped_vs.append(verbs[0])
 		
-		vs = deduped_vs
+		vs = sorted(deduped_vs, key = lambda t: t.i)
 		
 		return vs
 		
@@ -1166,7 +1174,7 @@ class EDoc():
 		elif (
 			s.determiner and
 			isinstance(s.determiner,list) and
-			any([t for t in s.determiner if t.tag_ == 'DT']) and
+			any(t for t in s.determiner if t.tag_ == 'DT') and
 			[t for t in s.determiner if t.tag_ == 'DT'][0].get_morph('Number') and
 			not [t for t in s.determiner if t.tag_ == 'DT'][0] in ALL_PARTITIVES
 		):	# this happens with "all the ...", which tags 'all' as 'PDT'
@@ -1632,9 +1640,19 @@ class EDoc():
 						number = self._get_list_noun_number(s)
 						person = 3
 					else:
-						number = s.get_morph('Number')
-						person = s.get_morph('Person')
-						person = int(person) if person else 3
+						if any(self._get_conjuncts(s)):
+							s = [s]
+							s.extend(self._get_conjuncts(s[0]))
+							number = self._get_list_noun_number(s)
+							person = 3
+							s = s[0]
+						elif s.text in ALL_PARTITIVES:
+							number = self._get_partitive_noun_number(s)
+							person = 3
+						else:
+							number = s.get_morph('Number')
+							person = s.get_morph('Person')
+							person = int(person) if person else 3
 					
 					tense = v.get_morph('Tense')
 					aux.reinflect(number=number, person=person, tense=tense)
@@ -1656,15 +1674,29 @@ class EDoc():
 					else:
 						# account for passive auxiliaries,
 						# which have existing dependencies
-						aux.head = self[v.head.i+added+1]
+						try:
+							aux.head = self[v.head.i+added+1]
+						except IndexError:
+							# if the verb is near the end of the sentence
+							# we might be trying to index past the max len
+							# which raises IndexError. to get around this, 
+							# we'll set a special attr that the copy_with_* 
+							# functions will allow to override the actual 
+							# index of the head if it exists
+							aux.head_i = v.head.i+added+1
+							
 						aux.dep_ = v.dep_
 				else:
-					# if the verb is not an aux, we need to
-					# replace it with the infinitival form
-					aux.head = self[aux.head.i+added+1]
-					v.reinflect(tense=INFINITIVE)
-					v.set_morph(Number=None, Tense=None, VerbForm='Inf')
-					question = question.copy_with_replace(tokens=v, indices=v.i+added)
+					try:
+						aux.head = self[aux.head.i+added+1]
+					except IndexError:
+						# if the aux is near the end of the sentence
+						# we might be trying to index past the max len
+						# which raises IndexError. to get around this, 
+						# we'll set a special attr that the copy_with_* 
+						# functions will allow to override the actual 
+						# index of the head if it exists
+						aux.head_i = aux.head.i+added+1
 				
 				# insert the auxiliary
 				question =  question._copy_with_add(token=aux, index=aux.i+added)
@@ -1675,6 +1707,18 @@ class EDoc():
 			if v.is_aux:
 				question =  question._copy_with_remove(indices=v_original_index+added, move_deps_to=aux.i)
 				added 	 -= 1
+			else:
+				# if the verb is not an aux, we need
+				# to reinflect it to the infinitive
+				# form for do-support
+				v.reinflect(tense=INFINITIVE)
+				v.set_morph(Number=None, Tense=None, VerbForm='Inf')
+				try: 
+					v.head = self[v.head.i+added]
+				except IndexError:
+					v.head_i = v.head.i+added
+				
+				question = question.copy_with_replace(tokens=v, indices=v.i+added)
 		
 		q_mark, q_mark_i = self._get_question_punctuation(question)
 		
@@ -1712,6 +1756,8 @@ class EDoc():
 		'''Can the passed subject be inverted with an aux?'''
 		if not isinstance(s,list):
 			s = [s]
+		else:
+			s = [s[0]]
 		
 		# a subject cannot be inverted with an aux
 		# if it is clausal and the verb is not a gerund

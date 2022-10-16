@@ -19,6 +19,12 @@ EN_STOP_CHARS: Set[str] = {
 	*[str(n) for n in range(10)], # digits, 0–9
 	'–', # ndash, separates numbers (which we don't want)
 	'—', # mdash, can separate two independent sentences
+	'(',
+	')',
+	'[',
+	']',
+	'{',
+	'}', # delimiters do weird things with sentence structures
 }
 
 EN_ABBREVIATIONS: Set[str] = {
@@ -99,6 +105,35 @@ EN_ABBREVIATIONS: Set[str] = {
 	'govt.',
 	'var.',
 	'Var.',
+	'Ste.',
+	'ste.',
+	'Vs.',
+	'vs.',
+	'Dir.',
+	'dir.',
+	'www.',
+	'Fr.',
+	'fr.',
+	'Sr.',
+	'sr.',
+	'Vol.',
+	'vol.',
+	'Ft.',
+	'ft.',
+	'Ph.',
+	'ph.',
+	'oosp.',
+	'Oosp.',
+	'Dist.',
+	'dist.',
+	'Jr.',
+	'jr.',
+	'Subsp.',
+	'subsp.',
+	'Ul.',
+	'ul.',
+	'Po.',
+	'po.',
 }
 
 MISPARSED_AS_VERBS: Set[str] = {
@@ -113,6 +148,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'te', # german
 	'up', # not actually wrong, but misparsed as the verb in "level up"
 	'between',
+	'entdeckted', # probably German?
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -148,10 +184,41 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'getup', # for get up
 	'though', # for 'thought'
 	'sung', # for 'sang'
+	'funktions', # typo of function
+	'funktion',
+	'funktioned',
+	'stupified', # typo of stupefy
+	'stupify',
+	'stupifies',
+	'pretent', # pretend
+	'pretents'
+	'pretented',
+	'discluded', # non-standard
+	'discludes',
+	'disclude',
+	'discides', # descide
+	'discide',
+	'discided'
+	'composee', # compose
+	'composees',
+	'composeed'
+	'mispell', # misspell
+	'mispells',
+	'mispelled',
+	'mispelt',
+	'councils', # counsel
+	'council',
+	'councilled',
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
 	'focu', # due to a typo of "focuses"
+	'stupifie',
+	'funktion',
+	'scollop', # ???
+	'disclude',
+	'pretente',
+	'council', # counsel
 }
 
 SALTS_WORDS: Set[str] = {
@@ -407,6 +474,11 @@ BAD_OBJECTS: Set[str] = {
 	'served',
 	'former',
 	'of',
+	'detailed',
+	'go',
+	'additional',
+	'traditional',
+	'than',
 }
 
 def en_string_conditions(s: str) -> Union[bool,str]:

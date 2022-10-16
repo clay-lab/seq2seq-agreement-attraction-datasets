@@ -159,6 +159,9 @@ PLURALIZE_MAP: Dict[str,str] = {
 	'the': 'the', # pattern.en does 'thes' lol
 }
 
+# things that pattern.en gets wrong.
+# also, we don't force US English here, but in cases
+# where a form is ambiguous, we prefer it
 CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	# we don't have a corresponding entry for this
 	# in the present tense, because it will be parsed
@@ -266,18 +269,18 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'quits': {
 		'any':		{'past': 'quit'},
 	},
-	'benefited': {
-		'any':		{'past': 'benefitted'},
-	},
-	'benefitted': {
-		'any':		{'past': 'benefitted'},
-	},
-	'benefit': {
-		'any':		{'past': 'benefitted'},
-	},
-	'benefits': {
-		'any': 		{'past': 'benefitted'},
-	},
+	# 'benefited': {
+	# 	'any':		{'past': 'benefitted'},
+	# },
+	# 'benefitted': {
+	# 	'any':		{'past': 'benefitted'},
+	# },
+	# 'benefit': {
+	# 	'any':		{'past': 'benefitted'},
+	# },
+	# 'benefits': {
+	# 	'any': 		{'past': 'benefitted'},
+	# },
 	'addressed': {
 		'any':		{'past': 'addressed'},
 	},
@@ -757,6 +760,105 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'enroll': {
 		'singular': {'present': 'enrolls'},
 	},
+	'segued': {
+		'singular': {'present': 'segues'},
+		'plural':	{'present': 'segue'},
+	},
+	'segues': {
+		'any':		{'past': 'segued'},
+	},
+	'segue': {
+		'any':		{'past': 'segued'},
+	},
+	'refueled': {
+		'any':		{'past': 'refueled'}
+	},
+	'refuels': {
+		'any':		{'past': 'refueled'},
+	},
+	'refuel': {
+		'any':		{'past': 'refueled'},
+	},
+	'reconnoitered': {
+		'any':		{'past': 'reconnoitered'},
+	},
+	'recoinnoiters': {
+		'any':		{'past': 'reconnoitered'},
+	},
+	'recoinnoiter': {
+		'any':		{'past': 'reconnoitered'},
+	},
+	'plugged': {
+		'any':		{'past': 'plugged'},
+	},
+	'plugs': {
+		'any':		{'past': 'plugged'},
+	},
+	'plug': {
+		'any':		{'past': 'plugged'},
+	},
+	'modeled': {
+		'singular': {'present': 'models'},
+		'plural':	{'present': 'model'},
+	},
+	'models': {
+		'any': 		{'past': 'modeled'},
+	},
+	'model': {
+		'any': 		{'past': 'modeled'},
+	},
+	'flexed': {
+		'singular': {'present': 'flexes'},
+	},
+	'flexes': {
+		'singular': {'present': 'flexes'},
+	},
+	'flex': {
+		'singular': {'present': 'flexes'},
+	},
+	'resorted': {
+		'singular': {'present': 'resorts'},
+		'plural': 	{'present': 'resort'},
+	},
+	'centered': {
+		'any': 		{'past': 'centered'},
+	},
+	'centers': {
+		'any':		{'past': 'centered'},
+	},
+	'center': {
+		'any':		{'past': 'centered'},
+	},
+	'tunneled': {
+		'singular': {'present': 'tunnels'},
+		'plural': 	{'present': 'tunnel'},
+	},
+	'tunnels': {
+		'any':		{'past': 'tunneled'},
+	},
+	'tunnel': {
+		'any':		{'past': 'tunneled'},
+	},
+	'misspelled': {
+		'singular': {'present': 'misspells'},
+		'plural':	{'present': 'misspell'},
+	},
+	'misspells': {
+		'any':		{'past': 'misspelled'},
+	},
+	'misspell': {
+		'any':		{'past': 'misspelled'},
+	},
+	'dueled': {
+		'any':		{'past': 'dueled'},
+	},
+	'duels': {
+		'any':		{'past': 'dueled'},
+	},
+	'duel': {
+		'any':		{'past': 'dueled'},
+	},
+	
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -820,6 +922,9 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'interwove': 'interweave',
 	'outgunned': 'outgun',
 	'reused': 'reuse',
+	'unwound': 'unwind',
+	'overviewed': 'overview',
+	'outsprinted': 'outsprint',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
