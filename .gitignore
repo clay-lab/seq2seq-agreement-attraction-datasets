@@ -2,5 +2,6 @@ __pycache__/
 joblogs/
 data/*/
 scripts/*/*.txt
+scripts/*/backup*
 
 debugutils.py
