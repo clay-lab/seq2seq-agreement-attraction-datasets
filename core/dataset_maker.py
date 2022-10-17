@@ -48,6 +48,12 @@ DONT_PRINT: Set[str] = {
 	'tgt_history',
 }
 
+ALL_MODELS: Set[str] = {
+	f't5-{size}' 
+	for size in ['tiny', 'mini', 'small', 'base']
+	# + ['large', 'xl', 'xxl']
+}
+
 def create_seq2seq_dataset(
 	dataset: str,
 	dataset_args: Tuple = None,
@@ -135,7 +141,7 @@ def create_seq2seq_dataset(
 			for i in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
 				ex = ''
 				while not ex:
-					ex = get_random_parsed_sentence(
+					ex = get_random_sentence(
 						dataset['train'],
 						conditions_fun=conditions_fun,
 						conditions_fun_args=conditions_fun_args,
@@ -232,7 +238,7 @@ def create_seq2seq_dataset(
 		
 		log.info('\n\n')
 
-def get_random_parsed_sentence(
+def get_random_sentence(
 	dataset: Dataset, 
 	conditions_fun: Callable = None,
 	conditions_fun_args: Tuple = None,
@@ -296,7 +302,7 @@ def create_datasets_from_config(
 	:param config: Dict[str,List]: passed to create_datasets
 	:param kwargs: passed to create_tense_datasets, 
 				   combine_language_datasets_for_tense,
-				   and create_mt5_scripts
+				   and create_scripts
 	 			   (useful to set overwrite=True)
 	
 	:outputs: see outputs of create_tense_datasets and combine_language_datasets_for_tense.
@@ -366,15 +372,15 @@ def create_datasets_from_config(
 			
 			log.info('')
 	
-	create_t5_scripts(config, only=only, **kwargs)
+	create_scripts(config, only=only, **kwargs)
 
-def create_t5_scripts(
+def create_scripts(
 	config: Dict = None, 
 	only: List[str] = None,
 	overwrite: bool = False
 ) -> None:
 	'''
-	Creates finetuning and eval scripts for the passed config for t5.
+	Creates finetuning and eval scripts for the passed config for models in ALL_MODELS.
 	
 	:params config: (List[str]): a config
 	:params overwrite: bool: whether to overwrite existing scripts
@@ -384,7 +390,7 @@ def create_t5_scripts(
 	script = '\n'.join([
 		'#!/bin/bash',
 		'',
-		'#SBATCH --job-name=T5-base-finetune-tense-[TRAIN_LANG]',
+		'#SBATCH --job-name=[MODEL]-base-finetune-tense-[TRAIN_LANG]',
 		'#SBATCH --output=joblogs/%x_%j.txt',
 		'#SBATCH --nodes=1',
 		'#SBATCH --cpus-per-task=1',
@@ -401,12 +407,12 @@ def create_t5_scripts(
 		'source activate /gpfs/gibbs/project/frank/ref4/conda_envs/py38-agratt',
 		'',
 		'python core/run_seq2seq.py \\',
-		"	--model_name_or_path 't5-base' \\",
+		"	--model_name_or_path '[MODEL]' \\",
 		'	--do_train \\',
 		'	--task translation_src_to_tgt \\',
 		'	--train_file data/[TRAIN_LANG]/[TRAIN_LANG]_train.json.gz \\',
 		'	--validation_file data/[DEV_LANG]/[DEV_LANG]_dev.json.gz \\',
-		'	--output_dir outputs/t5-finetuning-[TRAIN_LANG]-bs128/ \\',
+		'	--output_dir outputs/[MODEL]-finetuning-[TRAIN_LANG]-bs128/ \\',
 		'	--per_device_train_batch_size=4 \\',
 		'	--gradient_accumulation_steps=32 \\',
 		'	--per_device_eval_batch_size=16 \\',
@@ -438,34 +444,35 @@ def create_t5_scripts(
 	
 	# create the scripts for each language and pair of languages
 	for lang in langs:
-		lang_ft_script = script
-		lang_ev_script = eval_script
-		
-		train_lang 		= lang[0]
-		dev_lang 		= lang[0]
-		test_lang 		= lang[1]
-		
-		file_name 		= '_'.join(lang) if lang[0] != lang[1] else lang[0]
-		
-		if os.path.isfile(os.path.join('data', train_lang, f'{train_lang}_train.json.gz')):
-			print(f'Creating scripts for {" -> ".join(lang)}')
-			# if the langs are not the same, we do not need to create a separate tuning script, only a separate eval script
-			if (
-				lang[0] == lang[1] and 
-				os.path.isfile(os.path.join('data', dev_lang, f'{dev_lang}_dev.json.gz'))
-			):
-				lang_ft_script = lang_ft_script.replace('[TRAIN_LANG]', train_lang)
-				lang_ft_script = lang_ft_script.replace('[DEV_LANG]', dev_lang)
-				if not os.path.exists(os.path.join('scripts', 'finetune', f'finetune_t5_{file_name}_bs128.sh')) or overwrite:
-					with open(os.path.join('scripts', 'finetune', f'finetune_t5_{file_name}_bs128.sh'), 'wt') as out_file:
-						out_file.write(lang_ft_script)
+		for model in ALL_MODELS:
+			lang_ft_script = script.replace('[MODEL]', model)
+			lang_ev_script = eval_script.replace('[MODEL]', model)
 			
-			# if os.path.isfile(os.path.join('data', test_lang, f'{test_lang}_test.json.gz')):
-			lang_ev_script = lang_ev_script.replace('[TRAIN_LANG]', train_lang)
-			lang_ev_script = lang_ev_script.replace('[TEST_LANG]', test_lang)
-			if not os.path.exists(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh')) or overwrite:
-				with open(os.path.join('scripts', 'eval', f'eval_t5_{file_name}_bs128.sh'), 'wt') as out_file:
-					out_file.write(lang_ev_script)
+			train_lang 		= lang[0]
+			dev_lang 		= lang[0]
+			test_lang 		= lang[1]
+			
+			file_name 		= '_'.join(lang) if lang[0] != lang[1] else lang[0]
+			
+			if os.path.isfile(os.path.join('data', train_lang, f'{train_lang}_train.json.gz')):
+				print(f'Creating scripts for {" -> ".join(lang)} ({model})')
+				# if the langs are not the same, we do not need to create a separate tuning script, only a separate eval script
+				if (
+					lang[0] == lang[1] and 
+					os.path.isfile(os.path.join('data', dev_lang, f'{dev_lang}_dev.json.gz'))
+				):
+					lang_ft_script = lang_ft_script.replace('[TRAIN_LANG]', train_lang)
+					lang_ft_script = lang_ft_script.replace('[DEV_LANG]', dev_lang)
+					if not os.path.exists(os.path.join('scripts', 'finetune', f'finetune_{model}_{file_name}_bs128.sh')) or overwrite:
+						with open(os.path.join('scripts', 'finetune', f'finetune_{model}_{file_name}_bs128.sh'), 'wt') as out_file:
+							out_file.write(lang_ft_script)
+				
+				# if os.path.isfile(os.path.join('data', test_lang, f'{test_lang}_test.json.gz')):
+				lang_ev_script = lang_ev_script.replace('[TRAIN_LANG]', train_lang)
+				lang_ev_script = lang_ev_script.replace('[TEST_LANG]', test_lang)
+				if not os.path.exists(os.path.join('scripts', 'eval', f'eval_{model}_{file_name}_bs128.sh')) or overwrite:
+					with open(os.path.join('scripts', 'eval', f'eval_{model}_{file_name}_bs128.sh'), 'wt') as out_file:
+						out_file.write(lang_ev_script)
 
 def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
 	'''
