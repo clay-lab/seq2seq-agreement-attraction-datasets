@@ -68,7 +68,7 @@ def get_metadata(pair: Dict) -> Dict:
 	
 	metadata.update(dict(
 		target_main_verb=target.main_verb.text,
-		target_main_verb_lemma=target.main_verb.lemma,
+		target_main_verb_lemma=target.main_verb.lemma_,
 		main_verb_lemmas=main_verb_lemmas,
 		tense=prefix,
 		tgt_history=target._history,
