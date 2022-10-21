@@ -25,6 +25,8 @@ EN_STOP_CHARS: Set[str] = {
 	']',
 	'{',
 	'}', # delimiters do weird things with sentence structures
+	'is in length', # missing measure
+	'criterionif', # typo
 }
 
 EN_ABBREVIATIONS: Set[str] = {
@@ -134,6 +136,26 @@ EN_ABBREVIATIONS: Set[str] = {
 	'ul.',
 	'Po.',
 	'po.',
+	'Mfg.',
+	'mfg.',
+	'Ven.',
+	'ven.',
+	'Chr.',
+	'chr.',
+	'Rd.',
+	'rd.',
+	'Sci.',
+	'sci.',
+	'Univ.',
+	'univ.',
+	'Chr.',
+	'chr.',
+	'Cdr.',
+	'cdr.',
+	'Sc.',
+	'sc.',
+	'sp.',
+	'Sp.',
 }
 
 MISPARSED_AS_VERBS: Set[str] = {
@@ -148,7 +170,14 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'te', # german
 	'up', # not actually wrong, but misparsed as the verb in "level up"
 	'between',
-	'entdeckted', # probably German?
+	'entdeckted', # probably German?,
+	'zieht', # german
+	'werde', # german
+	'orestes', # species name
+	'ist', # german
+	'coeloms', # ???
+	'durchs', # german
+	'gelebten', # german
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -209,6 +238,68 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'councils', # counsel
 	'council',
 	'councilled',
+	'constitutie', # constitute
+	'constituties',
+	'constitutied',
+	'studei', # study
+	'studeis',
+	'studeid', 
+	'lise', # lies
+	'iis', # is
+	'solified', # solidify
+	'solifies',
+	'solify',
+	'sered', # serve 
+	'seres',
+	'sere',
+	'openin', # open
+	'openins',
+	'openined',
+	'ive', # live
+	'ived',
+	'ives',
+	'indroduce', # introduce
+	'indroduces',
+	'indroduced',
+	'formd', # formed
+	'envolves', # involve
+	'envolve',
+	'envolved',
+	'enroutes', # not a verb
+	'enrouted',
+	'enroute',
+	'devize', # devised
+	'devizes',
+	'devized',
+	'cliched', # clinched
+	'clich',
+	'cliches',
+	'benifted', # benefit
+	'benifte',
+	'beniftes',
+	'tooks', # took
+	'publisher', # published
+	'its', # it's
+	'employees', # employs
+	'composeed', # composed
+	'wons', # wins
+	'shited', # shifted
+	'quietened', # quieted
+	'includeds', # included or includes
+	'beings', # begins
+	'being',
+	'wss', # was
+	'undergoe', # undergo
+	'stoodout', # stood out
+	'pubescens', # species name
+	'os', # is
+	'his', # is
+	'exempiflied', # exemplify 
+	'exempiflies',
+	'exempifly',
+	'cronicled', # chronicle
+	'cronicles',
+	'cronicle',
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -469,6 +560,7 @@ BAD_OBJECTS: Set[str] = {
 	'an',
 	'to',
 	'.',
+	'in',
 	'together',
 	'between',
 	'served',
@@ -479,6 +571,11 @@ BAD_OBJECTS: Set[str] = {
 	'additional',
 	'traditional',
 	'than',
+	'whole', # not actually bad, but bad most of the time
+	'terrible',
+	'serial',
+	'estimated',
+	'as',
 }
 
 def en_string_conditions(s: str) -> Union[bool,str]:
@@ -662,6 +759,10 @@ def question_conditions(s: str) -> Union[bool,EDoc]:
 	if any(v.is_aux for v in s.main_clause_verbs):
 		return False
 	
+	# we don't want agreement in the baseline sentence
+	if any(v.lemma_ == 'be' for v in s.main_clause_verbs):
+		return False
+		
 	subject = s.main_subject
 	if isinstance(subject,list):
 		subject_position = min([t.i for t in subject])

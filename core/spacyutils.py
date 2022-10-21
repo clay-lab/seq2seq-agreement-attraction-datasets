@@ -27,6 +27,13 @@ log = logging.getLogger(__name__)
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
 
+def flatten(items, seqtypes=(list, tuple)):
+	for i, x in enumerate(items):
+		while i < len(items) and isinstance(items[i], seqtypes):
+			items[i:i+1] = items[i]
+	
+	return items
+
 # workaround for pattern.en bug in python > 3.6
 try:
 	_ = lexeme('bad pattern.en >:(')
@@ -272,7 +279,13 @@ class EToken():
 	@property
 	def determiner(self) -> Union['EToken',List['EToken']]:
 		'''Returns the determiner(s) associated with the token.'''
-		d = [c for c in self.children if c.dep_ == 'det']
+		d = [
+			c 
+			for c in self.children 
+				if 	c.dep_ in ['det', 'nummod'] or 
+					(c.dep_ == 'amod' and c.text in AMOD_DETERMINERS)
+		]
+		
 		if len(d) == 1:
 			d = d[0]
 		elif len(d) == 0:
@@ -296,6 +309,9 @@ class EToken():
 		
 		if not s and self.is_aux:
 			s = EToken(self.head).subject
+		
+		if not isinstance(s,list):
+			s = [s]
 		
 		# attrs only really count as subjects
 		# if they have a correlate with a real
@@ -832,8 +848,8 @@ class EDoc():
 		# of the auxpass = main_verb
 		if not s:
 			s = [t for t in EToken(v.head).children if t.dep_ in SUBJ_DEPS]
-			
-		s.extend(t for t in self._get_conjuncts(s[0]))
+		
+		s.extend(self._get_conjuncts(s[0]))
 		
 		if len(s) == 1:
 			s = s[0]
@@ -841,7 +857,7 @@ class EDoc():
 			# about hyphenated verbs
 			if s.text in VERB_PREFIXES:
 				s = [t for t in s.children if t.dep_ in SUBJ_DEPS]
-				s.extend(t for t in self._get_conjuncts(s[0]))
+				s.extend(self._get_conjuncts(s[0]))
 				if len(s) == 1:
 					s = s[0]
 		
@@ -912,12 +928,49 @@ class EDoc():
 		interveners = [t for t in self[s_loc:v_loc]]
 		if interveners:
 			interveners += [None]
+			# something is only really an intervener if
+			# (i)   it has a different tag from the next thing
+			# (ii)  it is a noun (NOUN or PROPN)
+			# (iii) it is not a direct child of the subject
+			# 		(which happens with compounds)
+			# (iv)	it is not part of a compound noun (since
+			# 		only the head of the compound should count)
+			# (v)	it is not the head of a partitive (whose
+			#		number features don't really count)
+			# we use the indices to check for children since
+			# the children generator returns a copy rather than
+			# a reference
 			interveners = [
 				t for i, t in enumerate(interveners[:-1])
 				if (
 					interveners[i+1] is None or
-					interveners[i+1].tag_ != t.tag_
-				) and t.pos_ in ['NOUN', 'PROPN']
+					interveners[i+1].tag_ != t.tag_ and
+					interveners[i+1].pos_ != t.pos_
+				) and 
+				t.pos_ in ['NOUN', 'PROPN'] and
+				not t.dep_ in ['compound', 'nmod'] and 
+				not (
+					(
+						t.text in PARTITIVES_WITH_OF.union(PARTITIVES_OPTIONAL_OF) and
+						any(word.text == 'of' for word in t.children)
+					) and 
+					(
+						t.text in PARTITIVES_WITH_INDEFINITE_ONLY and
+						t.determiner and 
+						isinstance(t.determiner,list) and 
+						not any(word.get_morph('Definite') == 'Ind' for word in t.determiner)
+					) and 
+					(
+						t.text in PARTITIVES_WITH_INDEFINITE_ONLY and
+						t.determiner and 
+						not isinstance(t.determiner,list) and 
+						not t.determiner.get_morph('Definite') == 'Ind'
+					) and 
+					(
+						t.text in PARTITIVES_OPTIONAL_OF and 
+						any(t.children)
+					)
+				)
 			]
 		
 		return interveners
@@ -930,16 +983,33 @@ class EDoc():
 	@property
 	def main_subject_verb_intervener_structures(self) -> List[str]:
 		'''What structure is each intervener embedded in?'''
+		s = self.main_subject
+		if isinstance(s,list):
+			s = s[-1]
+		
 		d = self.main_subject_verb_interveners
+		
 		if d:
-			# use get here to deal with cases we haven't mapped yet
-			d_dep_seqs 	= [STRUCTURE_MAP.get(t.head.dep_, t.head.dep_) for t in d]
-			d_dep_seqs  = [
-							'multiple' 
-								if not all([dep == d_dep_seqs[i] for dep in d_dep_seqs[:i]]) 
-								else d_dep_seqs[i] 
-							for i, _ in enumerate(d_dep_seqs)
-						]
+			d_dep_seqs = []
+			for intervener in d:
+				path = self._get_path(fr=intervener, to=s)
+				path = [t for t in path if not t.i == s.i]
+				if path:
+					d_dep_seqs.append(list(dict.fromkeys([STRUCTURE_MAP.get(t.dep_, t.dep_) for t in path])))
+				else:
+					path = self._get_path(fr=intervener, to=self.root)[:-1]
+					d_dep_seqs.append(list(dict.fromkeys([STRUCTURE_MAP.get(t.dep_, t.dep_) for t in path])))
+			
+			d_dep_seqs = [
+				[dep for dep in dep_seq if not dep in EXCLUDE_DEPS]
+				for dep_seq in d_dep_seqs
+			]
+			
+			d_dep_seqs = [
+				','.join(list(dict.fromkeys(dep_seq)))
+				for dep_seq in d_dep_seqs
+					if len(dep_seq) > 0
+			]
 			
 			return d_dep_seqs
 	
@@ -975,16 +1045,35 @@ class EDoc():
 	@property
 	def main_subject_verb_distractor_structures(self) -> List[str]:
 		'''What structure is each distractor embedded in?'''
+		s = self.main_subject
+		if isinstance(s,list):
+			s = s[-1]
+		
 		d = self.main_subject_verb_distractors
+		
 		if d:
-			# use get here to deal with cases we haven't mapped yet
-			d_dep_seqs 	= [STRUCTURE_MAP.get(t.head.dep_, t.head.dep_) for t in d]
-			d_dep_seqs  = [
-							'multiple' 
-								if not all([dep == d_dep_seqs[i] for dep in d_dep_seqs[:i]]) 
-								else d_dep_seqs[i] 
-							for i, _ in enumerate(d_dep_seqs)
-						]
+			d_dep_seqs = []
+			for intervener in d:
+				path = self._get_path(fr=intervener, to=s)
+				path = [t for t in path if not t.i == s.i]
+				if path:
+					d_dep_seqs.append(list(dict.fromkeys([STRUCTURE_MAP.get(t.dep_, t.dep_) for t in path])))
+				else:
+					path = self._get_path(fr=intervener, to=self.root)[:-1]
+					d_dep_seqs.append(list(dict.fromkeys([STRUCTURE_MAP.get(t.dep_, t.dep_) for t in path])))
+			
+			d_dep_seqs = [
+				[dep for dep in dep_seq if not dep in EXCLUDE_DEPS]
+				for dep_seq in d_dep_seqs
+			]
+			
+			d_dep_seqs = [
+				'multiple' 
+					if len(dep_seq) > 1
+					else dep_seq[0]
+				for dep_seq in d_dep_seqs
+					if len(dep_seq) > 0
+			]
 			
 			return d_dep_seqs
 	
@@ -1017,7 +1106,7 @@ class EDoc():
 		v = self.main_verb
 		s = [t for t in v.children if t.dep_ in OBJ_DEPS]
 		if s:
-			s.extend(t for t in self._get_conjuncts(s[0]))
+			s.extend(self._get_conjuncts(s[0]))
 		
 		if len(s) == 1:
 			s = s[0]
@@ -1046,9 +1135,9 @@ class EDoc():
 			if isinstance(o,list) and len(o) > 1:
 				return self._get_list_noun_number(o, deps=OBJ_DEPS)
 			elif o.text in ALL_PARTITIVES:
-				return self._get_partitive_noun_number(o)
+				return self._get_partitive_noun_number(o, deps=OBJ_DEPS)
 			else:
-				return self._get_noun_number(o)
+				return self._get_noun_number(o, deps=OBJ_DEPS)
 	
 	@property
 	def has_main_object(self) -> bool:
@@ -1079,9 +1168,9 @@ class EDoc():
 	def main_clause_verbs(self) -> List[EToken]:
 		'''Get all the verbs in the main clause of the sentence.'''
 		v = self.main_verb
-		vs = [v] + [t for t in self._get_conjuncts(v)]
+		vs = [v] + self._get_conjuncts(v)
 		if self.main_verb.is_aux:
-			vs = vs + [t for t in self._get_conjuncts(self.root)]
+			vs = vs + self._get_conjuncts(self.root)
 		
 		for v in vs:
 			vs.extend(self._get_conjuncts(v))
@@ -1099,6 +1188,12 @@ class EDoc():
 				deduped_vs.append(verbs[0])
 		
 		vs = sorted(deduped_vs, key = lambda t: t.i)
+		# we could also technically add 'VBN' here, since those are also
+		# non-finite. however, spaCy frequently misparses conjoined main
+		# verbs as VBNs, so we want to include them. if we're making
+		# a question using these verbs, the misparsing SHOULD throw an
+		# error, so don't try to silence it here!
+		vs = [v for v in vs if not v.tag_ == 'VBG']
 		
 		return vs
 		
@@ -1142,12 +1237,51 @@ class EDoc():
 		
 		return True
 	
-	@staticmethod
-	def _get_conjuncts(t: Union[Token,EToken]):
-		'''Yields all conjuncts dependent on the first in a coordinated phrase.'''
-		for r in t.rights:
-			if r.dep_ == 'conj':
-				yield EToken(r)
+	def _get_conjuncts(self, t: Union[Token,EToken]):
+		'''Returns all conjuncts dependent on the first in a coordinated phrase.'''
+		conjuncts = [t for t in t.rights if t.dep_ == 'conj']
+		for i, c in enumerate(conjuncts[:]):
+			if c.text in ALL_PARTITIVES:
+				if c.text in PARTITIVES_WITH_OF:
+					if any(c.children):
+						head_noun = [t for t in c.children if t.text == 'of'][0]
+						head_noun = list(head_noun.children)
+						for t in head_noun[:]:
+							head_noun.extend(self._get_conjuncts(t))
+					else:
+						head_noun = [c]
+				
+				if c.text in PARTITIVES_OPTIONAL_OF:
+					# next(s.children) == [of], so we get the children of that
+					if any(c.children):
+						head_noun = list(c.children)
+						if any(t.text == 'of' for t in head_noun):
+							head_noun = [t for t in head_noun if t.text == 'of'][0]
+							head_noun = list(head_noun.children)
+							 # use slice here since we are modifying the list
+							for t in head_noun[:]:
+								head_noun.extend(self._get_conjuncts(t))
+						else:
+							head_noun = [c]
+					else:
+						head_noun = [c]
+				
+				if c.text in PARTITIVES_WITH_INDEFINITE_ONLY:
+					s_det = [t for t in c.children if t.dep_ == 'det']
+					if s_det and s_det[0].get_morph('Definite') == 'Ind':
+						head_noun = [t for t in c.children if t.text == 'of']
+						if s_chi:
+							# first child not != 'det' is 'of', so get the children of that
+							head_noun = [t for t in head_noun[0].children]
+				
+				conjuncts[i] = head_noun
+		
+		conjuncts = flatten(conjuncts)
+							
+		for c in conjuncts[:]:
+			conjuncts.extend(self._get_conjuncts(c))
+		
+		return conjuncts
 	
 	def _get_noun_number(self, s: EToken, deps: List[str] = SUBJ_DEPS) -> str:
 		'''Handles special logic for getting noun number.'''
@@ -1174,26 +1308,26 @@ class EDoc():
 		elif (
 			s.determiner and
 			isinstance(s.determiner,list) and
-			any(t for t in s.determiner if t.tag_ == 'DT') and
-			[t for t in s.determiner if t.tag_ == 'DT'][0].get_morph('Number') and
-			not [t for t in s.determiner if t.tag_ == 'DT'][0] in ALL_PARTITIVES
+			any(t for t in s.determiner if t.tag_ in DET_TAGS) and
+			[t for t in s.determiner if t.tag_ in DET_TAGS][0].get_morph('Number') and
+			not [t for t in s.determiner if t.tag_ in DET_TAGS][0] in ALL_PARTITIVES
 		):	# this happens with "all the ...", which tags 'all' as 'PDT'
 			# we also want to account for single cases of 'all ...', where it is partitive,
 			# so don't use a determiner if it is a partitive, even if it has a number feature
 			# in this case, we want to treat all as a partitive and NOT use its number
 			# as the number of the subject
-			return [t for t in s.determiner if t.tag_ == 'DT'][0].get_morph('Number')
+			return [t for t in s.determiner if t.tag_ in DET_TAGS][0].get_morph('Number')
 		elif (
 			s.determiner and 
 			not isinstance(s.determiner,list) and 
 			s.determiner.get_morph('Number') and 
-			s.determiner.tag_ == 'DT' and 
+			s.determiner.tag_ in DET_TAGS and 
 			not s.determiner.text in ALL_PARTITIVES
 		):	# if there is a helpful determiner that isn't a list
 			# that has a number feature (i.e., 'these')
-			# and it isn't a partitive (since some partitives)
+			# and it isn't a partitive (since some partitives
 			# have default number features, which shouldn't override
-			# the nouns number
+			# the noun's number)
 			return s.determiner.get_morph('Number')
 		elif (
 			s.text in PLURALS_WITH_NO_DETERMINERS and 
@@ -1224,7 +1358,7 @@ class EDoc():
 			)
 			return 'Sing'
 	
-	def _get_partitive_noun_number(self, s: EToken) -> str:
+	def _get_partitive_noun_number(self, s: EToken, deps: List[str] = SUBJ_DEPS) -> str:
 		'''Returns the number of a partitive subject.'''
 		# this currently covers cases like "some of the (schools are/group is) unsure..."
 		def process_head_noun(head_noun: EToken) -> str:
@@ -1237,7 +1371,7 @@ class EDoc():
 			if len(head_noun) == 1:
 				return process_default(head_noun[0])
 			else:
-				return self._get_list_noun_number(head_noun)
+				return self._get_list_noun_number(head_noun, deps=deps)
 		
 		def process_default(s: EToken) -> str:
 			'''
@@ -1264,9 +1398,12 @@ class EDoc():
 				return 'Sing'
 		
 		if s.text in PARTITIVES_WITH_OF:
-			# next(s.children) == [of], so we get the children of that
+			# get the children of "of"
 			if any(s.children):
-				head_noun = [t for t in next(s.children).children]
+				head_noun = [t for t in s.children if t.text == 'of'][0]
+				head_noun = list(head_noun.children)
+				for t in head_noun[:]:
+					head_noun.extend(self._get_conjuncts(t))
 			else:
 				head_noun = [s]
 			
@@ -1349,6 +1486,27 @@ class EDoc():
 		else:
 			# conjoined subjects (i.e., and, or, etc.)
 			return 'Plur'
+	
+	def _get_path(self, fr: Union[Token,EToken], to: Union[Token,EToken]) -> List[Union[Token,EToken]]:
+		'''
+		Get the dependency path linking two (E)Tokens.
+		If no path exists, return an empty list.
+		'''
+		path = [fr]
+		if fr.i == to.i:
+			return path		
+		elif fr.head.i == to.i:
+			path.append(to)
+			return path
+		elif fr.head.i == fr.i:
+			return []
+		else:
+			ext_path = self._get_path(fr.head, to)
+			if ext_path is None:
+				return []
+			else:
+				path.extend(ext_path)
+				return path
 	
 	# CONVENIENCE METHODS.
 	# These return new objects; they do NOT modify in-place.
@@ -1650,7 +1808,7 @@ class EDoc():
 							number = self._get_partitive_noun_number(s)
 							person = 3
 						else:
-							number = s.get_morph('Number')
+							number = self._get_noun_number(s)
 							person = s.get_morph('Person')
 							person = int(person) if person else 3
 					
@@ -1762,11 +1920,11 @@ class EDoc():
 		# a subject cannot be inverted with an aux
 		# if it is clausal and the verb is not a gerund
 		# (i.e., if it is headed by "that" or "to")
-		if any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ != 'VBG'):
+		if any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ not in ['VBG', 'VBN']):
 			clausal_subject_text = ' '.join(
 				[
 					t.text 
-					for t in sorted([t for t in s.children] + [s], key=lambda t: t.i)
+					for t in sorted([t for t in s[0].children] + s, key=lambda t: t.i)
 				]
 			)
 			

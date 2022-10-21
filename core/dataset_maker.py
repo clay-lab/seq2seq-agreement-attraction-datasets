@@ -149,9 +149,15 @@ def create_seq2seq_dataset(
 					)
 					
 					try:
+						# get the metadata first so that we don't set 
+						# the dataset[i] to the bad example
+						# if the error arises in the metadata function.
+						# this way the exception will be raised BEFORE
+						# changing anything
 						pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
+						metadata = metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)
 						new_dataset[i] = {'translation': {k: str(v) for k, v in pair.items()}}
-						new_metadata[i] = metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)
+						new_metadata[i] = metadata
 					except KeyboardInterrupt:
 						sys.exit('User terminated program.')
 					except Exception as e:

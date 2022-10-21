@@ -97,6 +97,13 @@ OBJ_DEPS: Set[str] = {
 	"dobj",
 }
 
+DET_TAGS: Set[str] = {
+	'DT',
+	'JJ', # many,
+	'JJR', # fewer,
+	'CD', # numbers
+}
+
 NOUN_POS_TAGS: Set[str] = {
 	'NOUN',
 	'PRON',
@@ -779,6 +786,15 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'refuel': {
 		'any':		{'past': 'refueled'},
 	},
+	'fueled': {
+		'any':		{'past': 'fueled'}
+	},
+	'fuels': {
+		'any':		{'past': 'fueled'},
+	},
+	'fuel': {
+		'any':		{'past': 'fueled'},
+	},
 	'reconnoitered': {
 		'any':		{'past': 'reconnoitered'},
 	},
@@ -858,7 +874,229 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'duel': {
 		'any':		{'past': 'dueled'},
 	},
-	
+	'cowrote': {
+		'singular': {'present': 'cowrites'},
+		'plural': 	{'present': 'cowrite'},
+		'any':		{'past': 'cowrote'},
+	},
+	'cowrite': {
+		'any':		{'past': 'cowrote'},
+	},
+	'cowrites': {
+		'any':		{'past': 'cowrote'},
+	},
+	'yodeled': {
+		'singular': {'present': 'yodels'},
+		'plural': 	{'present': 'yodel'},
+	},
+	'yodels': {
+		'any':		{'past': 'yodeled'},
+	},
+	'yodel': {
+		'any':		{'past': 'yodeled'},
+	},
+	'summon': {
+		'any':		{'past': 'summoned'},
+	},
+	'reinterpreted': {
+		'singular':	{'present': 'reinterprets'},
+		'plural':	{'present': 'reinterpret'},
+	},
+	'reinterpret': {
+		'any':		{'past': 'reinterpreted'},
+	},
+	'reinterprets': {
+		'any':		{'past': 'reinterpreted'},
+	},
+	'regrew': {
+		'singular': {'present': 'regrows'},
+		'plural': 	{'present': 'regrow'},
+		'any':		{'past': 'regrew'},
+	},
+	'regrow': {
+		'any':		{'past': 'regrew'},
+	},
+	'regrows': {
+		'any':		{'past': 'regrew'},
+	},
+	'penciled': {
+		'singular': {'present': 'pencils'},
+		'plural':	{'present': 'pencil'},
+	},
+	'pencil': {
+		'any':		{'past': 'penciled'},
+	},
+	'pencils': {
+		'any':		{'past': 'penciled'},
+	},
+	'gossiped': {
+		'any':		{'past': 'gossiped'},
+	},
+	'gossips': {
+		'any':		{'past': 'gossiped'},
+	},
+	'gossip': {
+		'any':		{'past': 'gossiped'},
+	},
+	'funneled': {
+		'singular': {'present': 'funnels'},
+		'plural': 	{'present': 'funnel'},
+	},
+	'funnel': {
+		'any':		{'past': 'funneled'},
+	},
+	'funnels': {
+		'any':		{'past': 'funneled'},
+	},
+	'critiqued': {
+		'singular': {'present': 'critiques'},
+		'plural': 	{'present': 'critique'},
+	},
+	'critiques': {
+		'any': 		{'past': 'critiqued'},
+	},
+	'critique': {
+		'any': 		{'past': 'critiqued'},
+	},
+	'colored': {
+		'singular': {'present': 'colors'},
+		'plural': 	{'present': 'color'},
+	},
+	'color': {
+		'any':		{'past': 'colored'},
+	},
+	'colors': {
+		'any':		{'past': 'colored'},
+	},
+	'counseled': {
+		'singular': {'present': 'counsels'},
+		'plural': 	{'present': 'counsel'},
+	},
+	'counsel': {
+		'any': 		{'past': 'counseled'},
+	},
+	'counsels': {
+		'any':		{'past': 'counseled'},
+	},
+	'leveled': {
+		'singular': {'present': 'levels'},
+		'plural': 	{'present': 'level'},
+	},
+	'levels': {
+		'any':		{'past': 'leveled'},
+	},
+	'level': {
+		'any':		{'past': 'leveled'},
+	},
+	'flied': {
+		'plural':	{'present': 'fly'},
+		'any':		{'past': 'flied'},
+	},
+	'smites': {
+		'any':		{'past': 'smote'},
+	},
+	'smite': {
+		'any':		{'past': 'smote'},
+	},
+	'smote': {
+		'singular': {'present': 'smites'},
+		'plural': 	{'present': 'smite'},
+	},
+	'reveled': {
+		'singular': {'present': 'revels'},
+		'plural': 	{'present': 'revel'},
+	},
+	'revels': {
+		'any':		{'past': 'reveled'},
+	},
+	'revel': {
+		'any':		{'past': 'reveled'},
+	},
+	'rechristened': {
+		'any':		{'past': 'rechristened'},
+	},
+	'rechristens': {
+		'any':		{'past': 'rechristened'},
+	},
+	'rechristen': {
+		'any':		{'past': 'rechristened'},
+	},
+	'inbreed': {
+		'singular': {'present': 'inbreeds'},
+		'plural': 	{'present': 'inbreed'},
+		'any':		{'past': 'inbred'},
+	},
+	'inbreeds': {
+		'any': 		{'past': 'inbred'},
+	},
+	'inbred': {
+		'singular': {'present': 'inbreeds'},
+		'plural': 	{'present': 'inbreed'},
+	},
+	'homered': {
+		'any':		{'past': 'homered'},
+	},
+	'homers': {
+		'any':		{'past': 'homered'},
+	},
+	'homer': {
+		'any':		{'past': 'homered'},
+	},
+	'emceed': {
+		'any':		{'past': 'emceed'},
+	},
+	'emcees': {
+		'any':		{'past': 'emceed'},
+	},
+	'emcee': {
+		'any':		{'past': 'emceed'},
+	},
+	'fit': {
+		'any':		{'past': 'fit'},
+	},
+	'fits': {
+		'any':		{'past': 'fit'},
+	},
+	'dwell': {
+		'any':		{'past': 'dwelled'},
+	},
+	'dwells': {
+		'any':		{'past': 'dwelled'},
+	},
+	'extols': {
+		'plural': 	{'present': 'extol'},
+	},
+	'extolled': {
+		'plural':	{'present': 'extol'},
+	},
+	'reconvened': {
+		'singular': {'present': 'reconvenes'},
+		'plural':	{'present': 'reconvene'},
+		'any':		{'past': 'reconvened'},
+	},
+	'lensed': {
+		'singular': {'present': 'lenses'},
+		'plural':	{'present': 'lense'},
+	},
+	'frescoed': {
+		'singular': {'present': 'frescoes'},
+	},
+	'fresco': {
+		'singular': {'present': 'frescoes'},
+	},
+	'frescoes': {
+		'plural': 	{'present': 'fresco'},
+		'any':		{'past': 'frescoed'},
+	},
+	'fulfilled': {
+		'singular': {'present': 'fulfills'},
+	},
+	'fulfill': {
+		'singular': {'present': 'fulfills'},
+	},
+	'fulfills': {
+		'singular': {'present': 'fulfills'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -925,6 +1163,24 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'unwound': 'unwind',
 	'overviewed': 'overview',
 	'outsprinted': 'outsprint',
+	'reoccupied': 'reoccupy',
+	'reoccupies': 'reoccupy',
+	'reenlisted': 'reenlist',
+	'rechristened': 'rechristen',
+	'preselected': 'preselect',
+	'gusted': 'gust',
+	'flied': 'fly', # used in "flied out"
+	'chested': 'chest',
+	'vectored': 'vector',
+	'uncensored': 'uncensor',
+	'stress': 'stress', # due to typo
+	'misprojected': 'misproject',
+	'misidentified': 'misidentify',
+	'decisioned': 'decision',
+	'cowrote': 'cowrite',
+	'bless': 'bless', # misidentified as 'bles'
+	'extolled': 'extol',
+	
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -996,7 +1252,7 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 	'speeds': {
 		'any':		{'past': 'sped'},
 		'condition': (lambda t: t.is_intransitive)
-	}
+	},
 }
 
 ORDINALS: Set[str] = {
@@ -1159,6 +1415,16 @@ PLURALS_WITH_NO_DETERMINERS: Set[str] = {
 	'Insignia',
 }
 
+# determiners that spaCy parses as amods
+AMOD_DETERMINERS: Set[str] = {
+	'many',
+	'Many',
+	'few',
+	'Few',
+	'fewer',
+	'Fewer'
+}
+
 # spaCy doesn't assign the right morphs to these words
 INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'was' : {'Number': 'Sing'},
@@ -1167,6 +1433,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'are' : {'Number': 'Plur'},
 	'Many': {'Number': 'Plur'},
 	'many': {'Number': 'Plur'},
+	'Fewer': {'Number': 'Plur'},
+	'fewer': {'Number': 'Plur'},
 	'Much': {'Number': 'Sing'},
 	'much': {'Number': 'Sing'},
 	'You' : {'Number': 'Plur'},
@@ -1237,6 +1505,8 @@ PARTITIVES_WITH_OF: Set[str] = {
 PARTITIVES_OPTIONAL_OF: Set[str] = {
 	'All',
 	'all',
+	'Half',
+	'half',
 	'Most',
 	'most',
 	'More',
@@ -1271,10 +1541,34 @@ ALL_PARTITIVES: Set[str] = {
 # maps some deps to others for purposes
 # of recording distractor structures
 STRUCTURE_MAP: Dict[str,str] = {
-	'prep': 'PP',
-	'pcomp': 'PP',
-	'relcl': 'RC',
-	'acl': 'CC', 
+	'prep': 		'PP', # prepositional phrase
+	'pcomp': 		'PP',
+	'pobj': 		'PP', 
+	'relcl': 		'RC', # relative clause
+	'acl': 			'CC', # clausal complement (e.g., Paula, seeing him there, ...)
+	'ccomp': 		'CC',
+	'npadvmod': 	'AdvP', # preverbal adverbial modifier (The school each year goes...)
+	'advmod': 		'AdvP', # adverbial modifier
+	'advcl': 		'AdvP',
+	'acomp':	 	'AdvP',
+	'amod':			'AP',
+	'appos': 		'ParenP',
+	'parataxis': 	'ParenP',
+	'cc': 			'ConjP', # all of them but that guy ...
+}
+
+# dependencies to exclude when determining agreement attraction
+EXCLUDE_DEPS: Set[str] = {
+	'nsubj',
+	'xcomp',
+	'agent',
+	'dobj',
+	'conj',
+	'oprd',
+	'dative',
+	'nsubjpass', # due to misparses
+	'attr',
+	'dep', # due to misparses
 }
 
 # list of valid distractor structures
