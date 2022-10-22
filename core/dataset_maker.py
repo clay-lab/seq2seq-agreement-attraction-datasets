@@ -180,7 +180,7 @@ def create_seq2seq_dataset(
 					f'\n\nPr. of each prefix ({split}):\n\t' + 
 					'\n\t'.join([
 						f'{str(k):<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})'
-						for k, v in sorted(prefixes.items(), key=lambda p: (-p[1], p[0]))
+						for k, v in sorted(prefixes.items(), key=lambda p: (-p[1], '' if p[0] is None else str(p[0])))
 					]) + 
 					'\n'
 				)
@@ -223,9 +223,9 @@ def create_seq2seq_dataset(
 				# we want to sort numeric variables by keys
 				# but non-numeric variables by values
 				if not isinstance(list(all_ks.keys())[0],(int,float)):
-					all_ks = dict(sorted(all_ks.items(), key=lambda p: (-p[1], p[0])))
+					all_ks = dict(sorted(all_ks.items(), key=lambda p: (-p[1], '' if p[0] is None else str(p[0]))))
 				else:
-					all_ks = dict(sorted(all_ks.items(), key=lambda p: (p[0], -p[1])))
+					all_ks = dict(sorted(all_ks.items(), key=lambda p: ('' if p[0] is None else str(p[0]), -p[1])))
 				
 				log.info(
 					f'\n\nPr. of each {k} ({split}):\n\t' + 
