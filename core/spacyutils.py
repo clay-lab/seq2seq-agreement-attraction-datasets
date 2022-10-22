@@ -861,6 +861,9 @@ class EDoc():
 				if len(s) == 1:
 					s = s[0]
 		
+		if isinstance(s,list):
+			s = sorted(s, key=lambda t: t.i)
+		
 		return s
 	
 	@property
@@ -1106,10 +1109,14 @@ class EDoc():
 		v = self.main_verb
 		s = [t for t in v.children if t.dep_ in OBJ_DEPS]
 		if s:
-			s.extend(self._get_conjuncts(s[0]))
+			s.extend(self._get_conjuncts(t) for t in s[:])
+			s = flatten(s)
 		
 		if len(s) == 1:
 			s = s[0]
+		
+		if isinstance(s,list):
+			s = sorted(s, key=lambda t: t.i)
 		
 		return s
 	
@@ -1237,49 +1244,62 @@ class EDoc():
 		
 		return True
 	
-	def _get_conjuncts(self, t: Union[Token,EToken]):
+	def _get_partitive_head_noun(self, t: Union[Token,EToken]) -> Union[EToken,List[EToken]]:
+		'''Get the head noun of a partitive.'''
+		if not t.text in ALL_PARTITIVES:
+			raise ValueError(
+				f'Cannot get the head of a non-partitive noun "{t}"!'
+			)
+		
+		def get_of_head_noun(t: EToken) -> Union[EToken,List[EToken]]:
+			'''Get the head noun of a partitive that has of.'''
+			if any(t.text == 'of' for t in t.children):
+				head_noun = [t for t in t.children if t.text == 'of'][0]
+				head_noun = list(head_noun.children)
+				for t in head_noun[:]:
+					head_noun.extend(self._get_conjuncts(t))
+			else:
+				head_noun = t
+			
+			return head_noun
+			
+		if t.text in PARTITIVES_WITH_OF:
+			return get_of_head_noun(t)
+						
+		if t.text in PARTITIVES_OPTIONAL_OF:
+			if any(t.text == 'of' for t in t.children):
+				return get_of_head_noun(t)
+			else:
+				return [t for t in t.children if t.pos_ in NOUN_POS_TAGS]
+		
+		# this covers cases like "a lot of people are/the money is"
+		# this is surprisingly tricky to do straightforwardly!
+		if t.text in PARTITIVES_WITH_INDEFINITE_ONLY:
+			s_det = [t for t in t.children if t.dep_ == 'det']
+			if s_det and s_det[0].get_morph('Definite') == 'Ind':
+				return get_of_head_noun(t)
+		
+		return t
+	
+	def _get_conjuncts(self, t: Union[Token,EToken]) -> List[EToken]:
 		'''Returns all conjuncts dependent on the first in a coordinated phrase.'''
 		conjuncts = [t for t in t.rights if t.dep_ == 'conj']
 		for i, c in enumerate(conjuncts[:]):
 			if c.text in ALL_PARTITIVES:
-				if c.text in PARTITIVES_WITH_OF:
-					if any(c.children):
-						head_noun = [t for t in c.children if t.text == 'of'][0]
-						head_noun = list(head_noun.children)
-						for t in head_noun[:]:
-							head_noun.extend(self._get_conjuncts(t))
-					else:
-						head_noun = [c]
-				
-				if c.text in PARTITIVES_OPTIONAL_OF:
-					# next(s.children) == [of], so we get the children of that
-					if any(c.children):
-						head_noun = list(c.children)
-						if any(t.text == 'of' for t in head_noun):
-							head_noun = [t for t in head_noun if t.text == 'of'][0]
-							head_noun = list(head_noun.children)
-							 # use slice here since we are modifying the list
-							for t in head_noun[:]:
-								head_noun.extend(self._get_conjuncts(t))
-						else:
-							head_noun = [c]
-					else:
-						head_noun = [c]
-				
-				if c.text in PARTITIVES_WITH_INDEFINITE_ONLY:
-					s_det = [t for t in c.children if t.dep_ == 'det']
-					if s_det and s_det[0].get_morph('Definite') == 'Ind':
-						head_noun = [t for t in c.children if t.text == 'of']
-						if s_chi:
-							# first child not != 'det' is 'of', so get the children of that
-							head_noun = [t for t in head_noun[0].children]
-				
-				conjuncts[i] = head_noun
+				# the next line addresses cases when spaCy parses the
+				# partitive as the noun to which others bear a conj dependency
+				# we want those nouns, but not the partitive head noun itself
+				conjuncts.extend(self._get_conjuncts(c))
+				conjuncts[i] = self._get_partitive_head_noun(c)
 		
 		conjuncts = flatten(conjuncts)
-							
+		
 		for c in conjuncts[:]:
-			conjuncts.extend(self._get_conjuncts(c))
+			conjuncts.extend(
+				t 
+				for t in self._get_conjuncts(c) 
+					if not any(t.i == t2.i for t2 in conjuncts)
+			)
 		
 		return conjuncts
 	
@@ -1368,8 +1388,10 @@ class EDoc():
 			get the number feature of the multiple
 			head nouns.
 			'''
-			if len(head_noun) == 1:
+			if isinstance(head_noun,list) and len(head_noun) == 1:
 				return process_default(head_noun[0])
+			elif not isinstance(head_noun,list):
+				return process_default(head_noun)
 			else:
 				return self._get_list_noun_number(head_noun, deps=deps)
 		
@@ -1390,6 +1412,30 @@ class EDoc():
 			elif s.is_verb and not s.can_be_inflected:
 				# gerunds and nominalized verbs are singular
 				return 'Sing'
+			elif (
+				s.determiner and
+				isinstance(s.determiner,list) and
+				any(t for t in s.determiner if t.tag_ in DET_TAGS) and
+				[t for t in s.determiner if t.tag_ in DET_TAGS][0].get_morph('Number') and
+				not [t for t in s.determiner if t.tag_ in DET_TAGS][0] in ALL_PARTITIVES
+			):	# this happens with "all the ...", which tags 'all' as 'PDT'
+				# we also want to account for single cases of 'all ...', where it is partitive,
+				# so don't use a determiner if it is a partitive, even if it has a number feature
+				# in this case, we want to treat all as a partitive and NOT use its number
+				# as the number of the subject
+				return [t for t in s.determiner if t.tag_ in DET_TAGS][0].get_morph('Number')
+			elif (
+				s.determiner and 
+				not isinstance(s.determiner,list) and 
+				s.determiner.get_morph('Number') and 
+				s.determiner.tag_ in DET_TAGS and 
+				not s.determiner.text in ALL_PARTITIVES
+			):	# if there is a helpful determiner that isn't a list
+				# that has a number feature (i.e., 'these')
+				# and it isn't a partitive (since some partitives
+				# have default number features, which shouldn't override
+				# the noun's number)
+				return s.determiner.get_morph('Number')
 			else:
 				log.warning(
 					f'No number feature for "{s}" was found in "{self}"! '
@@ -1397,48 +1443,12 @@ class EDoc():
 				)
 				return 'Sing'
 		
-		if s.text in PARTITIVES_WITH_OF:
-			# get the children of "of"
-			if any(s.children):
-				head_noun = [t for t in s.children if t.text == 'of'][0]
-				head_noun = list(head_noun.children)
-				for t in head_noun[:]:
-					head_noun.extend(self._get_conjuncts(t))
+		if s.text in ALL_PARTITIVES:
+			head_noun = self._get_partitive_head_noun(s)
+			if head_noun:
+				return process_head_noun(head_noun)
 			else:
-				head_noun = [s]
-			
-			return process_head_noun(head_noun)
-		
-		if s.text in PARTITIVES_OPTIONAL_OF:
-			# next(s.children) == [of], so we get the children of that
-			if any(s.children):
-				head_noun = list(s.children)
-				if any(t.text == 'of' for t in head_noun):
-					head_noun = [t for t in head_noun if t.text == 'of'][0]
-					head_noun = list(head_noun.children)
-					 # use slice here since we are modifying the list
-					for t in head_noun[:]:
-						head_noun.extend(self._get_conjuncts(t))
-				else:
-					head_noun = [s]
-			else:
-				head_noun = [s]
-			
-			return process_head_noun(head_noun)
-		
-		# this covers cases like "a lot of people are/the money is"
-		# this is surprisingly tricky to do straightforwardly!
-		if s.text in PARTITIVES_WITH_INDEFINITE_ONLY:
-			s_det = [t for t in s.children if t.dep_ == 'det']
-			if s_det and s_det[0].get_morph('Definite') == 'Ind':
-				s_chi = [t for t in s.children if t.text == 'of']
-				if s_chi:
-					# first child not != 'det' is 'of', so get the children of that
-					s_chi = [t for t in s_chi[0].children]
-					if s_chi:
-						return process_head_noun(s_chi)
-			
-			return process_default(s)
+				return process_default(s)
 		
 		raise ValueError(
 			"_get_partitive_noun_number should only "

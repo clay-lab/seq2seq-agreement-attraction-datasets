@@ -27,6 +27,7 @@ EN_STOP_CHARS: Set[str] = {
 	'}', # delimiters do weird things with sentence structures
 	'is in length', # missing measure
 	'criterionif', # typo
+	'out put', # typo
 }
 
 EN_ABBREVIATIONS: Set[str] = {
@@ -561,7 +562,9 @@ SALTS_MISSING_MISSING_WORDS: Set[str] = {
 BAD_OBJECTS: Set[str] = {
 	'about',
 	'adjacent',
+	'around',
 	'the',
+	'The',
 	'over',
 	'approximately',
 	'came',
@@ -749,7 +752,7 @@ def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 		return s
 	except KeyboardInterrupt:
 		sys.exit('User terminated program.')	
-	except Exception as e:
+	except Exception:
 		log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
 		log.warning(traceback.format_exc())
 		log.warning('\n\n')
