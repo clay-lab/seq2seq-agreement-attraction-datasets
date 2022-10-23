@@ -1833,7 +1833,7 @@ class EDoc():
 			s = v.subject
 			
 			check_tokens = flatten([s])
-			if any(t.determiner for t in s):
+			if any(t.determiner for t in check_tokens):
 				check_tokens += flatten([t.determiner for t in s])
 			
 			if any(t.text == 'which' for t in check_tokens):
