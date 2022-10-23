@@ -311,7 +311,7 @@ class EToken():
 			s = EToken(self.head).subject
 		
 		if not isinstance(s,list):
-			s = [s]
+			s = [s] if s is not None else []
 		
 		# attrs only really count as subjects
 		# if they have a correlate with a real
@@ -1218,13 +1218,24 @@ class EDoc():
 		
 		# spaCy sometimes misparses non-restrictive
 		# relative clauses as conjunctions
-		try:
-			ss = flatten([v.subject for v in vs if v.subject is not None])
-			ds = flatten([s.determiner for s in ss if s.determiner is not None])
-			if any(s.text == 'which' for s in ss + ds):
-				return False
-		except Exception:
-			breakpoint()
+		# get the subject of each verb and ensure it's
+		# not the head of a non-restricted relative
+		ss = []
+		for v in vs:
+			s = v.subject
+			if s and self._can_be_inverted_subject(s):
+				ss.append(s)
+			else:
+				next_v = v
+				while not next_v.subject:
+					next_v = EToken(next_v.head)
+				
+				ss.append(next_v.subject)
+		
+		ss = flatten(ss)
+		ds = flatten([s.determiner for s in ss if s.determiner is not None])
+		if any(s.text == 'which' for s in ss + ds):
+			return False
 			
 		# sometimes spaCy identifies a non-finite verb
 		# as a main clause verb, due to misparsing
