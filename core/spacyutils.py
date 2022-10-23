@@ -6,7 +6,7 @@ https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 import inspect
 import logging
 
-from typing import Union, List, Dict, Set
+from typing import Union, List, Dict, Set, Tuple
 from collections import Counter
 
 import spacy
@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
 
-def flatten(items, seqtypes=(list, tuple)):
+def flatten(items: 'Iterable', seqtypes: Tuple['Class'] = (list, tuple)):
 	for i, x in enumerate(items):
 		while i < len(items) and isinstance(items[i], seqtypes):
 			items[i:i+1] = items[i]
@@ -1218,8 +1218,8 @@ class EDoc():
 		
 		# spaCy sometimes misparses non-restrictive
 		# relative clauses as conjunctions
-		ss = [v.subject for v in vs if v.subject is not None]
-		ds = [s.determiner for s in ss if s.determiner is not None]
+		ss = flatten([v.subject for v in vs if v.subject is not None])
+		ds = flatten([s.determiner for s in ss if s.determiner is not None])
 		if any(s.text == 'which' for s in ss + ds):
 			return False
 		
