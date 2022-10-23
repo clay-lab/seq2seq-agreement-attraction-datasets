@@ -77,6 +77,19 @@
 						"eval": "core.language_funs.en.grammar_funs.simple"
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_salts_metadata"
+				},
+				"en_wiki-salts-missing-missing-missing": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.salts_conditions",
+					"conditions_fun_kwargs": {
+						"words": "SALTS_MISSING_MISSING_MISSING_WORDS"
+					},
+					"splits": {
+						"eval": 200
+					},
+					"splits_funs": {
+						"eval": "core.language_funs.en.grammar_funs.simple"
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_salts_metadata"
 				}
 			}
 		}

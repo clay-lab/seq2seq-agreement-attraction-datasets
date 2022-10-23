@@ -572,6 +572,11 @@ SALTS_MISSING_MISSING_WORDS: Set[str] = {
 	'writ',
 }
 
+SALTS_MISSING_MISSING_MISSING_WORDS: Set[str] = {
+	'dash',
+	'haven',
+}
+
 # the wikipedia dump removes measure words
 # like, "The terrain occupies 464 acres adjacent to..."
 # becomes "The terrain occupies adjacent to..."
@@ -819,7 +824,14 @@ def salts_conditions(s: str, words: Set[str] = SALTS_WORDS) -> Union[bool,str]:
 	useful. They must also meet the EN
 	string conditions.
 	'''
-	if words in ['SALTS_WORDS', 'SALTS_MISSING_WORDS', 'SALTS_MISSING_MISSING_WORDS']:
+	if (
+		words in [
+			'SALTS_WORDS', 
+			'SALTS_MISSING_WORDS', 
+			'SALTS_MISSING_MISSING_WORDS',
+			'SALTS_MISSING_MISSING_MISSING_WORDS',
+		]
+	):
 		words = eval(words)
 	
 	s = en_string_conditions(s)
