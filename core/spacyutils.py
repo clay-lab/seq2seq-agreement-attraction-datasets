@@ -1207,7 +1207,35 @@ class EDoc():
 	@property
 	def can_form_polar_question(self) -> bool:
 		'''Can the sentence form a polar question?'''
+		
+		# can only make questions from sentences 
+		# that aren't already questions
+		# and are parsed correctly
+		if not self[-1].text in ['.', '!'] or self[-1].dep_ != 'punct':
+			return False
+		
 		vs = self.main_clause_verbs
+		
+		# spaCy sometimes misparses non-restrictive
+		# relative clauses as conjunctions
+		ss = [v.subject for v in vs if v.subject is not None]
+		ds = [s.determiner for s in ss if s.determiner is not None]
+		if any(s.text == 'which' for s in ss + ds):
+			return False
+		
+		# sometimes spaCy identifies a non-finite verb
+		# as a main clause verb, due to misparsing
+		# if the sentence is misparsed, we won't be able
+		# to make a question out of it reliably
+		if any(not t.can_be_inflected for t in vs):
+			cannot_be_inflected = [t for t in vs if not t.can_be_inflected]
+			# log.info(
+			# 	f'"{self}" cannot be made into a question because it contains '
+			# 	f'non-finite main clause verb(s): "{",".join([t.text for t in cannot_be_inflected])}" '
+			# 	f'({",".join([t.tag_ for t in cannot_be_inflected])})! '
+			# 	f'This is probably because it is ungrammatical or was parsed incorrectly.'
+			# )
+			return False
 		
 		# we need to make sure that all of the main clause
 		# verbs that share a subject would use the same auxiliary
@@ -1226,7 +1254,11 @@ class EDoc():
 			
 			# record the position of that subject 
 			# and the auxiliary associated with its verb
-			all_v_lemmas[tmp_subject.i] = all_v_lemmas.get(tmp_subject.i, set()).union({f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'})
+			all_v_lemmas[tmp_subject.i] = (
+				all_v_lemmas
+					.get(tmp_subject.i, set())
+					.union({f'{v.lemma_}_{v.pos_}' if v.is_aux else 'do_AUX'})
+			)
 		
 		# if any one subject would require more than
 		# one aux, we cannot form a polar question
@@ -1235,11 +1267,11 @@ class EDoc():
 		# Can he go and would he be happy?
 		for i in all_v_lemmas:
 			if len(all_v_lemmas[i]) > 1:
-				log.info(
-					f'"{self}" cannot be made into a question '
-					f'because multiple auxiliaries would be required for '
-					f'subject "{self[i]}" at position {i} ({", ".join(all_v_lemmas[i])})!'
-				)
+				# log.info(
+				# 	f'"{self}" cannot be made into a question '
+				# 	f'because multiple auxiliaries would be required for '
+				# 	f'subject "{self[i]}" at position {i} ({", ".join(all_v_lemmas[i])})!'
+				# )
 				return False
 		
 		return True
@@ -1368,6 +1400,8 @@ class EDoc():
 			# turns out just about the last thing we want to do is trust
 			# the number feature spaCy assigns. go figure
 			return s.get_morph('Number')
+		elif s.pos_ == 'ADJ' and s.text in NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS:
+			return NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS[s.text]
 		else:
 			# usually we end up here because of adjectives serving
 			# as nouns (the latter, etc.), or genuine ambiguity 
@@ -1757,7 +1791,9 @@ class EDoc():
 		# we need to make each a question separately
 		if not self.can_form_polar_question:
 			raise ValueError(
-				f'"{self}" cannot form a polar question!'
+				f'"{self}" cannot form a polar question! '
+				f'This is usually either due to it already being a question, '
+				f'or because spaCy misparsed something.'
 			)
 		
 		# get the main clause verbs
@@ -1782,6 +1818,15 @@ class EDoc():
 			v_has_subject = True
 			s = v.subject
 			
+			if any(t.text == 'which' for t in [s] + ([s.determiner] if s.determiner else [])):
+				raise ValueError(
+					f'Cannot form a polar question from "{self}" '
+					f'because the subject of the main clause verb "{v}" is a wh-phrase '
+					f'"{" ".join([t.text for t in ([s.determiner] if s.determiner else []) + [s]])}"! '
+					f'(This usually means that spaCy has misparsed a '
+					f'non-restrictive relative clause as conjunction.)'
+				)
+			
 			if s and self._can_be_inverted_subject(s):
 				if isinstance(s,list):
 					s = s[0]
@@ -1804,24 +1849,31 @@ class EDoc():
 				
 				# inflect the aux
 				if aux.can_be_inflected:
-					if isinstance(s,list):
-						number = self._get_list_noun_number(s)
-						person = 3
-					else:
-						if any(self._get_conjuncts(s)):
-							s = [s]
-							s.extend(self._get_conjuncts(s[0]))
-							number = self._get_list_noun_number(s)
-							person = 3
-							s = s[0]
-						elif s.text in ALL_PARTITIVES:
-							number = self._get_partitive_noun_number(s)
-							person = 3
-						else:
-							number = self._get_noun_number(s)
-							person = s.get_morph('Person')
-							person = int(person) if person else 3
+					number = v.get_morph('Number')
+					person = v.get_morph('Person')
 					
+					if person is not None:
+						person = int(person)
+					
+					if number is None or person is None:
+						if isinstance(s,list):
+							number = self._get_list_noun_number(s) if number is None else number
+							person = 3 if person is not None else person
+						else:
+							if any(self._get_conjuncts(s)):
+								s = [s]
+								s.extend(self._get_conjuncts(s[0]))
+								number = self._get_list_noun_number(s) if number is None else number 
+								person = 3 if person is not None else person
+								s = s[0]
+							elif s.text in ALL_PARTITIVES:
+								number = self._get_partitive_noun_number(s) if number is None else number
+								person = 3 if person is None else person
+							else:
+								number = self._get_noun_number(s) if number is None else number
+								person = s.get_morph('Person')
+								person = int(person) if person else 3
+						
 					tense = v.get_morph('Tense')
 					aux.reinflect(number=number, person=person, tense=tense)
 				
@@ -1908,7 +1960,7 @@ class EDoc():
 	def _get_question_punctuation(self, question: 'EDoc') -> Tuple:
 		# replace the final punct with a question mark
 		final = question[-1]
-		if not final.text in ['!', '.'] or not final.dep_ == 'punct':
+		if not final.text in ['!', '.'] or final.dep_ != 'punct':
 			raise ParseError(
 				f'The sentence "{self}" does not end with '
 				'an exclamation point or period! '

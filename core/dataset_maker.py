@@ -168,6 +168,22 @@ def create_seq2seq_dataset(
 						pass
 		
 		if any(new_dataset):
+			os.makedirs(os.path.join('data', name), exist_ok=True)
+			log.info(f'Writing out dataset {name} ({split}).')
+			with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
+				for ex in tqdm(new_dataset, miniters=miniters):
+					json.dump(ex, out_file, ensure_ascii=False)
+					out_file.write('\n')
+		
+		if any(new_metadata):
+			os.makedirs(os.path.join('data', name), exist_ok=True)
+			log.info(f'Writing out metadata for {name} ({split}).')
+			with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
+				for m in tqdm(new_metadata, miniters=miniters):
+					json.dump(m, out_file, ensure_ascii=False)
+					out_file.write('\n')
+		
+		if any(new_dataset):
 			if (
 				'prefix' in new_dataset[0]['translation'] and 
 				isinstance(new_dataset[0]['translation']['prefix'], Hashable)
@@ -193,19 +209,12 @@ def create_seq2seq_dataset(
 				counts = {k: v for k, v in counts.items() if v > 1}
 				v = sum(counts.values())
 				total = len(new_dataset)
-				pad_len = len('Number of sentences with >1 occurrence')
+				pad_len = len(f'Number of sentences with >1 occurrence ({split})')
 				pad_len2 = len(str(total))
 				log.info(
-					f'\n\nNumber of sentences with >1 occurrence: {len(counts)}\n'
-					f'{"Pr. duplications":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})\n\n'
+					f'\n\nNumber of sentences with >1 occurrence ({split}): {len(counts)}\n'
+					f'{f"Pr. duplications {split}":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})\n\n'
 				)
-			
-			os.makedirs(os.path.join('data', name), exist_ok=True)
-			log.info(f'Writing out dataset {name} ({split}).')
-			with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
-				for ex in tqdm(new_dataset, miniters=miniters):
-					json.dump(ex, out_file, ensure_ascii=False)
-					out_file.write('\n')
 		
 		if any(new_metadata):
 			print_keys = [
@@ -235,12 +244,6 @@ def create_seq2seq_dataset(
 					]) + 
 					'\n'
 				)	
-			
-			log.info(f'Writing out metadata for {name} ({split}).')
-			with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
-				for m in tqdm(new_metadata, miniters=miniters):
-					json.dump(m, out_file, ensure_ascii=False)
-					out_file.write('\n')
 		
 		log.info('\n\n')
 

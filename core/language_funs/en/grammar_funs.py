@@ -46,6 +46,8 @@ EN_ABBREVIATIONS: Set[str] = {
 	'No.',
 	'approx.',
 	'Approx.',
+	'C.',
+	'c.',
 	'ca.',
 	'Ca.',
 	'Ps.',
@@ -157,6 +159,8 @@ EN_ABBREVIATIONS: Set[str] = {
 	'sc.',
 	'sp.',
 	'Sp.',
+	'Sts.',
+	'sts.',
 }
 
 MISPARSED_AS_VERBS: Set[str] = {
@@ -179,6 +183,9 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'coeloms', # ???
 	'durchs', # german
 	'gelebten', # german
+	'wird', # german
+	'migliori', # italian
+	'gegen', # german
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -301,6 +308,17 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'cronicled', # chronicle
 	'cronicles',
 	'cronicle',
+	'rippen', # ripen
+	'rippens',
+	'rippened',
+	'rippenned',
+	'fulfils', # fulfill
+	'fulfil',
+	'fulfiled',
+	'signe', # signed
+	'enrcircled', # encircle
+	'enrcircle',
+	'enrcircles',
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -587,6 +605,10 @@ BAD_OBJECTS: Set[str] = {
 	'serial',
 	'estimated',
 	'as',
+	'critical',
+	'damaged',
+	'diplomatic',
+	'advanced',
 }
 
 def en_string_conditions(s: str) -> Union[bool,str]:
@@ -762,18 +784,23 @@ def question_conditions(s: str) -> Union[bool,EDoc]:
 	'''
 	No distractors, plus no presubject modifiers.
 	Also main verbs must not be an aux. (We want do-support.)
-	'''
+	'''	
 	s = no_dist_conditions(s)
 	if not s:
 		return False
 	
+	if not s.can_form_polar_question:
+		return False
+	
+	# we want do-support
 	if any(v.is_aux for v in s.main_clause_verbs):
 		return False
 	
 	# we don't want agreement in the baseline sentence
 	if any(v.lemma_ == 'be' for v in s.main_clause_verbs):
 		return False
-		
+	
+	# we want the subject to be the first dependent of the verb in the sentence
 	subject = s.main_subject
 	if isinstance(subject,list):
 		subject_position = min([t.i for t in subject])

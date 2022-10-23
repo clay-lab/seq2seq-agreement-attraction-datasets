@@ -836,15 +836,6 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'singular': {'present': 'resorts'},
 		'plural': 	{'present': 'resort'},
 	},
-	'centered': {
-		'any': 		{'past': 'centered'},
-	},
-	'centers': {
-		'any':		{'past': 'centered'},
-	},
-	'center': {
-		'any':		{'past': 'centered'},
-	},
 	'tunneled': {
 		'singular': {'present': 'tunnels'},
 		'plural': 	{'present': 'tunnel'},
@@ -1057,6 +1048,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'fits': {
 		'any':		{'past': 'fit'},
 	},
+	'dwelled': {
+		'singular': {'present': 'dwells'},
+		'plural':	{'present': 'dwell'},
+	},
 	'dwell': {
 		'any':		{'past': 'dwelled'},
 	},
@@ -1096,6 +1091,56 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'fulfills': {
 		'singular': {'present': 'fulfills'},
+	},
+	'meshed': {
+		'singular': {'present': 'meshes'},
+	},
+	'meshes': {
+		'singular': {'present': 'meshes'},
+	},
+	'mesh': {
+		'singular': {'present': 'meshes'},
+	},
+	'greenlit': {
+		'singular': {'present': 'greenlights'},
+		'plural': 	{'present': 'greenlight'},
+		'any':		{'past': 'greenlit'},
+	},
+	'countersued': {
+		'singular': {'present': 'countersues'},
+		'plural': 	{'present': 'countersue'},
+	},
+	'countersues': {
+		'any':		{'past': 'countersued'},
+	},
+	'countersue': {
+		'any':		{'past': 'countersued'},
+	},
+	'distilled': {
+		'singular':	{'present': 'distills'},
+		'plural':	{'present': 'distill'},
+	},
+	'distills': {
+		'singular':	{'present': 'distills'},
+	},
+	'distill': {
+		'singular':	{'present': 'distills'},
+	},
+	'neighbored': {
+		'singular': {'present': 'neighbors'},
+		'plural': 	{'present': 'neighbor'},
+	},
+	'neighbor': {
+		'any':		{'past': 'neighbored'},
+	},
+	'neighbors': {
+		'any':		{'past': 'neighbored'},
+	},
+	'rids': {
+		'any':		{'past': 'rid'},
+	},
+	'rid': {
+		'any':		{'past': 'rid'},
 	},
 }
 
@@ -1475,13 +1520,30 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'Rhyme': {'Number': 'Sing'},
 	'Diverse': {'Number': 'Plur'},
 	'diverse': {'Number': 'Plur'},
+	'matte': {'Number': 'Sing'},
+	'Matte': {'Number': 'Sing'},
+	'theca': {'Number': 'Sing'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
+}
+
+# when adjectives are used as nouns, 
+# some are associated with particular numbers (though not all)
+# we look these up here
+NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS: Dict[str,str] = {
+	'needy': 'Plur',
+	'disabled': 'Plur',
+	'poor': 'Plur',
+	'final': 'Sing',
+	'other': 'Sing',
+	'French': 'Plur',
+	'straight': 'Sing',
+	'secondary': 'Sing',
 }
 
 INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
 	'say': {'Number': 'Plur'},
-	'have':{'Number': 'Plur'},
-	'remain':{'Number': 'Plur'},
+	'have': {'Number': 'Plur'},
+	'remain': {'Number': 'Plur'},
 }
 
 # partitives are things where the head noun of the subject
@@ -1519,6 +1581,8 @@ PARTITIVES_OPTIONAL_OF: Set[str] = {
 	'last',
 	'Any',
 	'any',
+	'Enough',
+	'enough',
 }
 
 # these are partitives when they have an indefinite
@@ -1569,6 +1633,8 @@ EXCLUDE_DEPS: Set[str] = {
 	'nsubjpass', # due to misparses
 	'attr',
 	'dep', # due to misparses
+	'punct', # non-restrictive clauses and some appositives
+	'prt', # particles
 }
 
 # list of valid distractor structures
