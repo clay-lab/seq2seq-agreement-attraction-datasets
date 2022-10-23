@@ -1218,11 +1218,14 @@ class EDoc():
 		
 		# spaCy sometimes misparses non-restrictive
 		# relative clauses as conjunctions
-		ss = flatten([v.subject for v in vs if v.subject is not None])
-		ds = flatten([s.determiner for s in ss if s.determiner is not None])
-		if any(s.text == 'which' for s in ss + ds):
-			return False
-		
+		try:
+			ss = flatten([v.subject for v in vs if v.subject is not None])
+			ds = flatten([s.determiner for s in ss if s.determiner is not None])
+			if any(s.text == 'which' for s in ss + ds):
+				return False
+		except Exception:
+			breakpoint()
+			
 		# sometimes spaCy identifies a non-finite verb
 		# as a main clause verb, due to misparsing
 		# if the sentence is misparsed, we won't be able
@@ -1818,7 +1821,11 @@ class EDoc():
 			v_has_subject = True
 			s = v.subject
 			
-			if any(t.text == 'which' for t in [s] + ([s.determiner] if s.determiner else [])):
+			check_tokens = flatten([s])
+			if any(t.determiner for t in s):
+				check_tokens += flatten([t.determiner for t in s])
+			
+			if any(t.text == 'which' for t in check_tokens):
 				raise ValueError(
 					f'Cannot form a polar question from "{self}" '
 					f'because the subject of the main clause verb "{v}" is a wh-phrase '
