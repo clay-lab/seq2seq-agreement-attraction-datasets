@@ -1832,19 +1832,6 @@ class EDoc():
 			v_has_subject = True
 			s = v.subject
 			
-			check_tokens = flatten([s])
-			if any(t.determiner for t in check_tokens):
-				check_tokens += flatten([t.determiner for t in s])
-			
-			if any(t.text == 'which' for t in check_tokens):
-				raise ValueError(
-					f'Cannot form a polar question from "{self}" '
-					f'because the subject of the main clause verb "{v}" is a wh-phrase '
-					f'"{" ".join([t.text for t in ([s.determiner] if s.determiner else []) + [s]])}"! '
-					f'(This usually means that spaCy has misparsed a '
-					f'non-restrictive relative clause as conjunction.)'
-				)
-			
 			if s and self._can_be_inverted_subject(s):
 				if isinstance(s,list):
 					s = s[0]
@@ -1855,6 +1842,19 @@ class EDoc():
 					next_v = EToken(next_v.head)
 				
 				s = next_v.subject
+			
+			check_tokens = flatten([s])
+			if any(t.determiner for t in check_tokens):
+				check_tokens = flatten([t.determiner for t in check_tokens]) + check_tokens
+			
+			if any(t.text == 'which' for t in check_tokens):
+				raise ValueError(
+					f'Cannot form a polar question from "{self}" '
+					f'because the subject of the main clause verb "{v}" is a wh-phrase '
+					f'"{" ".join([t.text for t in check_tokens])}"! '
+					f'(This usually means that spaCy has misparsed a '
+					f'non-restrictive relative clause as conjunction.)'
+				)
 			
 			# save this so we can put the preceding token here
 			v_original_index = v.i
