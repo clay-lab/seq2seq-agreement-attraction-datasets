@@ -1238,10 +1238,11 @@ class EDoc():
 					next_v = EToken(next_v.head)
 					limit += 1
 					if limit > LOOK_FOR_SUBJECTS_LIMIT:
-						raise ParseError(
+						log.warn(
 							f'Could not find a subject for "{v}" in "{self}" '
-							f'within {LOOK_FOR_SUBJECTS_LIMIT}! Skipping.'
+							f'within {LOOK_FOR_SUBJECTS_LIMIT}!'
 						)
+						return False
 				
 				ss.append(next_v.subject)
 		
@@ -1276,10 +1277,11 @@ class EDoc():
 				tmp_v = EToken(tmp_v.head)
 				limit += 1
 				if limit > LOOK_FOR_SUBJECTS_LIMIT:
-					raise ParseError(
+					log.warn(
 						f'Could not find a subject for "{v}" in "{self}" '
-						f'within {LOOK_FOR_SUBJECTS_LIMIT}! Skipping.'
+						f'within {LOOK_FOR_SUBJECTS_LIMIT}!'
 					)
+					return False
 			
 			# get the first subject position for that verb
 			tmp_subject = tmp_v.subject
