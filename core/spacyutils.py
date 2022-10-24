@@ -27,6 +27,10 @@ log = logging.getLogger(__name__)
 
 nlp_ = spacy.load('en_core_web_trf', disable=['ner'])
 
+# how many times to look up for a subject
+# when determining whether a sentence can form a polar question
+LOOK_FOR_SUBJECTS_LIMIT: int = 10
+
 def flatten(items: 'Iterable', seqtypes: Tuple['Class'] = (list, tuple)):
 	for i, x in enumerate(items):
 		while i < len(items) and isinstance(items[i], seqtypes):
@@ -1227,8 +1231,15 @@ class EDoc():
 				ss.append(s)
 			else:
 				next_v = v
+				limit = 0
 				while not next_v.subject:
 					next_v = EToken(next_v.head)
+					limit += 1
+					if limit > LOOK_FOR_SUBJECTS_LIMIT:
+						log.info(
+							f'Could not find a subject for {v} in "{self}" '
+							f'within {LOOK_FOR_SUBJECTS_LIMIT}! Skipping.'
+						)
 				
 				ss.append(next_v.subject)
 		
@@ -1258,8 +1269,15 @@ class EDoc():
 		for v in vs:
 			# run up the tree until we find the verb's subject
 			tmp_v = v
+			limit = 0
 			while not tmp_v.subject:
 				tmp_v = EToken(tmp_v.head)
+				limit += 1
+				if limit > LOOK_FOR_SUBJECTS_LIMIT:
+					log.info(
+						f'Could not find a subject for {v} in "{self}" '
+						f'within {LOOK_FOR_SUBJECTS_LIMIT}! Skipping.'
+					)
 			
 			# get the first subject position for that verb
 			tmp_subject = tmp_v.subject
