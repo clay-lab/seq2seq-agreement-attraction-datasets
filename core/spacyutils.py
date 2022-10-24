@@ -1242,9 +1242,9 @@ class EDoc():
 		# if the sentence is misparsed, we won't be able
 		# to make a question out of it reliably
 		if any(not t.can_be_inflected for t in vs):
-			cannot_be_inflected = [t for t in vs if not t.can_be_inflected]
+			cannot_be_inflected = [t for t in vs if not t.can_be_inflected and t.tag_ == 'VBN']
 			# log.info(
-			# 	f'"{self}" cannot be made into a question because it contains '
+			# 	f'"{self}" cannot be made into a polar question because it contains '
 			# 	f'non-finite main clause verb(s): "{",".join([t.text for t in cannot_be_inflected])}" '
 			# 	f'({",".join([t.tag_ for t in cannot_be_inflected])})! '
 			# 	f'This is probably because it is ungrammatical or was parsed incorrectly.'
