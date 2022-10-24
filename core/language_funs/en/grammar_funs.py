@@ -660,21 +660,24 @@ def basic_conditions(s: str) -> Union[bool,EDoc]:
 		if any(t.pos_ == 'X' or t.tag_ == 'FW' for t in s):
 			return False
 		
+		vs = s.main_clause_verbs
+		
 		# main verb cannot start with a capital letter
-		if s.main_verb.text[0].isupper():
+		# no imperatives or polar questions
+		if any(v.text[0].isupper() for v in vs):
 			return False
 		
 		# disallow verbs with common typos
-		if any(t in s.main_verb.text for t in COMMON_VERB_TYPOS):
+		if any(v.text in COMMON_VERB_TYPOS for v in vs):
 			return False
 		
 		# spaCy has some trouble parsing certain rare verbs
 		# 'Trumpeter swans winter along the upper Stuart.' parsed
 		# 'swans' as the verb instead of winter
-		if any(s.main_verb.text == t for t in MISPARSED_AS_VERBS):
+		if any(v.text in MISPARSED_AS_VERBS for v in vs):
 			return False
 		
-		if any(s.main_verb.lemma_ == l for l in BAD_VERB_LEMMAS):
+		if any(v.lemma_ in BAD_VERB_LEMMAS for v in vs):
 			return False
 		
 		# if there is no subject, we don't want it
@@ -716,8 +719,24 @@ def basic_conditions(s: str) -> Union[bool,EDoc]:
 			if s.main_subject.text.lower() == 'the':
 				return False
 		
-		# if the main verb cannot be inflected, we don't want it
-		if not s.main_verb.can_be_inflected:
+		# if any of the main verbs cannot be inflected, we don't want it
+		if any(not v.can_be_inflected for v in vs):
+			return False
+		
+		# if the main verb is used to, it can be inflected (for questions)
+		# but we don't want it because it can't be made present tense
+		if any(
+			(
+				not v.is_aux and 
+				v.text in ['use', 'used'] and
+				any(t.dep_ == 'xcomp' for t in v.children)
+			) or (
+				v.is_aux and 
+				v.head.text in ['use', 'used'] and 
+				any(t.dep_ == 'xcomp' for t in v.head.children)
+			)
+			for v in vs
+		):
 			return False
 		
 		return s

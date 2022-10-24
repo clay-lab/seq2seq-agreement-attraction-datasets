@@ -182,7 +182,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'founds': {
 		'singular': {'present': 'founds'},
 		'plural': 	{'present': 'found'},
-		'any':		{'past': 'founded'},
+		'any':		{
+			'past': 'founded',
+			'infinitive': 'found',
+		},
 	},
 	'leaves': {
 		'any': 		{'past': 'left'},
@@ -193,6 +196,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'left' : {
 		'singular': {'present': 'leaves'},
 		'plural'  : {'present': 'leave'},
+		'any':		{'infinitive': 'leave'},
 	},
 	'bears': {
 		'any':		{'past': 'bore'},
@@ -211,7 +215,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'sang':  {
 		'singular': {'present': 'sings'},
 		'plural': 	{'present': 'sing'},
-		'any':		{'past':    'sang'},
+		'any':		{
+			'past':    'sang',
+			'infinitive': 'sang',
+		},
 	},
 	'sing':  {
 		'any':		{'past': 'sang'},
@@ -230,12 +237,18 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'lays':  {
 		'singular': {'present': 'lays'},
 		'plural': 	{'present': 'lay'},
-		'any':		{'past': 'laid'},
+		'any':		{
+			'past': 'laid',
+			'infinitive': 'lay',
+		},
 	},
 	'laid':  {
 		'singular': {'present': 'lays'},
 		'plural':	{'present': 'lay'},
-		'any':		{'past': 'laid'},
+		'any':		{
+			'past': 'laid',
+			'infinitive': 'lay',
+		},
 	},
 	'escapes': {
 		'any':	    {'past': 'escaped'},
@@ -246,12 +259,18 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'escaped': {
 		'singular': {'present': 'escapes'},
 		'plural':	{'present': 'escape'},
-		'any':		{'past': 'escaped'},
+		'any':		{
+			'past': 'escaped',
+			'infinitive': 'escape',
+		},
 	},
 	'paid': {
 		'singular': {'present': 'pays'},
 		'plural':   {'present': 'pay'},
-		'any':		{'past': 'paid'},
+		'any':		{
+			'past': 'paid',
+			'infinitive': 'pay',
+		},
 	},
 	'pay': {
 		'any':		{'past': 'paid'},
@@ -310,6 +329,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'paralleled': {
 		'singular': {'present': 'parallels'},
 		'plural':	{'plural': 'parallel'},
+		'any':		{'infinitive': 'parallel'},
 	},
 	'parallel': {
 		'any': 		{'past': 'paralleled'},
@@ -320,7 +340,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'sank': {
 		'singular': {'present': 'sinks'},
 		'plural': 	{'present': 'sink'},
-		'any':		{'past': 'sank'},
+		'any':		{
+			'past': 'sank',
+			'infinitive': 'sink',
+		},
 	},
 	'sink': {
 		'any': 		{'past': 'sank'},
@@ -346,9 +369,6 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'pleads': {
 		'any':		{'past': 'pleaded'},
 	},
-	'fit': {
-		'any': 		{'past': 'fit'},
-	},
 	'cursed': {
 		'any':		{'past': 'cursed'},
 	},
@@ -361,7 +381,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'sprang': {
 		'singular': {'present': 'springs'},
 		'plural': 	{'present': 'spring'},
-		'any':		{'past': 'sprang'},
+		'any':		{
+			'past': 'sprang',
+			'infinitive': 'spring',
+		},
 	},
 	'spring': {
 		'any':		{'past': 'sprang'},
@@ -381,6 +404,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'favored': {
 		'singular': {'present': 'favors'},
 		'plural': 	{'present': 'favor'},
+		'any':		{'infinitive': 'favor'},
 	},
 	'favor': {
 		'any':		{'past': 'favored'},
@@ -409,6 +433,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'endeavored': {
 		'singular': {'present': 'endeavors'},
 		'plural':	{'present': 'endeavor'},
+		'any':		{'infinitive': 'endeavor'},
 	},
 	'endeavor': {
 		'any':		{'past': 'endeavored'},
@@ -428,7 +453,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'shrank': {
 		'singular': {'present': 'shrinks'},
 		'plural':	{'present': 'shrink'},
-		'any':		{'past': 'shrank'},
+		'any':		{
+			'past': 'shrank',
+			'infinitive': 'shrink',
+		},
 	},
 	'shrink': {
 		'any':		{'past': 'shrank'},
@@ -451,7 +479,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'bit': {
 		'singular':	{'present': 'bites'},
 		'plural':	{'present': 'bite'},
-		'any':		{'past': 'bit'},
+		'any':		{
+			'past': 'bit',
+			'infinitive': 'bite',
+		},
 	},
 	'bite': {
 		'any':		{'past': 'bit'},
@@ -460,7 +491,16 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'any':		{'past': 'bit'},
 	},
 	'bringest': {
-		'any':		{'past': 'broughtest'},
+		'any': {
+			'past': 'broughtest',
+			'infinitive': 'bring'
+		},
+	},
+	'bringeth': {
+		'any':		{'infinitive': 'bring'},
+	},
+	'broughtest': {
+		'any': 		{'infinitive': 'bring'},
 	},
 	'setup': {
 		'any': 		{'past': 'setup'},
@@ -471,6 +511,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'mentored': {
 		'singular': {'present': 'mentors'},
 		'plural':	{'present': 'mentor'},
+		'any':		{'infinitive': 'mentor'},
 	},
 	'mentor': {
 		'any':		{'past': 'mentored'},
@@ -481,16 +522,23 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'wrapped': {
 		'singular': {'present': 'wraps'},
 		'plural':	{'present': 'wrap'},
-		'any':		{'past': 'wrapped'},
+		'any':		{
+			'past': 'wrapped',
+			'infinitive': 'wrap',
+		},
 	},
 	'wraps': {
 		'singular': {'present': 'wraps'},
 		'plural':	{'present': 'wrap'},
-		'any':		{'past': 'wrapped'},
+		'any':		{
+			'past': 'wrapped',
+			'infinitive': 'wrap'
+		},
 	},
 	'felled': {
 		'singular': {'present': 'fells'},
 		'plural': 	{'present': 'fell'},
+		'any':		{'infinitive': 'fell'},
 	},
 	'secret': {
 		'any':		{'past': 'secreted'},
@@ -504,6 +552,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'spirited': {
 		'singular': {'present': 'spirits'},
 		'plural':	{'present': 'spirit'},
+		'any':		{'infinitive': 'spirit'},
 	},
 	'spirits': {
 		'any':		{'past': 'spirited'},
@@ -514,7 +563,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'sped': {
 		'singular': {'present': 'speeds'},
 		'plural': 	{'present': 'speed'},
-		'any':		{'past': 'sped'},
+		'any':		{
+			'past': 'sped',
+			'infinitive': 'speed',
+		},
 	},
 	'siphoned': {
 		'any':		{'past': 'siphoned'},
@@ -528,7 +580,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'rang': {
 		'singular': {'present': 'rings'},
 		'plural': 	{'present': 'ring'},
-		'any':		{'past': 'rang'},
+		'any':		{
+			'past': 'rang',
+			'infinitive': 'ring',
+		},
 	},
 	'rings': {
 		'any':		{'past': 'rang'},
@@ -566,13 +621,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'sprung': {
 		'singular': {'present': 'springs'},
 		'plural': 	{'present': 'spring'},
-		'any':		{'past': 'sprang'},
-	},
-	'springs': {
-		'any':		{'past': 'sprang'},
-	},
-	'spring': {
-		'any':		{'past': 'sprang'},
+		'any':		{
+			'past': 'sprang',
+			'infinitive': 'spring',
+		},
 	},
 	'quoted': {
 		'any':		{'past': 'quoted'},
@@ -593,14 +645,20 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'any':		{'past': 'burned'},
 	},
 	'focusses': {
-		'any': 		{'past': 'focused'},
+		'any': 		{
+			'past': 'focused',
+			'infinitive': 'focus',
+		},
 	},
 	'focussed': {
 		'any':		{'past': 'focused'},
 	},
 	'focused': {
 		'plural':	{'present': 'focus'},
-		'any':		{'past': 'focused'},
+		'any':		{
+			'past': 'focused',
+			'infinitive': 'focus',
+		},
 	},
 	'focuses': {
 		'any':		{'past': 'focused'},
@@ -611,7 +669,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'fed': {
 		'singular': {'present': 'feeds'},
 		'plural': 	{'present': 'feed'},
-		'any':		{'past': 'fed'},
+		'any':		{
+			'past': 'fed',
+			'infinitive': 'feed',
+		},
 	},
 	'feeds': {
 		'singular': {'present': 'feeds'},
@@ -626,6 +687,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'recovered': {
 		'singular': {'present': 'recovers'},
 		'plural':	{'present': 'recover'},
+		'any':		{'infinitive': 'recover'},
 	},
 	'willed': {
 		'singular': {'present': 'wills'},
@@ -660,6 +722,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'spelled': {
 		'singular': {'present': 'spells'},
 		'plural':	{'present': 'spell'},
+		'any':		{'infinitive': 'spell'},
 	},
 	'spells': {
 		'any':		{'past': 'spelled'},
@@ -688,7 +751,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'onsold': {
 		'singular': {'present': 'onsells'},
 		'plural':	{'present': 'onsell'},
-		'any':		{'past': 'onsold'},
+		'any':		{
+			'past': 'onsold',
+			'infinitive': 'onsell',
+		},
 	},
 	'onsells': {
 		'any':		{'past': 'onsold'},
@@ -699,12 +765,18 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'roped': {
 		'singular': {'present': 'ropes'},
 		'plural': 	{'present': 'rope'},
-		'any':		{'past': 'roped'},
+		'any':		{
+			'past': 'roped',
+			'infinitive': 'rope',
+		},
 	},
 	'redrew': {
 		'singular': {'present': 'redraws'},
 		'plural': 	{'present': 'redraw'},
-		'any':		{'past': 'redrew'},
+		'any':		{
+			'past': 'redrew',
+			'infinitive': 'redraw',
+		},
 	},
 	'redraws': {
 		'any': 		{'past': 'redrew'},
@@ -715,10 +787,12 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'reformed': {
 		'singular':	{'present': 'reforms'},
 		'plural': 	{'present': 'reform'},
+		'any':		{'infinitive': 'reform'},
 	},
 	'neighbored': {
 		'singular': {'present': 'neighbors'},
 		'plural':	{'present': 'neighbor'},
+		'any':		{'infinitive': 'neighbor'},
 	},
 	'neighbors': {
 		'any':		{'past': 'neighbored'},
@@ -728,9 +802,11 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'delimited': {
 		'plural': 	{'present': 'delimit'},
+		'any':		{'infinitive': 'delimit'},
 	},
 	'delimits': {
 		'plural': 	{'present': 'delimit'},
+		'any':		{'infinitive': 'delimit'},
 	},
 	'delimit': {
 		'any':		{'past': 	'delimited'},
@@ -738,6 +814,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'spilled': {
 		'singular': {'present': 'spills'},
 		'plural': 	{'present': 'spill'},
+		'any':		{'infinitive': 'spill'},
 	},
 	'spills': {
 		'any': 		{'past': 'spilled'},
@@ -745,16 +822,13 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'spill': {
 		'any':		{'past': 'spilled'},
 	},
-	'sped': {
-		'singular': {'present': 'speeds'},
-		'plural':	{'present': 'speed'},
-		'any':		{'past': 'sped'},
-	},
 	'bound': {
 		'plural':	{'present': 'bind'},
+		'any':		{'infinitive': 'bind'},
 	},
 	'binds': {
 		'plural':	{'present': 'bind'},
+		'any':		{'infinitive': 'bind'},
 	},
 	'bind': {
 		'any':		{'past': 'bound'},
@@ -771,6 +845,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'segued': {
 		'singular': {'present': 'segues'},
 		'plural':	{'present': 'segue'},
+		'any':		{'infinitive': 'segue'},
 	},
 	'segues': {
 		'any':		{'past': 'segued'},
@@ -817,6 +892,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'modeled': {
 		'singular': {'present': 'models'},
 		'plural':	{'present': 'model'},
+		'any':		{'infinitive': 'model'},
 	},
 	'models': {
 		'any': 		{'past': 'modeled'},
@@ -836,10 +912,12 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'resorted': {
 		'singular': {'present': 'resorts'},
 		'plural': 	{'present': 'resort'},
+		'any':		{'infinitive': 'resort'},
 	},
 	'tunneled': {
 		'singular': {'present': 'tunnels'},
 		'plural': 	{'present': 'tunnel'},
+		'any':		{'infinitive': 'tunnel'},
 	},
 	'tunnels': {
 		'any':		{'past': 'tunneled'},
@@ -850,6 +928,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'misspelled': {
 		'singular': {'present': 'misspells'},
 		'plural':	{'present': 'misspell'},
+		'any':		{'infinitive': 'misspell'},
 	},
 	'misspells': {
 		'any':		{'past': 'misspelled'},
@@ -869,7 +948,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'cowrote': {
 		'singular': {'present': 'cowrites'},
 		'plural': 	{'present': 'cowrite'},
-		'any':		{'past': 'cowrote'},
+		'any':		{
+			'past': 'cowrote',
+			'infinitive': 'cowrite',
+		},
 	},
 	'cowrite': {
 		'any':		{'past': 'cowrote'},
@@ -880,6 +962,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'yodeled': {
 		'singular': {'present': 'yodels'},
 		'plural': 	{'present': 'yodel'},
+		'any':		{'infinitive': 'yodel'},
 	},
 	'yodels': {
 		'any':		{'past': 'yodeled'},
@@ -890,9 +973,16 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'summon': {
 		'any':		{'past': 'summoned'},
 	},
+	'summoned': {
+		'any': 		{'infinitive': 'summon'},
+	},
+	'summons': {
+		'any':		{'infinitive': 'summon'},
+	},
 	'reinterpreted': {
 		'singular':	{'present': 'reinterprets'},
 		'plural':	{'present': 'reinterpret'},
+		'any':		{'infinitive': 'reinterpret'},
 	},
 	'reinterpret': {
 		'any':		{'past': 'reinterpreted'},
@@ -903,7 +993,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'regrew': {
 		'singular': {'present': 'regrows'},
 		'plural': 	{'present': 'regrow'},
-		'any':		{'past': 'regrew'},
+		'any':		{
+			'past': 'regrew',
+			'infinitive': 'regrow',
+		},
 	},
 	'regrow': {
 		'any':		{'past': 'regrew'},
@@ -914,6 +1007,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'penciled': {
 		'singular': {'present': 'pencils'},
 		'plural':	{'present': 'pencil'},
+		'any':		{'infinitive': 'pencil'},
 	},
 	'pencil': {
 		'any':		{'past': 'penciled'},
@@ -933,6 +1027,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'funneled': {
 		'singular': {'present': 'funnels'},
 		'plural': 	{'present': 'funnel'},
+		'any':		{'infinitive': 'funnel'},
 	},
 	'funnel': {
 		'any':		{'past': 'funneled'},
@@ -943,6 +1038,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'critiqued': {
 		'singular': {'present': 'critiques'},
 		'plural': 	{'present': 'critique'},
+		'any':		{'infinitive': 'critique'},
 	},
 	'critiques': {
 		'any': 		{'past': 'critiqued'},
@@ -953,6 +1049,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'colored': {
 		'singular': {'present': 'colors'},
 		'plural': 	{'present': 'color'},
+		'any':		{'infinitive': 'color'},
 	},
 	'color': {
 		'any':		{'past': 'colored'},
@@ -963,6 +1060,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'counseled': {
 		'singular': {'present': 'counsels'},
 		'plural': 	{'present': 'counsel'},
+		'any':		{'infinitive': 'counsel'},
 	},
 	'counsel': {
 		'any': 		{'past': 'counseled'},
@@ -973,6 +1071,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'leveled': {
 		'singular': {'present': 'levels'},
 		'plural': 	{'present': 'level'},
+		'any':		{'infinitive': 'level'},
 	},
 	'levels': {
 		'any':		{'past': 'leveled'},
@@ -982,7 +1081,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'flied': {
 		'plural':	{'present': 'fly'},
-		'any':		{'past': 'flied'},
+		'any':		{
+			'past': 'flied',
+			'infinitive': 'fly',
+		},
 	},
 	'smites': {
 		'any':		{'past': 'smote'},
@@ -993,10 +1095,12 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'smote': {
 		'singular': {'present': 'smites'},
 		'plural': 	{'present': 'smite'},
+		'any':		{'infinitive': 'smite'},
 	},
 	'reveled': {
 		'singular': {'present': 'revels'},
 		'plural': 	{'present': 'revel'},
+		'any':		{'infinitive': 'revel'},
 	},
 	'revels': {
 		'any':		{'past': 'reveled'},
@@ -1016,7 +1120,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'inbreed': {
 		'singular': {'present': 'inbreeds'},
 		'plural': 	{'present': 'inbreed'},
-		'any':		{'past': 'inbred'},
+		'any':		{
+			'past': 'inbred',
+			'infinitive': 'inbreed',
+		},
 	},
 	'inbreeds': {
 		'any': 		{'past': 'inbred'},
@@ -1024,6 +1131,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'inbred': {
 		'singular': {'present': 'inbreeds'},
 		'plural': 	{'present': 'inbreed'},
+		'any':		{'infinitive': 'inbred'},
 	},
 	'homered': {
 		'any':		{'past': 'homered'},
@@ -1052,6 +1160,7 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'dwelled': {
 		'singular': {'present': 'dwells'},
 		'plural':	{'present': 'dwell'},
+		'any':		{'infinitive': 'dwell'},
 	},
 	'dwell': {
 		'any':		{'past': 'dwelled'},
@@ -1061,18 +1170,24 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'extols': {
 		'plural': 	{'present': 'extol'},
+		'any':		{'infinitive': 'extol'},
 	},
 	'extolled': {
 		'plural':	{'present': 'extol'},
+		'any':		{'infinitive': 'extol'},
 	},
 	'reconvened': {
 		'singular': {'present': 'reconvenes'},
 		'plural':	{'present': 'reconvene'},
-		'any':		{'past': 'reconvened'},
+		'any':		{
+			'past': 'reconvened',
+			'infinitive': 'reconvene',
+		},
 	},
 	'lensed': {
 		'singular': {'present': 'lenses'},
 		'plural':	{'present': 'lense'},
+		'any':		{'infinitive': 'lense'},
 	},
 	'frescoed': {
 		'singular': {'present': 'frescoes'},
@@ -1082,7 +1197,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	},
 	'frescoes': {
 		'plural': 	{'present': 'fresco'},
-		'any':		{'past': 'frescoed'},
+		'any':		{
+			'past': 'frescoed',
+			'infinitive': 'fresco',
+		},
 	},
 	'fulfilled': {
 		'singular': {'present': 'fulfills'},
@@ -1105,11 +1223,15 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'greenlit': {
 		'singular': {'present': 'greenlights'},
 		'plural': 	{'present': 'greenlight'},
-		'any':		{'past': 'greenlit'},
+		'any':		{
+			'past': 'greenlit',
+			'infinitive': 'greenlight',
+		},
 	},
 	'countersued': {
 		'singular': {'present': 'countersues'},
 		'plural': 	{'present': 'countersue'},
+		'any':		{'infinitive': 'countersue'},
 	},
 	'countersues': {
 		'any':		{'past': 'countersued'},
@@ -1127,21 +1249,22 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'distill': {
 		'singular':	{'present': 'distills'},
 	},
-	'neighbored': {
-		'singular': {'present': 'neighbors'},
-		'plural': 	{'present': 'neighbor'},
-	},
-	'neighbor': {
-		'any':		{'past': 'neighbored'},
-	},
-	'neighbors': {
-		'any':		{'past': 'neighbored'},
-	},
 	'rids': {
 		'any':		{'past': 'rid'},
 	},
 	'rid': {
 		'any':		{'past': 'rid'},
+	},
+	'uses': {
+		'plural':	{'present': 'use'},
+		'any':		{'infinitive': 'use'},
+	},
+	'use': {
+		'any':		{'infinitive': 'use'},
+	},
+	'used': {
+		'plural':	{'present': 'use'},
+		'any':		{'infinitive': 'use'},
 	},
 }
 
@@ -1233,6 +1356,7 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 	'lay': {
 		'singular': {'present': 'lies'}, 
 		'plural': 	{'present': 'lie'},
+		'any':		{'infinitive': 'lie'},
 		'condition': (lambda t: t.is_intransitive)
 	},
 	# TODO: exception for ccomp and prep = about,
@@ -1268,6 +1392,7 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 	'secreted': {
 		'singular': {'present': 'secrets'},
 		'plural':	{'present': 'secret'},
+		'any':		{'infinitive': 'secret'},
 		'condition':(
 			lambda t: 
 				any(
@@ -1285,9 +1410,11 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 		'condition':(lambda t: t.is_intransitive),
 	},
 	'fell': {
+		'singular': {'present': 'fells'},
+		'plural': 	{'present': 'fell'},
 		'any':		{
 			'past': 'felled',
-			'present': 'fell',
+			'infinitive': 'fell',
 		},
 		'condition':(lambda t: t.is_transitive),
 	},

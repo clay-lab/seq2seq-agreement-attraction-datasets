@@ -315,6 +315,19 @@ class EToken():
 		
 		if not s and self.is_aux:
 			s = EToken(self.head).subject
+		elif (
+			all(t.dep_ == 'expl' for t in s) and 				# there
+			self.text == 'used' and 							# used
+			any(t.dep_ == 'xcomp' for t in self.children) and 	# to
+			any(t.lemma_ == 'be' for t in self.children) 		# be
+		):
+			# there used to be [subj]
+			s.extend([
+				t for t in [
+					t for t in self.children if t.text == 'be'
+				][0].children
+					if t.dep_ in SUBJ_DEPS
+			])
 		
 		if not isinstance(s,list):
 			s = [s] if s is not None else []
@@ -430,6 +443,17 @@ class EToken():
 		number = self.get_morph('Number') if number is None else number
 		tense  = self.get_morph('Tense') if tense is None else tense
 		
+		# used to cannot be made present tense 
+		# (*He uses to, *They use to)
+		if (
+			self.text == 'used' and 						# used
+			any(t.dep_ == 'xcomp' for t in self.children)	# to
+			and tense == PRESENT
+		):
+			raise ValueError(
+				f'"{self.text} to" cannot be made present tense!'
+			)
+		
 		# we need to filter out Nones, in case the current word
 		# doesn't have these morphs
 		c_kwargs = dict(number=NUMBER_MAP.get(number), tense=TENSE_MAP.get(tense))
@@ -464,7 +488,7 @@ class EToken():
 		
 		m_kwargs = dict(Number=n, Tense=t)
 		if tense == INFINITIVE:
-			m_kwargs.update(dict(VerbForm='Inf'))
+			m_kwargs.update(dict(VerbForm='Inf', Tense=None))
 		
 		m_kwargs = {**m_kwargs, **kwargs}
 		
@@ -845,6 +869,20 @@ class EDoc():
 		'''Gets the main clause subject of the SDoc if one exists.'''
 		v = self.main_verb
 		s = [t for t in v.children if t.dep_ in SUBJ_DEPS]
+		
+		# there used to be [subj]
+		if (
+			all(t.dep_ == 'expl' for t in s) and 			# there
+			v.text == 'used' and 							# used
+			any(t.dep_ == 'xcomp' for t in v.children) and 	# to
+			any(t.lemma_ == 'be' for t in v.children) 		# be
+		):
+			s.extend([
+				t for t in [
+					t for t in v.children if t.text == 'be'
+				][0].children
+					if t.dep_ in SUBJ_DEPS
+			])
 		
 		# in passives, spaCy parses the participle as the main verb
 		# and assigns it the dependency to the subject
@@ -1236,6 +1274,11 @@ class EDoc():
 				limit = 0
 				while not next_v.subject:
 					next_v = EToken(next_v.head)
+					# we've reached the root but still haven't found
+					# a subject, so break
+					if next_v.dep_ == 'ROOT':
+						return False
+					
 					limit += 1
 					if limit > LOOK_FOR_SUBJECTS_LIMIT:
 						log.warn(
@@ -1619,6 +1662,24 @@ class EDoc():
 			all_vs = [v] + [i for s in conj_vs for i in s]
 		else:
 			all_vs = [v]
+			
+		# in questions, can't change make present if 
+		# main verb is "used to" (*Does/do he/they use to...?)
+		# the EToken object catches this if it is a sentence,
+		# but it can't when it is a question because "use to" is 
+		# possible as an infinitive: ('Did he use to go?')
+		if any(
+			v.lemma_ == 'do' and 								# did
+			v.is_aux and 										# Q
+			v.head.text in ['use', 'used'] and 					# used/use
+			any(t.dep_ == 'xcomp' for t in v.head.children) and	# to
+			tense == PRESENT									# cannot make present tense
+			for v in all_vs
+		):
+			raise ValueError(
+				f'Cannot make "{self}" present tense because '
+				f'"{v.head.text} to" cannot be present tense!'
+			)
 		
 		# this will allow us to account for contractions
 		whitespaces_modified = []
@@ -1882,13 +1943,13 @@ class EDoc():
 					if number is None or person is None:
 						if isinstance(s,list):
 							number = self._get_list_noun_number(s) if number is None else number
-							person = 3 if person is not None else person
+							person = 3 if person is None else person
 						else:
 							if any(self._get_conjuncts(s)):
 								s = [s]
 								s.extend(self._get_conjuncts(s[0]))
 								number = self._get_list_noun_number(s) if number is None else number 
-								person = 3 if person is not None else person
+								person = 3 if person is None else person
 								s = s[0]
 							elif s.text in ALL_PARTITIVES:
 								number = self._get_partitive_noun_number(s) if number is None else number
@@ -2006,7 +2067,12 @@ class EDoc():
 		# a subject cannot be inverted with an aux
 		# if it is clausal and the verb is not a gerund
 		# (i.e., if it is headed by "that" or "to")
-		if any(t.dep_ in ['csubj', 'csubjpass'] for t in s if t.tag_ not in ['VBG', 'VBN']):
+		if any(
+			t.dep_ in ['csubj', 'csubjpass'] 
+			for t in s 
+			if 	t.tag_ not in ['VBG', 'VBN', 'VB', 'VBZ'] or 
+				t.get_morph('VerbForm') == 'Inf'
+		):
 			clausal_subject_text = ' '.join(
 				[
 					t.text 
