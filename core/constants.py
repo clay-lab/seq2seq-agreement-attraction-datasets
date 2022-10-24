@@ -88,7 +88,8 @@ SUBJ_DEPS: Set[str] = {
 	"csubjpass", 
 	"attr", 
 	"nsubj", 
-	"nsubjpass"
+	"nsubjpass",
+	"expl",
 }
 
 OBJ_DEPS: Set[str] = {

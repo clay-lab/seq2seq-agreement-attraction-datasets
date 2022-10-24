@@ -194,7 +194,9 @@ class EToken():
 	@property
 	def is_aux(self):
 		'''Is the token an AUX?'''
-		return self.pos_ == 'AUX'	
+		# be, even if it is a main verb, is always
+		# grammatically an aux
+		return self.pos_ == 'AUX' or self.lemma_ == 'be'
 	
 	@property
 	def is_verb(self) -> bool:
@@ -693,7 +695,7 @@ class EDoc():
 		pos 		= [t.pos_ for t in tokens]
 		morphs 		= [str(t.morph) for t in tokens]
 		lemmas 		= [t.lemma_ for t in tokens]
-		heads 		= [t.head.i if not has_attr(t, 'head_i') else t.head_i for t in self]
+		heads 		= [t.head.i if not hasattr(t, 'head_i') else t.head_i for t in self if not t.i in indices]
 		
 		# have to reduce the head indices for each index we remove
 		for i, move_to in zip(indices, move_deps_to):
@@ -1236,8 +1238,8 @@ class EDoc():
 					next_v = EToken(next_v.head)
 					limit += 1
 					if limit > LOOK_FOR_SUBJECTS_LIMIT:
-						log.info(
-							f'Could not find a subject for {v} in "{self}" '
+						raise ParseError(
+							f'Could not find a subject for "{v}" in "{self}" '
 							f'within {LOOK_FOR_SUBJECTS_LIMIT}! Skipping.'
 						)
 				
@@ -1274,8 +1276,8 @@ class EDoc():
 				tmp_v = EToken(tmp_v.head)
 				limit += 1
 				if limit > LOOK_FOR_SUBJECTS_LIMIT:
-					log.info(
-						f'Could not find a subject for {v} in "{self}" '
+					raise ParseError(
+						f'Could not find a subject for "{v}" in "{self}" '
 						f'within {LOOK_FOR_SUBJECTS_LIMIT}! Skipping.'
 					)
 			
@@ -1850,29 +1852,13 @@ class EDoc():
 			v_has_subject = True
 			s = v.subject
 			
-			if s and self._can_be_inverted_subject(s):
-				if isinstance(s,list):
-					s = s[0]
-			else:
+			if not (s and self._can_be_inverted_subject(s)):
 				v_has_subject = False
 				next_v = v
 				while not next_v.subject:
 					next_v = EToken(next_v.head)
 				
 				s = next_v.subject
-			
-			check_tokens = flatten([s])
-			if any(t.determiner for t in check_tokens):
-				check_tokens = flatten([t.determiner for t in check_tokens]) + check_tokens
-			
-			if any(t.text == 'which' for t in check_tokens):
-				raise ValueError(
-					f'Cannot form a polar question from "{self}" '
-					f'because the subject of the main clause verb "{v}" is a wh-phrase '
-					f'"{" ".join([t.text for t in check_tokens])}"! '
-					f'(This usually means that spaCy has misparsed a '
-					f'non-restrictive relative clause as conjunction.)'
-				)
 			
 			# save this so we can put the preceding token here
 			v_original_index = v.i
