@@ -710,7 +710,7 @@ def en_string_conditions(s: str) -> Union[bool,str]:
 	
 	return s
 
-def basic_conditions(s: str) -> Union[bool,EDoc]:
+def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 	'''Basic conditions to clean up noisy data.'''
 	s = en_string_conditions(s)
 	
