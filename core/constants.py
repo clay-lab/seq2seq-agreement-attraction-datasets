@@ -60,6 +60,8 @@ EXCLUSION_STRINGS: Set[str] = {
 	" ll've ",
 	'himthat',
 	'hilself',
+	'unitsalso',
+	'Americansskirmished',
 }
 
 # must not contain a punctuation sandwiched
@@ -1266,6 +1268,269 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'plural':	{'present': 'use'},
 		'any':		{'infinitive': 'use'},
 	},
+	'refind': {
+		'any':		{'past': 'refound'},
+	},
+	'refinds': {
+		'any':		{'past': 'refound'},
+	},
+	'enthralled': {
+		'singular': {'present': 'enthralls'},
+	},
+	'enthralls': {
+		'singular': {'present': 'enthralls'},
+	},
+	'enthrall': {
+		'singular': {'present': 'enthralls'},
+	},
+	'traveled': {
+		'singular':	{'present': 'travels'},
+		'plural':	{'present': 'travel'},
+		'any':		{'infinitive': 'travel'},
+	},
+	'travels': {
+		'any':		{'past': 'traveled'},
+	},
+	'travel': {
+		'any':		{'past': 'traveled'},
+	},
+	'signaled': {
+		'singular':	{'present': 'signals'},
+		'plural':	{'present': 'signal'},
+		'any':		{'infinitive': 'signal'},
+	},
+	'signals': {
+		'any':		{'past': 'signaled'},
+	},
+	'signal': {
+		'any':		{'past': 'signaled'},
+	},
+	'recreated': {
+		'singular': {'present': 'recreates'},
+		'plural':	{'present': 'recreate'},
+	},
+	'reserved': {
+		'singular': {'present': 'reserves'},
+		'plural': 	{'present': 'reserve'},
+	},
+	'quarreled': {
+		'singular':	{'present': 'quarrels'},
+		'plural':	{'present': 'quarrel'},
+		'any':		{'infinitive': 'quarrel'},
+	},
+	'quarrels': {
+		'any':		{'past': 'quarreled'},
+	},
+	'quarrel': {
+		'any':		{'past': 'quarreled'},
+	},
+	'nectared': {
+		'singular': {'present': 'nectars'},
+		'plural':	{'present': 'nectar'},
+		'any':		{'infinitive': 'nectar'},
+	},
+	'nectars': {
+		'any':		{'past': 'nectared'},
+	},
+	'nectar': {
+		'any':		{'past': 'nectared'},
+	},
+	'marveled': {
+		'singular':	{'present': 'marvels'},
+		'plural':	{'present': 'marvel'},
+		'any':		{'infinitive': 'marvel'},
+	},
+	'marvels': {
+		'any':		{'past': 'marveled'},
+	},
+	'marvel': {
+		'any':		{'past': 'marveled'},
+	},
+	'labored': {
+		'singular': {'present': 'labors'},
+		'plural': 	{'present': 'labor'},
+		'any':		{'infinitive': 'labor'},
+	},
+	'labors': {
+		'any':		{'past': 'labored'},
+	},
+	'labor': {
+		'any':		{'past':'labored'},
+	},
+	'labeled': {
+		'singular': {'present': 'labels'},
+		'plural': 	{'present': 'label'},
+		'any':		{'infinitive': 'label'},
+	},
+	'labels': {
+		'any':		{'past': 'labeled'},
+	},
+	'label': {
+		'any':		{'past': 'labeled'},
+	},
+	'install': {
+		'singular': {'present': 'installs'},
+	},
+	'installed': {
+		'singular': {'present': 'installs'},
+	},
+	'equalled': {
+		'singular': {'present': 'equals'},
+		'plural': 	{'present': 'equal'},
+		'any':		{'infinitive': 'equal'},
+	},
+	'dreamed': {
+		'any':		{'past': 'dreamed'},
+	},
+	'dreams': {
+		'any': 		{'past': 'dreamed'},
+	},
+	'dream': {
+		'any':		{'past': 'dreamed'},
+	},
+	'ciliated': {
+		'singular': {'present': 'ciliates'},
+		'plural':	{'present': 'ciliate'},
+		'any':		{'infinitive': 'ciliate'},
+	},
+	'chickened': {
+		'any':		{'past': 'chickened'},
+	},
+	'chickens': {
+		'any':		{'past': 'chickened'},
+	},
+	'chicken': {
+		'any':		{'past': 'chickened'},
+	},
+	'cataloged': {
+		'singular': {'present': 'catalogs'},
+		'plural': 	{'present': 'catalog'},
+		'any':		{'infinitive': 'catalog'},
+	},
+	'catalog': {
+		'any':		{'past': 'cataloged'},
+	},
+	'catalogs': {
+		'any':		{'past': 'cataloged'},
+	},
+	'bypass': {
+		'singular':	{'present': 'bypasses'},
+	},
+	'bypassed': {
+		'singular':	{'present': 'bypasses'},
+	},
+	'bypasses': {
+		'singular': {'present': 'bypasses'},
+	},
+	'authored': {
+		'singular': {'present': 'authors'},
+		'plural':	{'present': 'author'},
+		'any':		{'infinitive': 'author'},
+	},
+	'authors': {
+		'any':		{'past': 'authored'},
+	},
+	'author': {
+		'any':		{'past': 'authored'},
+	},
+	'coached': {
+		'singular':	{'present': 'coaches'},
+	},
+	'coach': {
+		'singular': {'present': 'coaches'},
+	},
+	'coaches': {
+		'singular': {'present': 'coaches'},
+	},
+	'learned': {
+		'any':		{'past': 'learned'},
+	},
+	'learn': {
+		'any':		{'past': 'learned'},
+	},
+	'learns': {
+		'any':		{'past': 'learned'},
+	},
+	'unraveled': {
+		'singular':	{'present': 'unravels'},
+		'plural': 	{'present': 'unravel'},
+		'any':		{'infinitive': 'unravel'},
+	},
+	'unravels': {
+		'any':		{'past': 'unraveled'},
+	},
+	'unravel': {
+		'any':		{'past': 'unraveled'},
+	},
+	'spiraled': {
+		'singular': {'present': 'spirals'},
+		'plural': 	{'present': 'spiral'},
+		'any':		{'infinitive': 'spiral'},
+	},
+	'spirals': {
+		'any':		{'past': 'spiraled'},
+	},
+	'spiral': {
+		'any':		{'past': 'spiraled'},
+	},
+	'leaned': {
+		'singular': {'present': 'leans'},
+		'plural': 	{'present': 'lean'},
+		'any':		{'infinitive': 'lean'},
+	},
+	'leans': {
+		'any':		{'past': 'leaned'},
+	},
+	'lean': {
+		'any': 		{'past': 'leaned'},
+	},
+	'harbored': {
+		'singular': {'present': 'harbors'},
+		'plural': 	{'present': 'harbor'},
+		'any':		{'infinitive': 'harbor'},
+	},
+	'harbor': {
+		'any':		{'past': 'harbored'},
+	},
+	'harbors': {
+		'any': 		{'past': 'harbored'},
+	},
+	'crossbred': {
+		'singular': {'present': 'crossbreeds'},
+		'plural': 	{'present': 'crossbreed'},
+		'any':		{'infinitive': 'crossbreed'},
+	},
+	'crossbreeds': {
+		'any':		{'past': 'crossbred'},
+	},
+	'crossbreed': {
+		'singular': {'present': 'crossbreeds'},
+		'plural': 	{'present': 'crossbreed'},
+		'any':		{
+			'past': 'crossbred',
+			'infinitive': 'crossbreed',
+		},
+	},
+	'canceled': {
+		'singular': {'present': 'cancels'},
+		'plural': 	{'present': 'cancel'},
+		'any':		{'infinitive': 'cancel'},
+	},
+	'cancels': {
+		'any':		{'past': 'canceled'},
+	},
+	'cancel': {
+		'any':		{'past': 'canceled'},
+	},
+	'canned': {
+		'singular': {'present': 'cans'},
+		'plural': 	{'present': 'can'},
+		'any':		{'past': 'canned'},
+	},
+	'cans': {
+		'singular': {'present': 'cans'},
+		'any':		{'past': 'canned'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -1349,7 +1614,17 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'cowrote': 'cowrite',
 	'bless': 'bless', # misidentified as 'bles'
 	'extolled': 'extol',
-	
+	'russified': 'russify',
+	'russifies': 'russify',
+	'relaunched': 'relaunch',
+	'relaunches': 'relaunch',
+	'refounded': 'refound',
+	'enthralled': 'enthrall',
+	'doublecrossed': 'doublecross',
+	'doublecrosses': 'doublecross',
+	'distilled': 'distill',
+	'draghunted': 'draghunt',
+	'outdueled': 'outduel',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -1424,7 +1699,23 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 	},
 	'speeds': {
 		'any':		{'past': 'sped'},
-		'condition': (lambda t: t.is_intransitive)
+		'condition': (lambda t: t.is_intransitive),
+	},
+	'can': {
+		'any':		{'past': 'canned'},
+		'condition': (lambda t: not t.is_aux),
+	},
+	'knewest': {
+		'any':		{
+			'present': 'knoweth',
+			'past': 'knewest',
+		},
+		'condition': (
+			lambda t: 
+				t.subject.text.lower() == 'thou' 
+				if not isinstance(t.subject,list) 
+				else any(word.text.lower() == 'thou' for word in t.subject)
+			)
 	},
 }
 
@@ -1651,6 +1942,9 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'matte': {'Number': 'Sing'},
 	'Matte': {'Number': 'Sing'},
 	'theca': {'Number': 'Sing'},
+	'oneself': {'Case': 'Acc', 'Number': 'Sing', 'Person': '3', 'Reflex': 'Yes'},
+	'thee': {'Number': 'Sing', 'Case': 'Acc', 'Person': '2'},
+	'thou': {'Number': 'Sing', 'Case': 'Nom', 'Person': '2'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 
@@ -1666,6 +1960,11 @@ NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS: Dict[str,str] = {
 	'French': 'Plur',
 	'straight': 'Sing',
 	'secondary': 'Sing',
+	'young': 'Plur',
+	'moneyed': 'Plur',
+	'ceramic': 'Sing',
+	'occult': 'Sing',
+	'fundamental': 'Sing',
 }
 
 INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
@@ -1680,6 +1979,8 @@ INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
 PARTITIVES_WITH_OF: Set[str] = {
 	'Some',
 	'some',
+	'Any',
+	'any',
 	# currently an edge case, marked as singular 
 	# even when partitives. though a search shows 
 	# that "neither of the two are" is way
@@ -1722,6 +2023,7 @@ PARTITIVES_WITH_INDEFINITE_ONLY: Set[str] = {
 	'number',
 	'quantity',
 	'ton',
+	'series',
 }
 
 ALL_PARTITIVES: Set[str] = {

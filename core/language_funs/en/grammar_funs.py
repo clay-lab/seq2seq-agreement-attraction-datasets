@@ -161,6 +161,10 @@ EN_ABBREVIATIONS: Set[str] = {
 	'Sp.',
 	'Sts.',
 	'sts.',
+	'Rev.',
+	'rev.',
+	'ver.',
+	'Ver.',
 }
 
 MISPARSED_AS_VERBS: Set[str] = {
@@ -171,6 +175,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'o', # don't know, but it's clearly wrong
 	'in', # don't know, but it's clearly wrong
 	'erinnert', # german
+	'erinnern', # german
 	'braucht', # german
 	'te', # german
 	'up', # not actually wrong, but misparsed as the verb in "level up"
@@ -186,6 +191,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'wird', # german
 	'migliori', # italian
 	'gegen', # german
+	'haben', # german
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -319,6 +325,51 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'enrcircled', # encircle
 	'enrcircle',
 	'enrcircles',
+	'withnessed', # witness
+	'withnesses',
+	'withness', 
+	'wittnesed', # witness
+	'wittnessed',
+	'wittneses',
+	'wittnesses',
+	'wittnes'
+	'wittnese',
+	'wittness',
+	'knewest', # too old
+	'art',
+	'broughtest',
+	'knoweth',
+	'bringest',
+	'showscase', # showcase
+	'showscased',
+	'showscases',
+	'rseignate', # resign?
+	'rseignates',
+	'rseignated',
+	'mimick', # mimic
+	'mimicks',
+	'enquire', # inquire
+	'enquires',
+	'enquired',
+	'clambe', # clamber/clam?
+	'clamb',
+	'clambs',
+	'manufacturer', # manufacture
+	'manufacturers',
+	'manufacturered',
+	'manufacturerred',
+	'maddes', #???
+	'madde', # made
+	'feaured', # features
+	'feaures',
+	'we', # were?
+	'throughs', # ???
+	'throughed',
+	'roled', # rolled?
+	'role', 
+	'reuss', # ???
+	'consistes', # consist
+	'consiste',
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -329,6 +380,21 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'disclude',
 	'pretente',
 	'council', # counsel
+	'showscase', # showcase
+	'rseignate', # resign?
+	'plat', # plate?
+	'madde', # made
+	'feaure', # feature
+	'evangalise', # evangelize
+	'evangalize',
+	'clambe', # clamber?
+	'ate', # eat
+	'we', # were?
+	'through', # ???
+	'withnesse',
+	'wittnese',
+	'outduele',
+	'erinnern', # german
 }
 
 SALTS_WORDS: Set[str] = {
@@ -614,6 +680,9 @@ BAD_OBJECTS: Set[str] = {
 	'damaged',
 	'diplomatic',
 	'advanced',
+	'famous',
+	'advantageous', # advantages
+	'youngman', # young man
 }
 
 def en_string_conditions(s: str) -> Union[bool,str]:
@@ -661,6 +730,14 @@ def basic_conditions(s: str) -> Union[bool,EDoc]:
 			return False
 		
 		vs = s.main_clause_verbs
+		# ungrammatical sentences without main verbs
+		# or sentence fragments
+		if not vs:
+			return False
+			
+		# disallow conjoined verbs if option set
+		if len(s.main_clause_verbs) > 1 and not conjoined:
+			return False
 		
 		# main verb cannot start with a capital letter
 		# no imperatives or polar questions
@@ -773,13 +850,13 @@ def has_interveners_and_number_agreement_conditions(s: str) -> Union[bool,EDoc]:
 	else:
 		return False	
 
-def no_dist_conditions(s: str) -> Union[bool,EDoc]:
+def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 	'''
 	If the sentence satisfies basic conditions and
 	has no distractor nouns, return the sentence.
 	Else, return False.
 	'''
-	s = basic_conditions(s)
+	s = basic_conditions(s, conjoined)
 	
 	if not s:
 		return False
@@ -804,12 +881,12 @@ def no_dist_conditions(s: str) -> Union[bool,EDoc]:
 		log.warning('\n\n')
 		return False
 
-def question_conditions(s: str) -> Union[bool,EDoc]:
+def question_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 	'''
 	No distractors, plus no presubject modifiers.
 	Also main verbs must not be an aux. (We want do-support.)
-	'''	
-	s = no_dist_conditions(s)
+	'''
+	s = no_dist_conditions(s, conjoined)
 	if not s:
 		return False
 	

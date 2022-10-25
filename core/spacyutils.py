@@ -82,8 +82,8 @@ class EToken():
 			self.pos_			= token.pos_
 			self.morph 			= token.morph
 			self.lemma_			= WRONG_LEMMAS.get(token.text, token.lemma_)
-			self.head 			= token.head
 			self.dep_ 			= token.dep_
+			self.head 			= EToken(token.head) if not self.dep_ == 'ROOT' else self
 			self.is_sent_start 	= token.is_sent_start
 			self.ent_iob_		= token.ent_iob_
 			self.i 				= token.i
@@ -303,6 +303,11 @@ class EToken():
 	def object(self) -> Union['EToken',List['EToken']]:
 		'''Return the object(s) of the token.'''
 		o = [t for t in self.children if t.dep_ in OBJ_DEPS]
+		s = self.subject
+		if not isinstance(s,list):
+			s = [s]
+		
+		o = [t for t in o if not any(t.i == t2.i for t2 in s)]
 		if len(o) == 1:
 			return o[0]
 		elif len(o) > 1:
@@ -313,11 +318,23 @@ class EToken():
 		'''Return the subject(s) of the token.'''
 		s = [t for t in self.children if t.dep_ in SUBJ_DEPS]
 		
+		# in passives, spaCy parses the participle as the main verb
+		# and assigns it the dependency to the subject
+		# however, we return the main verb as the aux
+		# in this case, we want to get the subject spaCy assigned
+		# to the participle instead, so we go through the head
+		# of the auxpass = main_verb
+		if not s:
+			s = [t for t in EToken(self.head).children if t.dep_ in SUBJ_DEPS]
+		
 		if not s and self.is_aux:
 			s = EToken(self.head).subject
-		elif (
+		
+		if not isinstance(s,list):
+			s = [s]
+		
+		if (
 			all(t.dep_ == 'expl' for t in s) and 				# there
-			self.text == 'used' and 							# used
 			any(t.dep_ == 'xcomp' for t in self.children) and 	# to
 			any(t.lemma_ == 'be' for t in self.children) 		# be
 		):
@@ -327,6 +344,13 @@ class EToken():
 					t for t in self.children if t.text == 'be'
 				][0].children
 					if t.dep_ in SUBJ_DEPS
+			])
+		elif (
+			all(t.dep_ == 'expl' for t in s) and 
+			not self.lemma_ == 'be'
+		):  # misparsed "there" with unaccusatives
+			s.extend([
+				t for t in self.children if t.dep_ in OBJ_DEPS	
 			])
 		
 		if not isinstance(s,list):
@@ -868,30 +892,10 @@ class EDoc():
 	def main_subject(self) -> Union[EToken,List[EToken]]:
 		'''Gets the main clause subject of the SDoc if one exists.'''
 		v = self.main_verb
-		s = [t for t in v.children if t.dep_ in SUBJ_DEPS]
+		s = v.subject
 		
-		# there used to be [subj]
-		if (
-			all(t.dep_ == 'expl' for t in s) and 			# there
-			v.text == 'used' and 							# used
-			any(t.dep_ == 'xcomp' for t in v.children) and 	# to
-			any(t.lemma_ == 'be' for t in v.children) 		# be
-		):
-			s.extend([
-				t for t in [
-					t for t in v.children if t.text == 'be'
-				][0].children
-					if t.dep_ in SUBJ_DEPS
-			])
-		
-		# in passives, spaCy parses the participle as the main verb
-		# and assigns it the dependency to the subject
-		# however, we return the main verb as the aux
-		# in this case, we want to get the subject spaCy assigned
-		# to the participle instead, so we go through the head
-		# of the auxpass = main_verb
-		if not s:
-			s = [t for t in EToken(v.head).children if t.dep_ in SUBJ_DEPS]
+		if not isinstance(s,list):
+			s = [s]
 		
 		s.extend(self._get_conjuncts(s[0]))
 		
@@ -913,7 +917,7 @@ class EDoc():
 	@property
 	def main_subject_number(self) -> str:
 		'''Gets the number feature of the main clause subject.'''
-		s = self.main_subject	
+		s = self.main_subject
 		
 		if self.main_verb.get_morph('Number'):
 			# trust the inflection of the verb if it exists
@@ -1151,18 +1155,23 @@ class EDoc():
 	@property
 	def main_object(self) -> Union[EToken,List[EToken]]:
 		v = self.main_verb
-		s = [t for t in v.children if t.dep_ in OBJ_DEPS]
+		s = v.object
+		
+		if not isinstance(s,list):
+			s = [s]
+		
 		if s:
 			s.extend(self._get_conjuncts(t) for t in s[:])
 			s = flatten(s)
 		
-		if len(s) == 1:
-			s = s[0]
-		
-		if isinstance(s,list):
-			s = sorted(s, key=lambda t: t.i)
-		
-		return s
+		if s:
+			if len(s) == 1:
+				s = s[0]
+			
+			if isinstance(s,list):
+				s = sorted(s, key=lambda t: t.i)
+			
+			return s
 	
 	@property
 	def main_object_determiner(self) -> Union[EToken,List[EToken]]:
@@ -1260,6 +1269,11 @@ class EDoc():
 		
 		vs = self.main_clause_verbs
 		
+		# ungrammatical sentences
+		# lack a main clause verb
+		if not vs:
+			return False
+		
 		# spaCy sometimes misparses non-restrictive
 		# relative clauses as conjunctions
 		# get the subject of each verb and ensure it's
@@ -1287,7 +1301,10 @@ class EDoc():
 						)
 						return False
 				
-				ss.append(next_v.subject)
+				if self._can_be_inverted_subject(next_v.subject):
+					ss.append(next_v.subject)
+				else:
+					return False
 		
 		ss = flatten(ss)
 		ds = flatten([s.determiner for s in ss if s.determiner is not None])
@@ -1429,9 +1446,9 @@ class EDoc():
 		):	# clausal subjects/object are not correctly associated
 			# with a Singular number feature
 			return 'Sing'
-		elif s.text in ['Some', 'some'] and s.dep_ != 'det':
-			# when 'some' is a det, it can be singular or plural
-			# but when it is the head noun, it should be plural
+		elif s.text in ['Some', 'some', 'Any', 'any'] and s.dep_ != 'det':
+			# when 'some' or 'any' are dets, they can be singular or plural
+			# but when they are the head noun, it should be plural
 			return 'Plur'
 		elif s.text in ALL_PARTITIVES:
 			# special logic here, so a separate function
@@ -1517,7 +1534,7 @@ class EDoc():
 			'''
 			if s.get_morph('Number'):
 				return s.get_morph('Number')
-			elif s.text in ['Some', 'some']:
+			elif s.text in ['Some', 'some', 'Any', 'any']:
 				# we end up here if we have 'some' as a subject
 				# of a copular sentence. like "some were discarded buses,
 				# rais carriages."
@@ -1606,6 +1623,15 @@ class EDoc():
 					log.warning(f'No token in {s} has a number feature! ({self})')
 					log.warning("I'm going to guess it's singular, but this may be wrong!")
 					return 'Sing'
+		elif tag_counts['expl'] == 1 and any(tag_counts[dep] == 1 for dep in OBJ_DEPS):
+			# this happens when spaCy has misparsed an unaccusative with there inversion
+			d = [d for d in OBJ_DEPS if tag_counts[d] == 1 and not d == 'expl']
+			s = [t for t in s if t.dep_ in d]
+			if len(s) == 1:
+				s = s[0]
+				return self._get_noun_number(s)
+			else:
+				return self._get_list_noun_number(s)
 		else:
 			# conjoined subjects (i.e., and, or, etc.)
 			return 'Plur'
@@ -1646,7 +1672,7 @@ class EDoc():
 		# get conjoined verbs and reinflect those too
 		# this can be easily turned off
 		if conjoined:
-			conj_vs = [t for t in v.children if t.dep_ == 'conj' and (t.can_be_inflected)]
+			conj_vs = [t for t in v.children if t.dep_ == 'conj' and t.can_be_inflected]
 			# don't reinflect conjoined verbs if they have their own subjects
 			conj_vs = [
 				[v]
@@ -1671,7 +1697,7 @@ class EDoc():
 		if any(
 			v.lemma_ == 'do' and 								# did
 			v.is_aux and 										# Q
-			v.head.text in ['use', 'used'] and 					# used/use
+			v.head.text in ['use', 'used'] and					# used/use
 			any(t.dep_ == 'xcomp' for t in v.head.children) and	# to
 			tense == PRESENT									# cannot make present tense
 			for v in all_vs
@@ -1913,7 +1939,16 @@ class EDoc():
 			# need to invert them. if not, we don't
 			# need to do inversion, just reinflection
 			v_has_subject = True
-			s = v.subject
+			s = [t for t in v.children if t in SUBJ_DEPS]
+			
+			# if we have a chain of auxes, we need to step up through them
+			# and see if the final verb has a subject
+			if not s and v.is_aux:
+				next_v = v
+				while next_v.head.is_aux:
+					next_v = next_v.head
+				
+				s = [t for t in next_v.head.children if t.dep_ in SUBJ_DEPS]
 			
 			if not (s and self._can_be_inverted_subject(s)):
 				v_has_subject = False
@@ -1926,12 +1961,12 @@ class EDoc():
 			# save this so we can put the preceding token here
 			v_original_index = v.i
 			
+			aux = self._get_aux(v)
+			aux.whitespace_ = ' '
+			
 			# if the verb has a subject,
 			# do aux inversion or do-support
 			if v_has_subject:
-				aux = self._get_aux(v)
-				aux.whitespace_ = ' '
-				
 				# inflect the aux
 				if aux.can_be_inflected:
 					number = v.get_morph('Number')
@@ -2073,18 +2108,18 @@ class EDoc():
 			if 	t.tag_ not in ['VBG', 'VBN', 'VB', 'VBZ'] or 
 				t.get_morph('VerbForm') == 'Inf'
 		):
-			clausal_subject_text = ' '.join(
-				[
-					t.text 
-					for t in sorted([t for t in s[0].children] + s, key=lambda t: t.i)
-				]
-			)
-			
-			log.info(
-				f'Cannot covert "{self}" to a polar question, because '
-				 'it has a clausal subject with a non-gerund verb '
-				f'("{clausal_subject_text}")!'
-			)
+			# clausal_subject_text = ' '.join(
+			# 	[
+			# 		t.text 
+			# 		for t in sorted([t for t in s[0].children] + s, key=lambda t: t.i)
+			# 	]
+			# )
+			# 
+			# log.info(
+			# 	f'Cannot convert "{self}" to a polar question, because '
+			# 	 'it has a clausal subject with a non-gerund verb '
+			# 	f'("{clausal_subject_text}")!'
+			# )
 			return False
 		
 		return True

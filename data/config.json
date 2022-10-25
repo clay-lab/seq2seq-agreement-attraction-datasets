@@ -6,7 +6,26 @@
 				"en_wiki-nodist-pres-and-past": {
 					"conditions_fun": "core.language_funs.en.grammar_funs.no_dist_conditions",
 					"splits": {
-						"train": 100000,
+						"train": 10000,
+						"dev"  : 1000
+					},
+					"splits_funs": {
+						"train": "core.language_funs.en.grammar_funs.pres_or_past",
+						"dev"  : "core.language_funs.en.grammar_funs.pres_or_past"
+					},
+					"splits_funs_kwargs": {
+						"train": {"pres_p": 0.5},
+						"dev"  : {"pres_p": 0.5}
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata"
+				},
+				"en_wiki-nodist-noconj-pres-and-past": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.no_dist_conditions",
+					"conditions_fun_kwargs": {
+						"conjoined": false,
+					},
+					"splits": {
+						"train": 10000,
 						"dev"  : 1000
 					},
 					"splits_funs": {
@@ -22,7 +41,26 @@
 				"en_wiki-nodist-ques-and-past": {
 					"conditions_fun": "core.language_funs.en.grammar_funs.question_conditions",
 					"splits": {
-						"train": 100000,
+						"train": 10000,
+						"dev"  : 1000
+					},
+					"splits_funs": {
+						"train": "core.language_funs.en.grammar_funs.ques_or_past",
+						"dev"  : "core.language_funs.en.grammar_funs.ques_or_past"
+					},
+					"splits_funs_kwargs": {
+						"train": {"ques_p": 0.5},
+						"dev"  : {"ques_p": 0.5}
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_metadata"
+				},
+				"en_wiki-nodist-noconj-ques-and-past": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.question_conditions",
+					"conditions_fun_kwargs": {
+						"conjoined": false	
+					},
+					"splits": {
+						"train": 10000,
 						"dev"  : 1000
 					},
 					"splits_funs": {
