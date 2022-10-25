@@ -1157,17 +1157,16 @@ class EDoc():
 		v = self.main_verb
 		s = v.object
 		
-		if not isinstance(s,list):
-			s = [s]
-		
-		if s:
+		if s is not None:
+			if not isinstance(s,list):
+				s = [s]
+			
 			s.extend(self._get_conjuncts(t) for t in s[:])
 			s = flatten(s)
-		
-		if s:
+			
 			if len(s) == 1:
 				s = s[0]
-			
+				
 			if isinstance(s,list):
 				s = sorted(s, key=lambda t: t.i)
 			
@@ -1939,7 +1938,7 @@ class EDoc():
 			# need to invert them. if not, we don't
 			# need to do inversion, just reinflection
 			v_has_subject = True
-			s = [t for t in v.children if t in SUBJ_DEPS]
+			s = [t for t in v.children if t.dep_ in SUBJ_DEPS]
 			
 			# if we have a chain of auxes, we need to step up through them
 			# and see if the final verb has a subject
