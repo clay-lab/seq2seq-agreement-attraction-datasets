@@ -325,11 +325,19 @@ class EToken():
 		# to the participle instead, so we go through the head
 		# of the auxpass = main_verb
 		if not s:
-			s = [t for t in EToken(self.head).children if t.dep_ in SUBJ_DEPS]
+			s = [t for t in self.head.children if t.dep_ in SUBJ_DEPS]
 		
 		if not s and self.is_aux:
-			s = EToken(self.head).subject
+			s = self.head.subject if not self.dep_ == 'ROOT' else None
 		
+		# this means we don't actually have a subject
+		# sentence fragment or misparsed
+		if s is None:
+			return None
+		
+		# now that we know we have something,
+		# check for edge cases involve expletive/locative
+		# inversion
 		if not isinstance(s,list):
 			s = [s]
 		
@@ -353,14 +361,13 @@ class EToken():
 				t for t in self.children if t.dep_ in OBJ_DEPS	
 			])
 		
-		if not isinstance(s,list):
-			s = [s] if s is not None else []
-		
 		# attrs only really count as subjects
 		# if they have a correlate with a real
 		# subject. so if everything is attr,
 		# then we don't really have a subject
 		# but instead a SC or something like that
+		# this also happens if spaCy misparses stylistic
+		# inversion, but that's rare and we don't want it anyway
 		if all(t.dep_ == 'attr' for t in s):
 			return None
 		
@@ -787,7 +794,7 @@ class EDoc():
 		heads 		= [h + 1 if h > index else h for h in heads]
 		
 		tokens.insert(index, token)
-		heads.insert(index, token.head.i)
+		heads.insert(index, token.head.i if not hasattr(token, 'head_i') else token.head_i)
 		
 		vocab 		= self.vocab
 		words 		= [t.text for t in tokens]
@@ -803,7 +810,7 @@ class EDoc():
 		# if we have added to a position preceding a no whitespace,
 		# remove the punctuation of the added token
 		if self[index].whitespace_ == '':
-			spaces 	= [t.whitespace_ == ' ' or t.i != index for t in tokens]
+			spaces 	= [t.whitespace_ == ' ' if t.i != index else False for t in tokens]
 		else:
 			spaces 	= [t.whitespace_ == ' ' for t in tokens]
 		
@@ -882,11 +889,7 @@ class EDoc():
 		Ungrammatical sentences and fragments
 		can fail this.
 		'''
-		try:
-			self.main_subject
-			return True
-		except IndexError:
-			return False
+		return True if self.main_subject else False
 	
 	@property
 	def main_subject(self) -> Union[EToken,List[EToken]]:
@@ -894,6 +897,13 @@ class EDoc():
 		v = self.main_verb
 		s = v.subject
 		
+		# missing subject due to sentence fragments
+		# or misparses
+		if s is None:
+			return None
+		
+		# now that we know we have something
+		# handle extensions and edge cases
 		if not isinstance(s,list):
 			s = [s]
 		
@@ -931,6 +941,8 @@ class EDoc():
 		s = self.main_subject
 		if isinstance(s, list):
 			s_loc = max([subj.i for subj in s]) + 1
+		elif s is None:
+			s_loc = None
 		else:
 			s_loc = s.i + 1
 		
@@ -975,6 +987,9 @@ class EDoc():
 		of the main subject and the main verb.
 		'''
 		s_loc = self._main_subject_index
+		if s_loc is None:
+			return []
+		
 		v_loc = self.main_verb.i
 		interveners = [t for t in self[s_loc:v_loc]]
 		if interveners:
@@ -1119,9 +1134,7 @@ class EDoc():
 			]
 			
 			d_dep_seqs = [
-				'multiple' 
-					if len(dep_seq) > 1
-					else dep_seq[0]
+				','.join(list(dict.fromkeys(dep_seq))) 
 				for dep_seq in d_dep_seqs
 					if len(dep_seq) > 0
 			]
@@ -1286,7 +1299,7 @@ class EDoc():
 				next_v = v
 				limit = 0
 				while not next_v.subject:
-					next_v = EToken(next_v.head)
+					next_v = next_v.head
 					# we've reached the root but still haven't found
 					# a subject, so break
 					if next_v.dep_ == 'ROOT':
@@ -1333,7 +1346,7 @@ class EDoc():
 			tmp_v = v
 			limit = 0
 			while not tmp_v.subject:
-				tmp_v = EToken(tmp_v.head)
+				tmp_v = tmp_v.head
 				limit += 1
 				if limit > LOOK_FOR_SUBJECTS_LIMIT:
 					log.warn(
@@ -1432,7 +1445,10 @@ class EDoc():
 	
 	def _get_noun_number(self, s: EToken, deps: List[str] = SUBJ_DEPS) -> str:
 		'''Handles special logic for getting noun number.'''
-		if isinstance(s,list) and len(s) > 1:
+		if s is None:
+			# default value if no noun is passed
+			return 'Sing'
+		elif isinstance(s,list) and len(s) > 1:
 			# if the subject is a list, there could be many reasons
 			# so we have a special function to deal with that
 			return self._get_list_noun_number(s, deps=deps)
@@ -1619,8 +1635,10 @@ class EDoc():
 					if subj.get_morph('Number'):
 						return subj.get_morph('Number')
 				else:
-					log.warning(f'No token in {s} has a number feature! ({self})')
-					log.warning("I'm going to guess it's singular, but this may be wrong!")
+					log.warning(
+						f'No token in {s} has a number feature! ({self}) '
+					 	f"I'm going to guess it's singular, but this may be wrong!"
+					)
 					return 'Sing'
 		elif tag_counts['expl'] == 1 and any(tag_counts[dep] == 1 for dep in OBJ_DEPS):
 			# this happens when spaCy has misparsed an unaccusative with there inversion
@@ -1953,7 +1971,7 @@ class EDoc():
 				v_has_subject = False
 				next_v = v
 				while not next_v.subject:
-					next_v = EToken(next_v.head)
+					next_v = next_v.head
 				
 				s = next_v.subject
 			

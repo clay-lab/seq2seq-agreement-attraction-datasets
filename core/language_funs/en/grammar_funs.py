@@ -28,6 +28,7 @@ EN_STOP_CHARS: Set[str] = {
 	'is in length', # missing measure
 	'criterionif', # typo
 	'out put', # typo
+	'instalment', # typo
 }
 
 EN_ABBREVIATIONS: Set[str] = {
@@ -165,6 +166,14 @@ EN_ABBREVIATIONS: Set[str] = {
 	'rev.',
 	'ver.',
 	'Ver.',
+	'P.',
+	'p.',
+	'al.',
+	'ibid.',
+	'Incl.',
+	'incl.',
+	'Tr.',
+	'tr.',
 }
 
 MISPARSED_AS_VERBS: Set[str] = {
@@ -370,6 +379,18 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'reuss', # ???
 	'consistes', # consist
 	'consiste',
+	'withs', # ??? 
+	'withed',
+	'with'
+	'wase', # was
+	'starrd', # starred
+	'shrunk', # shrank
+	'recaived', # received
+	'recaives',
+	'recaive',
+	'diversied', # diversify
+	'diversies',
+	'diversy'
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -395,6 +416,10 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'wittnese',
 	'outduele',
 	'erinnern', # german
+	'with', # ???
+	'wase', # was
+	'starrd', # starred
+	'diversie',
 }
 
 SALTS_WORDS: Set[str] = {
@@ -683,6 +708,8 @@ BAD_OBJECTS: Set[str] = {
 	'famous',
 	'advantageous', # advantages
 	'youngman', # young man
+	'wide',
+	'ambitious', # ambitions
 }
 
 def en_string_conditions(s: str) -> Union[bool,str]:
@@ -944,7 +971,7 @@ def salts_conditions(s: str, words: Set[str] = SALTS_WORDS) -> Union[bool,str]:
 	
 	return s
 
-def simple(s: str) -> str:
+def simple(s: str) -> Dict[str,EDoc]:
 	'''Puts a sentence into a dict.'''
 	return {'src': s}
 

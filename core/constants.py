@@ -1531,6 +1531,89 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'singular': {'present': 'cans'},
 		'any':		{'past': 'canned'},
 	},
+	'surveilled': {
+		'singular': {'present': 'surveils'},
+		'plural': 	{'present': 'surveil'},
+		'any':		{
+			'past': 'surveiled',
+			'infinitive': 'surveil',
+		},
+	},
+	'surveil': {
+		'any':		{'past': 'surveiled'},
+	},
+	'surveils': {
+		'any':		{'past': 'surveiled'},
+	},
+	'rivaled': {
+		'singular':	{'present': 'rivals'},
+		'plural':	{'present': 'rival'},
+		'any':		{'infinitive': 'rival'},
+	},
+	'rivals': {
+		'any':		{'past': 'rivaled'},
+	},
+	'rival': {
+		'any':		{'past': 'rivaled'},
+	},
+	'quarterbacked': {
+		'singular': {'present': 'quarterbacks'},
+		'plural': 	{'present': 'quarterback'},
+		'any':		{
+			'past':	'quarterbacked',
+			'infinitive': 'quarterbacked',
+		},
+	},
+	'underbilled': {
+		'singular': {'present': 'underbills'},
+		'plural': 	{'present': 'underbill'},
+		'any':		{'infinitive': 'underbill'},
+	},
+	'channeled': {
+		'singular': {'present': 'channels'},
+		'plural': 	{'present': 'channel'},
+		'any': 		{'infinitive': 'channel'},
+	},
+	'channels': {
+		'any':		{'past': 'channeled'},
+	},
+	'channel': {
+		'any':		{'past': 'channeled'},
+	},
+	'summited': {
+		'singular': {'present': 'summits'},
+		'plural': 	{'present': 'summit'},
+		'any':		{'infinitive': 'summit'},
+	},
+	'summits': {
+		'any':		{'past': 'summited'},
+	},
+	'summit': {
+		'any':		{'past': 'summited'},
+	},
+	'wyed': {
+		'singular': {'present': 'wyes'},
+		'plural':	{'present': 'wye'},
+		'any':		{
+			'past': 'wyed',
+			'infinitive': 'wye',
+		},
+	},
+	'outspent': {
+		'singular':	{'present': 'outspends'},
+		'plural':	{'present': 'outspend'},
+		'any':		{
+			'past': 'outspent',
+			'infinitive': 'outspend',
+		},
+	},
+	'outspends': {
+		'any':		{'past': 'outspent'},
+	},
+	'outspend': {
+		'any':		{'past': 'outspent'},
+	},
+	
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -1625,6 +1708,12 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'distilled': 'distill',
 	'draghunted': 'draghunt',
 	'outdueled': 'outduel',
+	'surveilled': 'surveil',
+	'retasked': 'retask',
+	'readied': 'ready',
+	'underbilled': 'underbill',
+	'outspent': 'outspend',
+	'mindmelded': 'mindmeld',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -1942,6 +2031,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'matte': {'Number': 'Sing'},
 	'Matte': {'Number': 'Sing'},
 	'theca': {'Number': 'Sing'},
+	'Various': {'Number': 'Plur'},
+	'various': {'Number': 'Plur'},
 	'oneself': {'Case': 'Acc', 'Number': 'Sing', 'Person': '3', 'Reflex': 'Yes'},
 	'thee': {'Number': 'Sing', 'Case': 'Acc', 'Person': '2'},
 	'thou': {'Number': 'Sing', 'Case': 'Nom', 'Person': '2'},
@@ -1965,6 +2056,7 @@ NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS: Dict[str,str] = {
 	'ceramic': 'Sing',
 	'occult': 'Sing',
 	'fundamental': 'Sing',
+	'wounded': 'Plur',
 }
 
 INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
@@ -2065,6 +2157,7 @@ EXCLUDE_DEPS: Set[str] = {
 	'dep', # due to misparses
 	'punct', # non-restrictive clauses and some appositives
 	'prt', # particles
+	'mark', # spaCy says "marker" ???
 }
 
 # list of valid distractor structures
