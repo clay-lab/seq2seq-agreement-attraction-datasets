@@ -22,7 +22,7 @@
 				"en_wiki-nodist-noconj-pres-and-past": {
 					"conditions_fun": "core.language_funs.en.grammar_funs.no_dist_conditions",
 					"conditions_fun_kwargs": {
-						"conjoined": false,
+						"conjoined": false
 					},
 					"splits": {
 						"train": 10000,
