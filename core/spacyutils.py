@@ -1,6 +1,6 @@
 '''
 Useful wrappers for editing spaCy
-Some of this is adapted from 
+Some early parts of this are inspired by
 https://github.com/chartbeat-labs/textacy/blob/main/src/textacy/spacier/utils.py
 '''
 import inspect
@@ -180,6 +180,29 @@ class EToken():
 		return {k: v for k, v in vars(self) if not k.startswith('_')}		
 	
 	@property
+	def polarity(self) -> str:
+		'''Is the (verb) token positive or negative?'''
+		if not (self.is_aux or self.is_verb):
+			raise ValueError(f'A {self.pos_} cannot be positive or negative!')
+		
+		if not self.is_aux and any(t for t in self.children if t.dep_ == 'neg'):
+			return 'Neg'
+		elif self.is_aux and any(t for t in self.head.children if t.dep_ == 'neg'):
+			return 'Neg'
+		
+		return 'Pos'
+	
+	@property
+	def is_positive(self):
+		'''Is the verb token positive?'''
+		return self.polarity == 'Pos'
+	
+	@property
+	def is_negative(self):
+		'''Is the verb token negative?'''
+		return self.polarity == 'Neg'
+	
+	@property
 	def rights(self) -> 'EToken':
 		'''Generator for the underlying Token's rights attribute.'''
 		for t in self._token.rights:
@@ -331,8 +354,8 @@ class EToken():
 			s = self.head.subject if not self.dep_ == 'ROOT' else None
 		
 		# this means we don't actually have a subject
-		# sentence fragment or misparsed
-		if s is None:
+		# sentence fragment, misparsed, or ungrammatical
+		if s is None or not s:
 			return None
 		
 		# now that we know we have something,
@@ -435,7 +458,11 @@ class EToken():
 	def renumber(self, number: str) -> None:
 		'''Renumber the token (if it is a noun).'''
 		if not self.can_be_numbered:
-			raise ValueError(f"'{self.text}' can't be renumbered; it's a {self.pos_} ({self.tag_}), not a numbered det/noun!")
+			raise ValueError(
+				f"'{self.text}' can't be renumbered; "
+				f"it's a {self.pos_} ({self.tag_}), "
+				f"not a numbered det/noun!"
+			)
 		
 		if NUMBER_MAP[number] == SG:
 			self.singularize()
@@ -844,6 +871,21 @@ class EDoc():
 	
 	# CONVENIENCE PROPERTIES
 	@property
+	def polarity(self) -> str:
+		'''Is main clause positive or negative?'''
+		return self.main_verb.polarity
+	
+	@property
+	def is_positive(self) -> bool:
+		'''Is the main clause positive?'''
+		return self.polarity == 'Pos'
+	
+	@property
+	def is_negative(self) -> bool:
+		'''Is the main clause negative?'''
+		return self.polarity == 'Neg'
+	
+	@property
 	def root(self) -> EToken:
 		'''Get the root node (i.e., main verb) of s.'''
 		try:
@@ -895,6 +937,9 @@ class EDoc():
 	def main_subject(self) -> Union[EToken,List[EToken]]:
 		'''Gets the main clause subject of the SDoc if one exists.'''
 		v = self.main_verb
+		if v is None:
+			return None
+		
 		s = v.subject
 		
 		# missing subject due to sentence fragments
@@ -986,12 +1031,25 @@ class EDoc():
 		intervene between the head noun(s)
 		of the main subject and the main verb.
 		'''
-		s_loc = self._main_subject_index
-		if s_loc is None:
-			return []
+		if self.main_subject.text in ALL_PARTITIVES:
+			s = self._get_partitive_head_noun(self.main_subject)
+			if isinstance(s,list):
+				s_loc = max(t.i for t in s)
+			else:
+				s_loc = s.i
+			
+			if s_loc is None:
+				return []
+		else:
+			s_loc = self._main_subject_index
+			if s_loc is None:
+				return []
 		
 		v_loc = self.main_verb.i
-		interveners = [t for t in self[s_loc:v_loc]]
+		if s_loc + 1 == v_loc:
+			return []
+		
+		interveners = [t for t in self[s_loc+1:v_loc]]
 		if interveners:
 			interveners += [None]
 			# something is only really an intervener if
@@ -1286,6 +1344,10 @@ class EDoc():
 		if not vs:
 			return False
 		
+		# we're not doing contracted verbs now
+		if any(v.text.startswith("'") for v in vs):
+			return False
+		
 		# spaCy sometimes misparses non-restrictive
 		# relative clauses as conjunctions
 		# get the subject of each verb and ensure it's
@@ -1322,13 +1384,17 @@ class EDoc():
 		ds = flatten([s.determiner for s in ss if s.determiner is not None])
 		if any(s.text == 'which' for s in ss + ds):
 			return False
-			
+		
+		# misparses
+		if any(t.get_morph('VerbForm') == 'Inf' for t in vs):
+			return False
+		
 		# sometimes spaCy identifies a non-finite verb
 		# as a main clause verb, due to misparsing
 		# if the sentence is misparsed, we won't be able
 		# to make a question out of it reliably
-		if any(not t.can_be_inflected for t in vs):
-			cannot_be_inflected = [t for t in vs if not t.can_be_inflected and t.tag_ == 'VBN']
+		if any(not t.can_be_inflected for t in vs if not t.is_aux):
+			# cannot_be_inflected = [t for t in vs if not t.can_be_inflected and t.tag_ == 'VBN']
 			# log.info(
 			# 	f'"{self}" cannot be made into a polar question because it contains '
 			# 	f'non-finite main clause verb(s): "{",".join([t.text for t in cannot_be_inflected])}" '
@@ -1461,10 +1527,12 @@ class EDoc():
 		):	# clausal subjects/object are not correctly associated
 			# with a Singular number feature
 			return 'Sing'
-		elif s.text in ['Some', 'some', 'Any', 'any'] and s.dep_ != 'det':
-			# when 'some' or 'any' are dets, they can be singular or plural
-			# but when they are the head noun, it should be plural
-			return 'Plur'
+		# this isn't actually true, since these can be used with ellipsis
+		# for mass nouns
+		# elif s.text in ['Some', 'some', 'Any', 'any'] and s.dep_ != 'det':
+		# 	# when 'some' or 'any' are dets, they can be singular or plural
+		# 	# but when they are the head noun, it should be plural
+		# 	return 'Plur'
 		elif s.text in ALL_PARTITIVES:
 			# special logic here, so a separate function
 			return self._get_partitive_noun_number(s)
@@ -1607,6 +1675,10 @@ class EDoc():
 		This happens with expletive 'it' subjects, some copular
 		sentences, and sentences with conjoined subjects.
 		'''
+		# failsafe
+		if len(s) == 1:
+			return self._get_noun_number(s[0])
+		
 		tag_counts = Counter([t.dep_ for t in s])
 		# happens with some dummy 'it' subject sentences
 		# and some copular sentences
@@ -1684,27 +1756,33 @@ class EDoc():
 		**kwargs
 	) -> 'EDoc':
 		'''Reinflect the main verb.'''
-		v = self.main_verb
-		
 		# get conjoined verbs and reinflect those too
 		# this can be easily turned off
+		if not self.main_verb.can_be_inflected or self.main_verb.get_morph('VerbForm') == 'Inf':
+			raise ValueError(
+				f'The main verb "{self.main_verb}" of "{self}" is non-finite! '
+				f'This is usually due to the sentence being ungrammatical, '
+				f'or because spaCy misparsed something. Unable to reinflect.'
+			)
+		
 		if conjoined:
-			conj_vs = [t for t in v.children if t.dep_ == 'conj' and t.can_be_inflected]
-			# don't reinflect conjoined verbs if they have their own subjects
-			conj_vs = [
-				[v]
-				if v.can_be_inflected and not v.has_subject
-				else [
-					t for t in v.children 
-					if 	t.dep_ in ['aux', 'auxpass'] and 
-						t.can_be_inflected and 
-						not v.has_subject
-					]
-				for v in conj_vs
-			]
-			all_vs = [v] + [i for s in conj_vs for i in s]
+			# conj_vs = [t for t in v.children if t.dep_ == 'conj' and t.can_be_inflected]
+			# # don't reinflect conjoined verbs if they have their own subjects
+			# conj_vs = [
+			# 	[v]
+			# 	if v.can_be_inflected and not v.has_subject
+			# 	else [
+			# 		t for t in v.children 
+			# 		if 	t.dep_ in ['aux', 'auxpass'] and 
+			# 			t.can_be_inflected and 
+			# 			not v.has_subject
+			# 		]
+			# 	for v in conj_vs
+			# ]
+			# all_vs = [v] + [i for s in conj_vs for i in s]
+			all_vs = self.main_clause_verbs
 		else:
-			all_vs = [v]
+			all_vs = [self.main_verb]
 			
 		# in questions, can't change make present if 
 		# main verb is "used to" (*Does/do he/they use to...?)
@@ -1932,8 +2010,10 @@ class EDoc():
 		if not self.can_form_polar_question:
 			raise ValueError(
 				f'"{self}" cannot form a polar question! '
-				f'This is usually either due to it already being a question, '
-				f'or because spaCy misparsed something.'
+				f'This is usually either due to it already '
+				f'being a question, it being a fragment/ungrammatical, '
+				f'because spaCy misparsed something, or because it has a '
+				f'contracted verb.'
 			)
 		
 		# get the main clause verbs
@@ -1956,7 +2036,20 @@ class EDoc():
 			# need to invert them. if not, we don't
 			# need to do inversion, just reinflection
 			v_has_subject = True
+			
+			# the verb's subject attribute is recursive
+			# but for questions, we don't want that, since
+			# we need to know whether the verb
+			# has its own subject to properly reorder things
+			# so we have to check this manually here
+			# exclude things that only have attrs, because 
+			# those are "objects" of copular verbs (like become)
 			s = [t for t in v.children if t.dep_ in SUBJ_DEPS]
+			if all(t.dep_ == 'attr' for t in s):
+				s = []
+			
+			if len(s) == 1:
+				s = s[0]
 			
 			# if we have a chain of auxes, we need to step up through them
 			# and see if the final verb has a subject
@@ -1977,6 +2070,7 @@ class EDoc():
 			
 			# save this so we can put the preceding token here
 			v_original_index = v.i
+			v_original_whitespace_ = v.whitespace_
 			
 			aux = self._get_aux(v)
 			aux.whitespace_ = ' '
@@ -2031,16 +2125,16 @@ class EDoc():
 					else:
 						# account for passive auxiliaries,
 						# which have existing dependencies
-						try:
-							aux.head = self[v.head.i+added+1]
-						except IndexError:
-							# if the verb is near the end of the sentence
-							# we might be trying to index past the max len
-							# which raises IndexError. to get around this, 
-							# we'll set a special attr that the copy_with_* 
-							# functions will allow to override the actual 
-							# index of the head if it exists
-							aux.head_i = v.head.i+added+1
+						# try:
+						# 	aux.head = self[v.head.i+added+1]
+						# except IndexError:
+						# if the verb is near the end of the sentence
+						# we might be trying to index past the max len
+						# which raises IndexError. to get around this, 
+						# we'll set a special attr that the copy_with_* 
+						# functions will allow to override the actual 
+						# index of the head if it exists
+						aux.head_i = v.head.i+added+1
 							
 						aux.dep_ = v.dep_
 				else:
@@ -2055,9 +2149,28 @@ class EDoc():
 						# index of the head if it exists
 						aux.head_i = aux.head.i+added+1
 				
+				# if we have an n't contraction, we need to get rid of the
+				# whitespace following the aux
+				if v.is_negative:
+					negs = [t for t in v.children if t.dep_ == 'neg']
+					negs += [t for t in v.head.children if t.dep_ == 'neg']
+					if any(t.text == "n't" for t in negs):
+						aux.whitespace_ = ''
+				
 				# insert the auxiliary
 				question =  question._copy_with_add(token=aux, index=aux.i+added)
 				added 	 += 1
+				
+				# if we have an n't contraction, we need to move that with
+				# the inverted aux. also deal with "cannot"
+				if v.is_negative:
+					negs = [t for t in v.children if t.dep_ == 'neg']
+					negs += [t for t in v.head.children if t.dep_ == 'neg']
+					if any(t.text == "n't" for t in negs):
+						neg = [t for t in negs if t.text == "n't"][0]
+						neg.head_i = v.head.i+added+1
+						question = question._copy_with_add(token=neg, index=aux.i+added)
+						added += 1
 			
 			# if the verb was already an aux, we need to remove
 			# the aux in the original position
@@ -2070,12 +2183,44 @@ class EDoc():
 				# form for do-support
 				v.reinflect(tense=INFINITIVE)
 				v.set_morph(Number=None, Tense=None, VerbForm='Inf')
-				try: 
-					v.head = self[v.head.i+added]
-				except IndexError:
-					v.head_i = v.head.i+added
+				# try: 
+				# 	v.head = self[v.head.i+added]
+				# except IndexError:
+				v.head_i = v.head.i+added
 				
 				question = question.copy_with_replace(tokens=v, indices=v.i+added)
+			
+			# if we moved n't, we also need to delete that
+			if v.is_negative:
+				negs = [t for t in v.children if t.dep_ == 'neg']
+				negs += [t for t in v.head.children if t.dep_ == 'neg']
+				if any(t.text == "n't" for t in negs):
+					neg = [t for t in negs if t.text == "n't"][0]
+					neg_index = neg.i
+					question = question._copy_with_remove(indices=neg.i+added, move_deps_to=aux.i+added)
+					added -= 1
+				elif (
+					any(t.text == 'not' for t in negs) and
+					v.is_aux and 
+					v.text == 'can' and
+					v_original_whitespace_ == ''
+				):
+					neg = [t for t in negs if t.text == 'not'][0]
+					prev_i = v_original_index - 1
+					prev_token = self[prev_i]
+					prev_token.whitespace_ = ' '
+					
+					# we need to replace the token before the 
+					# new position of the negation,
+					# not at the original index of that token
+					replace_index = neg.i-1+added
+					
+					# if we're not replacing at the beginning of the sentence,
+					# decapitalize the token if it should be decapitalized
+					if not replace_index == 0 and prev_token.can_be_decapitalized:
+						prev_token.text = prev_token.text[0].lower() + prev_token.text[1:]
+					
+					question = question.copy_with_replace(tokens=prev_token, indices=neg.i-1+added)
 		
 		q_mark, q_mark_i = self._get_question_punctuation(question)
 		

@@ -1613,7 +1613,72 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'outspend': {
 		'any':		{'past': 'outspent'},
 	},
-	
+	'pastored': {
+		'singular': {'present': 'pastors'},
+		'plural':	{'present': 'pastor'},
+		'any':		{'infinitive': 'pastor'},
+	},
+	'pastors': {
+		'any':		{'past': 'pastored'},
+	},
+	'pastor': {
+		'any':		{'past': 'pastored'},
+	},
+	'stank': {
+		'singular': {'present': 'stinks'},
+		'plural': 	{'present': 'stink'},
+		'any':		{
+			'past': 'stank',
+			'infinitive': 'stink',
+		},
+	},
+	'stinks': {
+		'any':		{'past': 'stank'},
+	},
+	'stink': {
+		'any':		{'past': 'stank'},
+	},
+	'totaled': {
+		'singular': {'present': 'totals'},
+		'plural':	{'present': 'total'},
+		'any':		{'infinitive': 'total'},
+	},
+	'totals': {
+		'any':		{'past': 'totaled'},
+	},
+	'total': {
+		'any':		{'past': 'totaled'},
+	},
+	'lambaste': {
+		'singular': {'present': 'lambastes'},
+	},
+	'lambastes': {
+		'singular': {'present': 'lambastes'},
+	},
+	'lambasted': {
+		'singular': {'present': 'lambastes'},
+	},
+	'reawakens': {
+		'any': 		{'past': 'reawakened'},
+	},
+	'reawaken': {
+		'any':		{'past': 'reawakened'},
+	},
+	'spotlighted': { # spotlighted is way more common than spotlit
+		'any':		{'past': 'spotlighted'},
+	},
+	'spotlights': {
+		'any':		{'past': 'spotlighted'},
+	},
+	'spotlight': {
+		'any':		{'past': 'spotlighted'},
+	},
+	'broadcasts': {
+		'any':		{'past': 'broadcast'},
+	},
+	'broadcast': {
+		'any':		{'past': 'broadcast'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -1714,6 +1779,9 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'underbilled': 'underbill',
 	'outspent': 'outspend',
 	'mindmelded': 'mindmeld',
+	'reinvested': 'reinvest',
+	'pastored': 'pastor',
+	'retweeted': 'retweet',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2057,6 +2125,8 @@ NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS: Dict[str,str] = {
 	'occult': 'Sing',
 	'fundamental': 'Sing',
 	'wounded': 'Plur',
+	'bankrupt': 'Plur',
+	'common': 'Sing',
 }
 
 INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
@@ -2116,6 +2186,7 @@ PARTITIVES_WITH_INDEFINITE_ONLY: Set[str] = {
 	'quantity',
 	'ton',
 	'series',
+	'array',
 }
 
 ALL_PARTITIVES: Set[str] = {
@@ -2141,6 +2212,8 @@ STRUCTURE_MAP: Dict[str,str] = {
 	'appos': 		'ParenP',
 	'parataxis': 	'ParenP',
 	'cc': 			'ConjP', # all of them but that guy ...
+	'quantmod':		'QP',
+	'nummod':		'NumP',
 }
 
 # dependencies to exclude when determining agreement attraction
@@ -2158,13 +2231,16 @@ EXCLUDE_DEPS: Set[str] = {
 	'punct', # non-restrictive clauses and some appositives
 	'prt', # particles
 	'mark', # spaCy says "marker" ???
+	'nmod',
+	'nummod',
+	'quantmod',
 }
 
 # list of valid distractor structures
-DISTRACTOR_STRUCTURES: Set[str] = {
-	'CP',
-	'PP',
-}
+# DISTRACTOR_STRUCTURES: Set[str] = {
+# 	'CP',
+# 	'PP',
+# }
 
 # spaCy has problems with some prefixes
 # it thinks they're subjects

@@ -29,7 +29,7 @@ def string_conditions(s: str) -> bool:
 		return False
 	
 	# don't start with an acronym/abbreviation
-	if s.split()[0].isupper():
+	if s.split()[0].isupper() and not len(s.split()[0]) == 1:
 		return False
 	
 	# too long!

@@ -29,9 +29,21 @@ def get_source_metadata(source: Union[Dict,EDoc]) -> Dict:
 		final_intervener_number = source.main_subject_verb_interveners[-1].get_morph('Number')
 	else:
 		final_intervener_number = None
-			
+	
+	# the EDoc gets the number by checking the verb first
+	# to ensure that as much as possible tense reinflection
+	# matches the verb's original tense rather than the number
+	# of the subject head noun.
+	# however, we want to record this from the actual subject
+	# head if possible, since that way it will be easier to track
+	# mismatches (i.e., bad agreement)
+	try:
+		main_subject_number = source.main_subject.get_morph('Number')
+	except AttributeError:
+		main_subject_number = source.main_subject_number
+	
 	metadata = dict(
-				subject_number=source.main_subject_number,
+				subject_number=main_subject_number,
 				object_number=source.main_object_number,
 				source_main_verb=source.main_verb.text,
 				source_main_verb_lemma=source.main_verb.lemma_,

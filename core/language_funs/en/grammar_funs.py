@@ -390,7 +390,39 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'recaive',
 	'diversied', # diversify
 	'diversies',
-	'diversy'
+	'diversy',
+	'encompases', # encompass
+	'encompased',
+	'encompas',
+	'showns', # showed
+	'shown',
+	'showned',
+	'prophecied', # prophesy
+	'prophecies',
+	'prophecy',
+	'inahabits', # inhabit
+	'inahabited',
+	'inahabitted',
+	'inahabit',
+	'ia', # is
+	'old', # hold
+	'olds',
+	'eld'
+	'hed', # had
+	'filmmed', # film
+	'filmms',
+	'filmm',
+	'despatches', # dispatch
+	'despatch',
+	'despatched',
+	'waseducated', # was educated
+	'meert', # meet
+	'forbad', # forbade
+	'seeme', # seem
+	'seemes',
+	'resemblies', # resemble
+	'resemblie',
+	'resemblied'
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -420,6 +452,16 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'wase', # was
 	'starrd', # starred
 	'diversie',
+	'old', # hold
+	'he', # typo of had as hed
+	'filmme',
+	'despatch', # dispatch
+	'waseducate', # typo
+	'meert', # meet
+	'forbad', # forbade
+	'tricarinate', # an adjective
+	'seeme', # seem
+	'resemblie', # resemble
 }
 
 SALTS_WORDS: Set[str] = {
@@ -710,6 +752,11 @@ BAD_OBJECTS: Set[str] = {
 	'youngman', # young man
 	'wide',
 	'ambitious', # ambitions
+	'similar', # ungrammatical sentence
+	'professional', # ungrammatical sentence
+	'blackish', # ungrammatical sentence
+	'numerous', # missing measure word
+	'gestural', # adjective
 }
 
 def en_string_conditions(s: str) -> Union[bool,str]:
@@ -738,7 +785,13 @@ def en_string_conditions(s: str) -> Union[bool,str]:
 	return s
 
 def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
-	'''Basic conditions to clean up noisy data.'''
+	'''
+	Basic conditions to clean up noisy data.
+	The main idea is to make sure we are reasonably
+	certain of getting a complete sentence that is 
+	correctly parsed. It's not foolproof, but it works
+	most of the time, and catches a lot of junk.
+	'''
 	s = en_string_conditions(s)
 	
 	if not s:
@@ -754,6 +807,10 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		
 		# no unidentified words or foreign words
 		if any(t.pos_ == 'X' or t.tag_ == 'FW' for t in s):
+			return False
+		
+		# ungrammatical sentences using a gerund or infinitive as the main verb
+		if not s.main_verb.can_be_inflected or s.main_verb.get_morph('VerbForm') == 'Inf':
 			return False
 		
 		vs = s.main_clause_verbs
@@ -863,7 +920,15 @@ def has_interveners_and_number_agreement_conditions(s: str) -> Union[bool,EDoc]:
 			if v.get_morph('Tense') == 'Past' and not v.lemma_ == 'be':
 				return False
 			
+			# we want interveners that are associated with structures
+			# we are not ignoring
 			if not s.has_main_subject_verb_interveners:
+				return False
+			
+			if not s.main_subject_verb_intervener_structures:
+				return False
+				
+			if len(s.main_subject_verb_interveners) != len(s.main_subject_verb_intervener_structures):
 				return False
 			
 			return s
@@ -893,6 +958,28 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		if s.has_main_subject_verb_distractors:
 			return False
 		
+		# check to make sure the sentences have the correct agreement
+		for v in s.main_clause_verbs:
+			# main clause verbs cannot be infinitives or gerunds
+			if v.get_morph('VerbForm') == 'Inf' or v.tag_ == 'VBG':
+				return False
+			
+			if v.subject.text in ALL_PARTITIVES:
+				subj = s._get_partitive_head_noun(v.subject)
+			else:
+				subj = v.subject
+			
+			if isinstance(subj,list):
+				s_n = s._get_list_noun_number(subj)
+			else:			
+				s_n = subj.get_morph('Number')
+			
+			v_n = v.get_morph('Number')
+			
+			# ungrammatical sentence
+			if s_n is not None and v_n is not None and s_n != v_n:
+				return False
+		
 		# a lot of these weird "The district covered about of Cambridge..."
 		# show up. it's bizarre and consistently odd. I guess the measure
 		# terms were removed from the dataset?
@@ -920,12 +1007,21 @@ def question_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 	if not s.can_form_polar_question:
 		return False
 	
+	vs = s.main_clause_verbs
+	
 	# we want do-support
-	if any(v.is_aux for v in s.main_clause_verbs):
+	if any(v.is_aux for v in vs):
+		return False
+		
+	# no negative sentences
+	# we have to do weird things
+	# with n't vs. not vs. cannot
+	# that we'd rather just avoid
+	if any(v.is_negative for v in vs):
 		return False
 	
 	# we don't want agreement in the baseline sentence
-	if any(v.lemma_ == 'be' for v in s.main_clause_verbs):
+	if any(v.lemma_ == 'be' for v in vs):
 		return False
 	
 	# we want the subject to be the first dependent of the verb in the sentence
