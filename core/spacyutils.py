@@ -1031,12 +1031,15 @@ class EDoc():
 		intervene between the head noun(s)
 		of the main subject and the main verb.
 		'''
-		if self.main_subject.text in ALL_PARTITIVES:
-			s = self._get_partitive_head_noun(self.main_subject)
-			if isinstance(s,list):
-				s_loc = max(t.i for t in s)
-			else:
-				s_loc = s.i
+		s = self.main_subject
+		if not isinstance(s,list):
+			s = [s]
+		
+		if any(t.text in ALL_PARTITIVES for t in s):
+			parts = [t for t in s if t.text in ALL_PARTITIVES]
+			s.extend(self._get_partitive_head_noun(part) for part in parts)
+			
+			s_loc = max(t.i for t in s)
 			
 			if s_loc is None:
 				return []
@@ -1045,8 +1048,11 @@ class EDoc():
 			if s_loc is None:
 				return []
 		
+		# we only consider interveners
+		# that occur before the verb
+		# for now
 		v_loc = self.main_verb.i
-		if s_loc + 1 == v_loc:
+		if s_loc + 1 >= v_loc:
 			return []
 		
 		interveners = [t for t in self[s_loc+1:v_loc]]
