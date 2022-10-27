@@ -935,7 +935,7 @@ def has_interveners_and_number_agreement_conditions(s: str) -> Union[bool,EDoc]:
 			
 			return s
 		except KeyboardInterrupt:
-			sys.exit('User terminated program.')	
+			sys.exit(f'User terminated program on example "{s}".')
 		except Exception as e:
 			log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
 			log.warning(traceback.format_exc())
@@ -1019,7 +1019,7 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		
 		return s
 	except KeyboardInterrupt:
-		sys.exit('User terminated program.')	
+		sys.exit(f'User terminated program on example "{s}".')
 	except Exception:
 		log.warning(f'\n\nExample "{s}" ran into an error!:\n\n')
 		log.warning(traceback.format_exc())
