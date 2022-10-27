@@ -964,15 +964,18 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			if v.get_morph('VerbForm') == 'Inf' or v.tag_ == 'VBG':
 				return False
 			
-			if v.subject.text in ALL_PARTITIVES:
-				subj = s._get_partitive_head_noun(v.subject)
-			else:
-				subj = v.subject
+			subj = v.subject
+			if not isinstance(subj,list):
+				subj = [subj]
 			
-			if isinstance(subj,list):
+			for t in enumerate(subj):
+				if t.text in ALL_PARTITIVES:
+					subj.extend(s._get_partitive_head_noun(t))
+			
+			if len(subj) > 1:
 				s_n = s._get_list_noun_number(subj)
-			else:			
-				s_n = subj.get_morph('Number')
+			else:
+				s_n = subj[0].get_morph('Number')
 			
 			v_n = v.get_morph('Number')
 			
