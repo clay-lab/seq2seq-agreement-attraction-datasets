@@ -21,6 +21,7 @@ from datasets import load_dataset, Dataset
 from collections import defaultdict, Counter
 from collections.abc import Hashable
 
+from .timeout import timeout
 from .spacyutils import nlp, EDoc
 
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
@@ -305,11 +306,12 @@ def get_random_sentence(
 		while '  ' in s:
 			s = s.replace('  ', ' ')
 		
-		try:
-			if (s := conditions_fun(s, *conditions_fun_args, **conditions_fun_kwargs)):
-				e = s
-		except KeyboardInterrupt:
-			sys.exit(f'User terminated program on example "{s}".')
+		with timeout(error_message=f'"{s}" took too long to process!'):
+			try:
+				if (s := conditions_fun(s, *conditions_fun_args, **conditions_fun_kwargs)):
+					e = s
+			except KeyboardInterrupt:
+				sys.exit(f'User terminated program on example "{s}".')
 		
 	return e
 
