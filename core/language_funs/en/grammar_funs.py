@@ -968,7 +968,7 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			if not isinstance(subj,list):
 				subj = [subj]
 			
-			for t in enumerate(subj):
+			for t in subj:
 				if t.text in ALL_PARTITIVES:
 					subj.extend(s._get_partitive_head_noun(t))
 			
