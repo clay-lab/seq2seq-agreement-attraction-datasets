@@ -759,6 +759,8 @@ BAD_OBJECTS: Set[str] = {
 	'gestural', # adjective
 }
 
+MAX_TRIES_TO_FIND_SUBJECT: int = 10
+
 def en_string_conditions(s: str) -> Union[bool,str]:
 	'''Conditions that strings of English must meet.'''
 	if not string_conditions(s):
@@ -975,8 +977,15 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			
 			if not subj:
 				next_v = v
+				tries = 0
 				while not next_v.subject:
 					next_v = next_v.head
+					tries += 1
+					# usually this means the sentence
+					# doesn't have a subject (because it's ungrammatical, 
+					# a fragment, etc.)
+					if tries > MAX_TRIES_TO_FIND_SUBJECT:
+						return False
 				
 				subj = next_v.subject
 			
