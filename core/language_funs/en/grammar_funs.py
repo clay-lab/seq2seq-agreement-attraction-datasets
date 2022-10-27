@@ -964,9 +964,24 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			if v.get_morph('VerbForm') == 'Inf' or v.tag_ == 'VBG':
 				return False
 			
-			subj = v.subject
+			# step up through the tree to find the subject
+			# that should agree with this verb
+			subj = [t for t in v.children if t.dep_ in SUBJ_DEPS]
+			if all(t.dep_ == 'attr' for t in subj):
+				subj = []
+			
+			if len(subj) == 1:
+				subj = subj[0]
+			
+			if not subj:
+				next_v = v
+				while not next_v.subject:
+					next_v = next_v.head
+				
+				subj = next_v.subject
+			
 			if not isinstance(subj,list):
-				subj = [subj]
+				subj = [subj] if subj is not None else []
 			
 			for t in subj:
 				if t.text in ALL_PARTITIVES:
