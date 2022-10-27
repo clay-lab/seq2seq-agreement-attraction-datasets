@@ -160,7 +160,7 @@ def create_seq2seq_dataset(
 						new_dataset[i] = {'translation': {k: str(v) for k, v in pair.items()}}
 						new_metadata[i] = metadata
 					except KeyboardInterrupt:
-						sys.exit('User terminated program.')
+						sys.exit(f'User terminated program on example "{ex}".')
 					except Exception as e:
 						log.warning(f'Example "{ex}" ran into an error!:\n\n')
 						log.warning(traceback.format_exc())
