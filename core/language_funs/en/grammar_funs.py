@@ -878,8 +878,7 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		if isinstance(s.main_subject,list):
 			if s.main_subject[0].text.lower() == 'the':
 				return False
-		else:
-			if s.main_subject.text.lower() == 'the':
+		elif s.main_subject.text.lower() == 'the':
 				return False
 		
 		# if any of the main verbs cannot be inflected, we don't want it
@@ -992,13 +991,21 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			if not isinstance(subj,list):
 				subj = [subj] if subj is not None else []
 			
-			for t in subj:
+			for t in subj[:]:
 				if t.text in ALL_PARTITIVES:
 					p_head = s._get_partitive_head_noun(t)
 					if isinstance(p_head, list):
 						subj.extend(p_head)
 					else:
 						subj.append(p_head)
+				
+			# remove any duplicates
+			deduped_subjs = [subj[0]]
+			for t in subj:
+				if not any(t.i == t2.i for t2 in deduped_subjs):
+					deduped_subjs.append(t)
+			
+			subj = deduped_subjs
 			
 			if len(subj) > 1:
 				s_n = s._get_list_noun_number(subj)
