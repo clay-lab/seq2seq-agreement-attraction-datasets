@@ -1046,7 +1046,8 @@ def question_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 	if any(v.lemma_ == 'be' for v in vs):
 		return False
 	
-	# we want the subject to be the first dependent of the verb in the sentence
+	# we want the main subject to be the first 
+	# dependent of the verb in the sentence
 	subject = s.main_subject
 	if isinstance(subject,list):
 		subject_position = min([t.i for t in subject])
