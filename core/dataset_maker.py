@@ -309,7 +309,7 @@ def get_random_sentence(
 			if (s := conditions_fun(s, *conditions_fun_args, **conditions_fun_kwargs)):
 				e = s
 		except KeyboardInterrupt:
-			sys.exit(f'User exited program on example "{s}".')
+			sys.exit(f'User terminated program on example "{s}".')
 		
 	return e
 
