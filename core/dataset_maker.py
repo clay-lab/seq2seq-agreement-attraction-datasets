@@ -132,7 +132,7 @@ def create_seq2seq_dataset(
 		
 		# how often to update the progress bar
 		# miniters = max(round(n/1000),1)
-		mititers = 1
+		miniters = 1
 		
 		# we don't just shuffle the dataset and choose the first n examples,
 		# because some datasets contain multiple sentences per row. we want
