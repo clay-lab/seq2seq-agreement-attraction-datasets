@@ -1038,6 +1038,7 @@ class EDoc():
 		if any(t.text in ALL_PARTITIVES for t in s):
 			parts = [t for t in s if t.text in ALL_PARTITIVES]
 			s.extend(self._get_partitive_head_noun(part) for part in parts)
+			s = flatten(s)
 			
 			s_loc = max(t.i for t in s)
 			
