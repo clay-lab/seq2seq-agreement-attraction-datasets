@@ -970,7 +970,11 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			
 			for t in subj:
 				if t.text in ALL_PARTITIVES:
-					subj.extend(s._get_partitive_head_noun(t))
+					p_head = s._get_partitive_head_noun(t)
+					if isinstance(p_head, list):
+						subj.extend(p_head)
+					else:
+						subj.append(p_head)
 			
 			if len(subj) > 1:
 				s_n = s._get_list_noun_number(subj)
