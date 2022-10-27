@@ -982,8 +982,8 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 					next_v = next_v.head
 					tries += 1
 					# usually this means the sentence
-					# doesn't have a subject (because it's ungrammatical, 
-					# a fragment, etc.)
+					# doesn't have a subject (because 
+					# it's ungrammatical, a fragment, etc.)
 					if tries > MAX_TRIES_TO_FIND_SUBJECT:
 						return False
 				
