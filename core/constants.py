@@ -42,6 +42,7 @@ EXCLUSION_STRINGS: Set[str] = {
 	'\\',
 	'_',
 	'\n',
+	'\t',
 	'.com',
 	'.gov',
 	'.edu',
