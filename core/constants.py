@@ -68,6 +68,7 @@ EXCLUSION_STRINGS: Set[str] = {
 # by two letters---we are intentionally excluding
 # apostrophes, since they lead to difficulties with inflecting
 # the verb. also no punctuations two in a row
+# also no things that occur only
 EXCLUSION_REGEXES: Set[str] = {
 	r'\w[!\'"#$%&()*+,-./:;<=>?@[\\\]^_`{|}~]\w',
 	r'[!\'"#$%&()*+,-./:;<=>?@[\\\]^_`{|}~]{2}',

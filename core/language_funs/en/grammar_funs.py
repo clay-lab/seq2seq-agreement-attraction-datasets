@@ -31,6 +31,16 @@ EN_STOP_CHARS: Set[str] = {
 	'instalment', # typo
 }
 
+# no things that only occur as prefixes
+# if they are separated from the verb by
+# a space. spaCy does weird things with
+# these that we don't want. this will also
+# exclude co as an abbrevation without a trailing
+# period, but that's acceptable
+EN_EXCLUDE_REGEXES: Set[str] = {
+	r'(re|pre|co|dis|un|mis)\s',
+}
+
 EN_ABBREVIATIONS: Set[str] = {
 	'Prof.',
 	'Blvd.',
@@ -783,6 +793,9 @@ def en_string_conditions(s: str) -> Union[bool,str]:
 		
 		if any(s.endswith(abb) for abb in EN_ABBREVIATIONS):
 			return False
+	
+	if any(re.search(regex, s) for regex in EN_EXCLUDE_REGEXES):
+		return False
 	
 	return s
 

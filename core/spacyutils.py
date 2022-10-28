@@ -365,21 +365,33 @@ class EToken():
 			s = [s]
 		
 		if (
-			all(t.dep_ == 'expl' for t in s) and 				# there
-			any(t.dep_ == 'xcomp' for t in self.children) and 	# to
-			any(t.lemma_ == 'be' for t in self.children) 		# be
+			all(t.dep_ == 'expl' for t in s) and 			# there
+			any(t.dep_ == 'xcomp' for t in self.children) 	# to
 		):
-			# there used to be [subj]
-			s.extend([
-				t for t in [
-					t for t in self.children if t.text == 'be'
-				][0].children
-					if t.dep_ in SUBJ_DEPS
-			])
+			# there used/seems to be/have been [subj]
+			if any(t.lemma_ == 'be' for t in self.children): # be
+				s.extend([
+					t for t in [
+						t for t in self.children if t.lemma_ == 'be'
+					][0].children
+						if t.dep_ in SUBJ_DEPS
+				])
+			elif any(t.is_verb for t in self.children):
+				# unaccusatives with there-inversion embedded under raising
+				# in these cases, the actual inverted subject gets
+				# misparsed as the object. this should not catch anything
+				# else with an object dependency, since there inversion
+				# without be can only happen with unaccusatives to begin with
+				s.extend([
+					t for t in [
+						t for t in self.children if t.is_verb
+					][0].children
+						if t.dep_ in OBJ_DEPS
+				])
 		elif (
 			all(t.dep_ == 'expl' for t in s) and 
 			not self.lemma_ == 'be'
-		):  # misparsed "there" with unaccusatives
+		):  # misparsed "there" with unaccusatives without raising
 			s.extend([
 				t for t in self.children if t.dep_ in OBJ_DEPS	
 			])
@@ -959,7 +971,7 @@ class EDoc():
 			# this is a weird bug spaCy has
 			# about hyphenated verbs
 			if s.text in VERB_PREFIXES:
-				s = [t for t in s.children if t.dep_ in SUBJ_DEPS]
+				s = [t for t in s.children if t.dep_ in SUBJ_DEPS.union({'compound'})]
 				s.extend(self._get_conjuncts(s[0]))
 				if len(s) == 1:
 					s = s[0]
