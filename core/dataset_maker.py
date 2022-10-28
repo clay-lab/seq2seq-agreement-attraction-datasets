@@ -22,6 +22,7 @@ from collections import defaultdict, Counter
 from collections.abc import Hashable
 
 from .timeout import timeout
+from .constants import SPACE_CHARS
 from .spacyutils import nlp, EDoc
 
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
@@ -299,8 +300,9 @@ def get_random_sentence(
 		r2 = int(random.random() * (len(ex)-1))
 		s  = ex[r2]
 		
-		# replace nbsp
-		s = s.replace(chr(160), ' ')
+		# replace special space characters
+		for c in SPACE_CHARS:
+			s = s.replace(c, ' ')
 		
 		# spaCy doesn't handle extra spaces well
 		while '  ' in s:

@@ -17,6 +17,20 @@ from word2number import w2n
 MIN_SENTENCE_LENGTH_IN_CHARS: int = 2
 MAX_SENTENCE_LENGTH_IN_WORDS: int = 50
 
+SPACE_CHARS: Set[str] = {
+	chr(8202),
+	chr(8198),
+	chr(8239),
+	chr(8201),
+	chr(8197),
+	chr(160),
+	chr(8200),
+	chr(8196),
+	chr(8194),
+	chr(8199),
+	chr(8195),
+}
+
 EXCLUSION_STRINGS: Set[str] = {
 	';', 
 	'"',
