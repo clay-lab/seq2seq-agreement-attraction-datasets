@@ -1256,7 +1256,7 @@ class EDoc():
 			
 			if len(s) == 1:
 				s = s[0]
-				
+			
 			if isinstance(s,list):
 				s = sorted(s, key=lambda t: t.i)
 			
@@ -1663,9 +1663,13 @@ class EDoc():
 			here. Return the number of the token if it exists,
 			otherwise assume singular.
 			'''
+			d = s.determiner
+			if not isinstance(d,list):
+				d = [d] if d is not None else []
+			
 			if (
 				s.text in ['number'] and 
-				s.determiner.get_morph('Definite') == 'Ind' and
+				any(t.get_morph('Definite') == 'Ind' for t in d) and
 				any(t.text == 'of' for t in s.children)
 			):
 				# number is special: it can only be used as
@@ -1693,29 +1697,28 @@ class EDoc():
 				# gerunds and nominalized verbs are singular
 				return 'Sing'
 			elif (
-				s.determiner and
-				isinstance(s.determiner,list) and
-				any(t for t in s.determiner if t.tag_ in DET_TAGS) and
-				[t for t in s.determiner if t.tag_ in DET_TAGS][0].get_morph('Number') and
-				not [t for t in s.determiner if t.tag_ in DET_TAGS][0] in ALL_PARTITIVES
+				d and
+				any(t for t in d if t.tag_ in DET_TAGS) and
+				[t for t in d if t.tag_ in DET_TAGS][0].get_morph('Number') and
+				not [t for t in d if t.tag_ in DET_TAGS][0] in ALL_PARTITIVES
 			):	# this happens with "all the ...", which tags 'all' as 'PDT'
 				# we also want to account for single cases of 'all ...', where it is partitive,
 				# so don't use a determiner if it is a partitive, even if it has a number feature
 				# in this case, we want to treat all as a partitive and NOT use its number
 				# as the number of the subject
-				return [t for t in s.determiner if t.tag_ in DET_TAGS][0].get_morph('Number')
-			elif (
-				s.determiner and 
-				not isinstance(s.determiner,list) and 
-				s.determiner.get_morph('Number') and 
-				s.determiner.tag_ in DET_TAGS and 
-				not s.determiner.text in ALL_PARTITIVES
-			):	# if there is a helpful determiner that isn't a list
-				# that has a number feature (i.e., 'these')
-				# and it isn't a partitive (since some partitives
-				# have default number features, which shouldn't override
-				# the noun's number)
-				return s.determiner.get_morph('Number')
+				return [t for t in d if t.tag_ in DET_TAGS][0].get_morph('Number')
+			# elif (
+			# 	s.determiner and 
+			# 	not isinstance(s.determiner,list) and 
+			# 	s.determiner.get_morph('Number') and 
+			# 	s.determiner.tag_ in DET_TAGS and 
+			# 	not s.determiner.text in ALL_PARTITIVES
+			# ):	# if there is a helpful determiner that isn't a list
+			# 	# that has a number feature (i.e., 'these')
+			# 	# and it isn't a partitive (since some partitives
+			# 	# have default number features, which shouldn't override
+			# 	# the noun's number)
+			# 	return s.determiner.get_morph('Number')
 			else:
 				log.warning(
 					f'No number feature for "{s}" was found in "{self}"! '
@@ -1723,7 +1726,7 @@ class EDoc():
 				)
 				return 'Sing'
 		
-		if s.text in ALL_PARTITIVES:	
+		if s.text in ALL_PARTITIVES:
 			head_noun = self._get_partitive_head_noun(s)
 			if head_noun:
 				return process_head_noun(head_noun)
