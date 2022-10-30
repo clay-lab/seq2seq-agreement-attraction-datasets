@@ -40,7 +40,17 @@ def get_source_metadata(source: Union[Dict,EDoc]) -> Dict:
 	try:
 		main_subject_number = source.main_subject.get_morph('Number')
 	except AttributeError:
+		main_subject_number = None 
+	
+	# fall back to the reported number if one doesn't exist for the noun itself
+	if main_subject_number is None:
 		main_subject_number = source.main_subject_number
+	
+	# if we still don't have one, 
+	# mimic the default behavior when no subject number is found,
+	# since this is usually right
+	if main_subject_number is None:
+		main_subject_number = 'Sing'
 	
 	metadata = dict(
 				subject_number=main_subject_number,

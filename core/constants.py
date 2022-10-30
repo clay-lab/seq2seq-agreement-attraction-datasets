@@ -16,6 +16,7 @@ from word2number import w2n
 
 MIN_SENTENCE_LENGTH_IN_CHARS: int = 2
 MAX_SENTENCE_LENGTH_IN_WORDS: int = 50
+MIN_SENTENCE_LENGTH_IN_WORDS: int = 3
 
 SPACE_CHARS: Set[str] = {
 	chr(8202),
@@ -1695,6 +1696,52 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'broadcast': {
 		'any':		{'past': 'broadcast'},
 	},
+	'handmade': {
+		'singular': {'present': 'handmakes'},
+		'plural': 	{'present': 'handmake'},
+		'any':		{
+			'past': 'handmade',
+			'infinitive': 'handmake',
+		},
+	},
+	'handmakes': {
+		'any':		{'past': 'handmade'},
+	},
+	'handmake': {
+		'any':		{'past': 'handmade'},
+	},
+	'interfingered': {
+		'any':		{'past': 'interfingered'},
+	},
+	'interfingers': {
+		'any':		{'past': 'interfingered'},
+	},
+	'interfinger': {
+		'any':		{'past': 'interfingered'},
+	},
+	'unzoned': {
+		'singular': {'present': 'unzones'},
+		'plural': 	{'present': 'unzone'},
+		'any':		{
+			'past': 'unzoned',
+			'infinitive': 'unzone',
+		},
+	},
+	'trialled': { # the one time it doesn't love doubled ls
+		'singular': {'present': 'trials'},
+		'plural': 	{'present': 'trial'},
+		'any':		{
+			'past': 'trialled',
+			'infinitive': 'trial',
+		},
+	},
+	'simulcasts': {
+		'any':		{'past': 'simulcast'},
+	},
+	'simulcast': {
+		'any':		{'past': 'simulcast'},
+	},
+	
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -1798,6 +1845,13 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'reinvested': 'reinvest',
 	'pastored': 'pastor',
 	'retweeted': 'retweet',
+	'handmade': 'handmake',
+	'rejigged': 'rejig',
+	'interfingered': 'interfinger',
+	'coauthored': 'coauthor',
+	'deputied': 'deputy',
+	'deputies': 'deputy',
+	'efforted': 'effort',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -1888,6 +1942,20 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 				t.subject.text.lower() == 'thou' 
 				if not isinstance(t.subject,list) 
 				else any(word.text.lower() == 'thou' for word in t.subject)
+			)
+	},
+	'fit': {
+		'any':		{'past': 'fitted'},
+		'condition': (
+				lambda t:
+					any(word.text == 'out' for word in t.children)
+			)
+	},
+	'fits': {
+		'any':		{'past': 'fitted'},
+		'condition': (
+				lambda t:
+					any(word.text == 'out' for word in t.children)
 			)
 	},
 }
@@ -2120,6 +2188,11 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'oneself': {'Case': 'Acc', 'Number': 'Sing', 'Person': '3', 'Reflex': 'Yes'},
 	'thee': {'Number': 'Sing', 'Case': 'Acc', 'Person': '2'},
 	'thou': {'Number': 'Sing', 'Case': 'Nom', 'Person': '2'},
+	'Thou': {'Number': 'Sing', 'Case': 'Nom', 'Person': '2'},
+	'shiurim': {'Number': 'Plur'},
+	'Shiurim': {'Number': 'Plur'},
+	'Heteroptera': {'Number': 'Plur'},
+	'heteroptera': {'Number': 'Plur'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 
@@ -2143,6 +2216,7 @@ NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS: Dict[str,str] = {
 	'wounded': 'Plur',
 	'bankrupt': 'Plur',
 	'common': 'Sing',
+	'tributary': 'Sing',
 }
 
 INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
@@ -2198,7 +2272,10 @@ PARTITIVES_WITH_INDEFINITE_ONLY: Set[str] = {
 	'amount',
 	'group',
 	'lot',
-	'number',
+	'number', 
+	# n.b. number and lot are weird: a number of ... 
+	# is always plural (if used as a partitive)
+	# but others here aren't
 	'quantity',
 	'ton',
 	'series',

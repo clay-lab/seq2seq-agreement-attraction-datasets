@@ -1481,13 +1481,42 @@ class EDoc():
 			if any(t.text == 'of' for t in t.children):
 				head_noun = [t for t in t.children if t.text == 'of'][0]
 				head_noun = list(head_noun.children)
+				# X of the most Y of the Z, where Y is an ADJ
+				# we only do this for partitives, because otherwise
+				# it is ambiguous (e.g., "The most notable of the people" could
+				# refer to one person or to many, but "Some of the most notable of the people"
+				# can only be plural)
+				# if (
+				# 	all(t.pos_ == 'ADJ' for t in head_noun) and 
+				# 	(
+				# 		any(w.text == 'most' for t in head_noun for w in t.children) or
+				# 		any(t.get_morph('Degree') == 'Sup' for t in head_noun)
+				# 	)
+				# ):
+				# 	if any(w.text == 'of' for t in head_noun for w in t.children):
+				# 		head_noun = [w for t in head_noun for w in t.children if w.text == 'of'][0]
+				# 		head_noun = list(head_noun.children)
+				# 	else:
+				# 		head_noun = [t]
+				
 				for t in head_noun[:]:
 					head_noun.extend(self._get_conjuncts(t))
 			else:
 				head_noun = t
 			
-			return head_noun
+			if isinstance(head_noun,list) and len(head_noun) == 1:
+				# this is tricky: 
+				#	we want to properly deal with things like "Some of the smartest of the group" (plur)
+				# 	and "Some of the cleanest "
+				# if head_noun[0].text in ALL_PARTITIVES and any(t.text == 'of' for t in head_noun[0].children):
+				# 	# we land here in weird cases like
+				# 	# "some of the smartest of the group"
+				# 	return t
+				# else:
+				return head_noun[0]
 			
+			return head_noun
+		
 		if t.text in PARTITIVES_WITH_OF:
 			return get_of_head_noun(t)
 						
@@ -1634,7 +1663,26 @@ class EDoc():
 			here. Return the number of the token if it exists,
 			otherwise assume singular.
 			'''
-			if s.get_morph('Number'):
+			if (
+				s.text in ['number'] and 
+				s.determiner.get_morph('Definite') == 'Ind' and
+				any(t.text == 'of' for t in s.children)
+			):
+				# number is special: it can only be used as
+				# plurals when it is the head noun of a partitive
+				# this occurs when there is an "of" phrase, but no number
+				# information can be found inside of it (e.g., "a number of the most
+				# prominent...")
+				return 'Plur'
+			elif (
+				s.pos_ == 'ADJ' and
+				(
+					any(t.text == 'most' for t in s.children) or
+					s.get_morph('Degree') == 'Sup'
+				)
+			): 	# a number of the most notable, some of the most notable ...
+				return 'Plur'
+			elif s.get_morph('Number'):
 				return s.get_morph('Number')
 			elif s.text in ['Some', 'some', 'Any', 'any']:
 				# we end up here if we have 'some' as a subject
@@ -1675,7 +1723,7 @@ class EDoc():
 				)
 				return 'Sing'
 		
-		if s.text in ALL_PARTITIVES:
+		if s.text in ALL_PARTITIVES:	
 			head_noun = self._get_partitive_head_noun(s)
 			if head_noun:
 				return process_head_noun(head_noun)
@@ -1714,20 +1762,23 @@ class EDoc():
 			# in this case, we just go with the verb number if possible
 			# since that is less likely to be errorful.
 			# otherwise, choose the first number feature that exists
-			# in a subject noun. If none exists, raise ValueError
+			# in a subject noun. If none exists, use singular as a default
 			else:
+				# we only trust the verb number if we have a subject noun
+				# since objects don't agree
+				if deps == SUBJ_DEPS:
+					if self.main_verb.get_morph('Number'):
+						return self.main_verb.get_morph('Number')
+					
 				if s[0].text in ALL_PARTITIVES:
 					return self._get_partitive_noun_number(s[0])
-				
-				if self.main_verb.get_morph('Number'):
-					return self.main_verb.get_morph('Number')
 				
 				for subj in s:
 					if subj.get_morph('Number'):
 						return subj.get_morph('Number')
 				else:
 					log.warning(
-						f'No token in {s} has a number feature! ({self}) '
+						f'No token in "{s}" has a number feature! ({self}) '
 					 	f"I'm going to guess it's singular, but this may be wrong!"
 					)
 					return 'Sing'
@@ -2153,8 +2204,7 @@ class EDoc():
 						# we'll set a special attr that the copy_with_* 
 						# functions will allow to override the actual 
 						# index of the head if it exists
-						aux.head_i = v.head.i+added+1
-							
+						aux.head_i = v.head.i+added+1	
 						aux.dep_ = v.dep_
 				else:
 					try:

@@ -9,6 +9,7 @@ from ..constants import (
 	VALID_SENTENCE_ENDING_CHARS,
 	DELIMITERS,
 	MAX_SENTENCE_LENGTH_IN_WORDS,
+	MIN_SENTENCE_LENGTH_IN_WORDS,
 	MIN_SENTENCE_LENGTH_IN_CHARS,
 	EXCLUSION_REGEXES
 )
@@ -34,6 +35,9 @@ def string_conditions(s: str) -> bool:
 	
 	# too long!
 	if len(s.split()) > MAX_SENTENCE_LENGTH_IN_WORDS:
+		return False
+	
+	if len(s.split()) < MIN_SENTENCE_LENGTH_IN_CHARS:
 		return False
 	
 	# must not contain a semicolon (i.e., two sentences)

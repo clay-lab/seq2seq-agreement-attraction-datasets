@@ -29,6 +29,7 @@ EN_STOP_CHARS: Set[str] = {
 	'criterionif', # typo
 	'out put', # typo
 	'instalment', # typo
+	'DThat', # typo
 }
 
 # no things that only occur as prefixes
@@ -38,7 +39,8 @@ EN_STOP_CHARS: Set[str] = {
 # exclude co as an abbrevation without a trailing
 # period, but that's acceptable
 EN_EXCLUDE_REGEXES: Set[str] = {
-	r'(re|pre|co|dis|un|mis)\s',
+	r'(^|\s)(re|pre|co|dis|un|mis|mal)\s',
+	r'(^|\s)(Re|Pre|Co|Dis|Un|Mis|Mal)\s',
 }
 
 EN_ABBREVIATIONS: Set[str] = {
@@ -211,6 +213,8 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'migliori', # italian
 	'gegen', # german
 	'haben', # german
+	'culminans', # species name
+	'geklebt', # german
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -432,7 +436,7 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'seemes',
 	'resemblies', # resemble
 	'resemblie',
-	'resemblied'
+	'resemblied',
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -767,6 +771,9 @@ BAD_OBJECTS: Set[str] = {
 	'blackish', # ungrammatical sentence
 	'numerous', # missing measure word
 	'gestural', # adjective
+	'been', # ungrammatical sentence
+	'currently', # ungrammatical sentence
+	'serial', # ungrammatical sentence
 }
 
 MAX_TRIES_TO_FIND_SUBJECT: int = 10
@@ -786,13 +793,14 @@ def en_string_conditions(s: str) -> Union[bool,str]:
 		return False
 	
 	# English-specific filters
-	if s[-1] == '.':
-		# must not end with a . preceded by a capital letter (happens when splitting on middle names)
-		if s[-2].isupper():
-			return False
-		
-		if any(s.endswith(abb) for abb in EN_ABBREVIATIONS):
-			return False
+	# if s[-1] in VALID_SENTENCE_ENDING_CHARS:
+	# must not end with a punct preceded by a capital letter (happens when splitting on middle names)
+	# we check that the sentence ends with '.', '!', or '?' already in the string conditions function above
+	if s[-2].isupper():
+		return False
+	
+	if any(s.endswith(f' {abb}') for abb in EN_ABBREVIATIONS):
+		return False
 	
 	if any(re.search(regex, s) for regex in EN_EXCLUDE_REGEXES):
 		return False
@@ -914,6 +922,12 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		):
 			return False
 		
+		# a lot of these weird "The district covered about of Cambridge..."
+		# show up. it's bizarre and consistently odd. I guess the measure
+		# terms were removed from the dataset?
+		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in BAD_OBJECTS):
+			return False
+		
 		return s
 	except KeyboardInterrupt:
 		sys.exit(f'User terminated program on example "{s}".')	
@@ -1030,12 +1044,6 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			# ungrammatical sentence
 			if s_n is not None and v_n is not None and s_n != v_n:
 				return False
-		
-		# a lot of these weird "The district covered about of Cambridge..."
-		# show up. it's bizarre and consistently odd. I guess the measure
-		# terms were removed from the dataset?
-		if any(t for t in s if t.dep_ in OBJ_DEPS and t.text in BAD_OBJECTS):
-			return False
 		
 		return s
 	except KeyboardInterrupt:
