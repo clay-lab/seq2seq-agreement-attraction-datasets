@@ -13,7 +13,7 @@ from ...constants import *
 
 log = logging.getLogger(__name__)
 
-EN_STOP_CHARS: Set[str] = {
+EN_STOP_STRINGS: Set[str] = {
 	'-',
 	':',
 	*[str(n) for n in range(10)], # digits, 0–9
@@ -30,6 +30,7 @@ EN_STOP_CHARS: Set[str] = {
 	'out put', # typo
 	'instalment', # typo
 	'DThat', # typo
+	' thevar ', # typo
 }
 
 # no things that only occur as prefixes
@@ -215,6 +216,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'haben', # german
 	'culminans', # species name
 	'geklebt', # german
+	'baute', # german
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -437,6 +439,10 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'resemblies', # resemble
 	'resemblie',
 	'resemblied',
+	'happeed', # happen
+	'happees',
+	'happee',
+	'plaed', # play
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -476,6 +482,14 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'tricarinate', # an adjective
 	'seeme', # seem
 	'resemblie', # resemble
+	# not actually bad, but it does 
+	# weird things with its object in the
+	# "definition" meaning (e.g.,
+	# always singular, even if plural bc of use-mention
+	# distinction. let's just avoid it)
+	'mean',
+	'happee', # happen
+	'plae', # play
 }
 
 SALTS_WORDS: Set[str] = {
@@ -785,7 +799,7 @@ def en_string_conditions(s: str) -> Union[bool,str]:
 	
 	# these characters lead to weird behavior
 	# by spaCy
-	if any(c in s for c in EN_STOP_CHARS):
+	if any(c in s for c in EN_STOP_STRINGS):
 		return False
 	
 	# must be ascii when punctuation is removed

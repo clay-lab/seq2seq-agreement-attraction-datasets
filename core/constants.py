@@ -1741,6 +1741,64 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'simulcast': {
 		'any':		{'past': 'simulcast'},
 	},
+	'unenrolled': {
+		'singular': {'present': 'unenrolls'},
+		'plural':	{'present': 'unenroll'},
+		'any':		{'infinitive': 'unenroll'},
+	},
+	'hyped': {
+		'singular': {'present': 'hypes'},
+		'plural': 	{'present': 'hype'},
+		'any':		{
+			'past': 'hyped',
+			'infinitive': 'hype',
+		},
+	},
+	'forecast': {
+		'any': 		{'past': 'forecast'},
+	},
+	'forecasts': {
+		'any':		{'past': 'forecast'},
+	},
+	'remastered': {
+		'any':		{'past': 'remastered'},
+	},
+	'remasters': {
+		'any':		{'past': 'remastered'},
+	},
+	'remaster': {
+		'any':		{'past': 'remastered'},
+	},
+	'wrought': {
+		'singular': {'present': 'works'},
+		'plural': 	{'present': 'work'},
+		'any':	{
+			'past': 'wrought',
+			'infinitive': 'work',
+		},
+	},
+	'discolored': {
+		'singular': {'present': 'discolors'},
+		'plural': 	{'present': 'discolor'},
+		'any':		{'infinitive': 'discolor'},
+	},
+	'discolors': {
+		'any':		{'past': 'discolored'},
+	},
+	'discolor': {
+		'any':		{'past': 'discolored'},
+	},
+	'parceled': {
+		'singular': {'present': 'parcels'},
+		'plural': 	{'present': 'parcel'},
+		'any':		{'infinitive': 'parcel'},
+	},
+	'parcels': {
+		'any':		{'past': 'parceled'},
+	},
+	'parcel': {
+		'any':		{'past': 'parceled'},
+	},
 	
 }
 
@@ -1852,6 +1910,13 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'deputied': 'deputy',
 	'deputies': 'deputy',
 	'efforted': 'effort',
+	'unenrolled': 'unenroll',
+	'photobombed': 'photobomb',
+	'reteamed': 'reteam',
+	'inflowed': 'inflow',
+	'simulcasted': 'simulcast',
+	'remastered': 'remaster',
+	'backstabbed': 'backstab',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2217,6 +2282,8 @@ NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS: Dict[str,str] = {
 	'bankrupt': 'Plur',
 	'common': 'Sing',
 	'tributary': 'Sing',
+	'unemployed': 'Plur',
+	'infected': 'Plur',
 }
 
 INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
@@ -2225,14 +2292,27 @@ INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
 	'remain': {'Number': 'Plur'},
 }
 
+# maps a partitive to the word used to
+# introduce the real head
+# in most cases, this will be 'of',
+# but this overrides that
+PARTITIVES_P_MAP: Set[str] = {
+	'latest': ['in','of'],
+	'newest': ['in','of'],
+	'recent': ['in','of'],
+}
+
 # partitives are things where the head noun of the subject
 # is NOT what the verb is supposed to agree with
 # note that this does not necessarily cover all actual partitives
-PARTITIVES_WITH_OF: Set[str] = {
+PARTITIVES_WITH_P: Set[str] = {
 	'Some',
 	'some',
 	'Any',
 	'any',
+	'latest',
+	'newest',
+	'recent',
 	# currently an edge case, marked as singular 
 	# even when partitives. though a search shows 
 	# that "neither of the two are" is way
@@ -2245,7 +2325,7 @@ PARTITIVES_WITH_OF: Set[str] = {
 # partitives that optionally take of
 # e.g., all (of) the people (plur),
 # all (of) the water (sing)
-PARTITIVES_OPTIONAL_OF: Set[str] = {
+PARTITIVES_OPTIONAL_P: Set[str] = {
 	'All',
 	'all',
 	'Half',
@@ -2283,8 +2363,8 @@ PARTITIVES_WITH_INDEFINITE_ONLY: Set[str] = {
 }
 
 ALL_PARTITIVES: Set[str] = {
-	*PARTITIVES_WITH_OF,
-	*PARTITIVES_OPTIONAL_OF,
+	*PARTITIVES_WITH_P,
+	*PARTITIVES_OPTIONAL_P,
 	*PARTITIVES_WITH_INDEFINITE_ONLY
 }
 

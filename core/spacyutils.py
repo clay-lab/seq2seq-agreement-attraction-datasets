@@ -1094,8 +1094,8 @@ class EDoc():
 				not t.dep_ in ['compound', 'nmod'] and 
 				not (
 					(
-						t.text in PARTITIVES_WITH_OF.union(PARTITIVES_OPTIONAL_OF) and
-						any(word.text == 'of' for word in t.children)
+						t.text in PARTITIVES_WITH_P.union(PARTITIVES_OPTIONAL_P) and
+						any(word.text in PARTITIVES_P_MAP.get(word.text, ['of']) for word in t.children)
 					) and 
 					(
 						t.text in PARTITIVES_WITH_INDEFINITE_ONLY and
@@ -1110,7 +1110,7 @@ class EDoc():
 						not t.determiner.get_morph('Definite') == 'Ind'
 					) and 
 					(
-						t.text in PARTITIVES_OPTIONAL_OF and 
+						t.text in PARTITIVES_OPTIONAL_P and 
 						any(t.children)
 					)
 				)
@@ -1478,8 +1478,8 @@ class EDoc():
 		
 		def get_of_head_noun(t: EToken) -> Union[EToken,List[EToken]]:
 			'''Get the head noun of a partitive that has of.'''
-			if any(t.text == 'of' for t in t.children):
-				head_noun = [t for t in t.children if t.text == 'of'][0]
+			if any(t.text in PARTITIVES_P_MAP.get(t.text, ['of']) for t in t.children):
+				head_noun = [t for t in t.children if t.text in PARTITIVES_P_MAP.get(t.text, ['of'])][0]
 				head_noun = list(head_noun.children)
 				# X of the most Y of the Z, where Y is an ADJ
 				# we only do this for partitives, because otherwise
@@ -1517,11 +1517,11 @@ class EDoc():
 			
 			return head_noun
 		
-		if t.text in PARTITIVES_WITH_OF:
+		if t.text in PARTITIVES_WITH_P:
 			return get_of_head_noun(t)
 						
-		if t.text in PARTITIVES_OPTIONAL_OF:
-			if any(t.text == 'of' for t in t.children):
+		if t.text in PARTITIVES_OPTIONAL_P:
+			if any(t.text in PARTITIVES_P_MAP.get(t.text, ['of']) for t in t.children):
 				return get_of_head_noun(t)
 			else:
 				return [t for t in t.children if t.pos_ in NOUN_POS_TAGS]
@@ -1670,7 +1670,7 @@ class EDoc():
 			if (
 				s.text in ['number'] and 
 				any(t.get_morph('Definite') == 'Ind' for t in d) and
-				any(t.text == 'of' for t in s.children)
+				any(t.text in PARTITIVES_P_MAP.get(t.text, ['of']) for t in s.children)
 			):
 				# number is special: it can only be used as
 				# plurals when it is the head noun of a partitive
