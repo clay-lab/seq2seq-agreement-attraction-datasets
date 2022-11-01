@@ -58,6 +58,8 @@ ALL_MODELS: Set[str] = {
 
 def create_seq2seq_dataset(
 	dataset: str,
+	data_split: str = 'train',
+	data_field: str = 'text',
 	dataset_args: Tuple = None,
 	dataset_kwargs: Tuple = None,
 	name: str = None,
@@ -134,42 +136,42 @@ def create_seq2seq_dataset(
 		
 		# how often to update the progress bar
 		# miniters = max(round(n/1000),1)
-		miniters = 1
+		# miniters = 1
 		
 		# we don't just shuffle the dataset and choose the first n examples,
 		# because some datasets contain multiple sentences per row. we want
 		# n sentences, which means getting the row, and then splitting and getting a random (good)
 		# sentence from that row. we also don't want repeats that are identical except for case
 		with logging_redirect_tqdm():
-			for i in tqdm(range(n), postfix=f'{split=}', miniters=miniters):
-				ex = ''
-				while not ex:
-					ex = get_random_sentence(
-						dataset['train'],
-						conditions_fun=conditions_fun,
-						conditions_fun_args=conditions_fun_args,
-						conditions_fun_kwargs=conditions_fun_kwargs,
-					)
-					
-					try:
-						# get the metadata first so that we don't set 
-						# the dataset[i] to the bad example
-						# if the error arises in the metadata function.
-						# this way the exception will be raised BEFORE
-						# changing anything
-						pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
-						metadata = metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)
-						new_dataset[i] = {'translation': {k: str(v) for k, v in pair.items()}}
-						new_metadata[i] = metadata
-					except KeyboardInterrupt:
-						sys.exit(f'User terminated program on example "{ex}".')
-					except Exception as e:
-						log.warning(f'Example "{ex}" ran into an error!:\n\n')
-						log.warning(traceback.format_exc())
-						log.warning('\n\n')
-						ex = ''
-						pass
-		
+			ex_generator = generate_random_examples(
+								dataset=dataset[data_split],
+								data_field=data_field,
+								n=n,
+								conditions_fun=conditions_fun,
+								conditions_fun_args=conditions_fun_args,
+								conditions_fun_kwargs=conditions_fun_kwargs,
+							)
+			
+			for ex in tqdm(ex_generator, postfix=f'{split=}', miniters=miniters):				
+				try:
+					# get the metadata first so that we don't set 
+					# the dataset[i] to the bad example
+					# if the error arises in the metadata function.
+					# this way the exception will be raised BEFORE
+					# changing anything
+					pair = splits_funs[split](ex, *splits_funs_args[split], **splits_funs_kwargs[split])
+					metadata = metadata_fun(pair, *metadata_fun_args, **metadata_fun_kwargs)
+					new_dataset[i] = {'translation': {k: str(v) for k, v in pair.items()}}
+					new_metadata[i] = metadata
+				except KeyboardInterrupt:
+					sys.exit(f'User terminated program on example "{ex}".')
+				except Exception as e:
+					log.warning(f'Example "{ex}" ran into an error!:\n\n')
+					log.warning(traceback.format_exc())
+					log.warning('\n\n')
+					ex = ''
+					pass
+	
 		if any(new_dataset):
 			os.makedirs(os.path.join('data', name), exist_ok=True)
 			log.info(f'Writing out dataset {name} ({split}).')
@@ -216,7 +218,7 @@ def create_seq2seq_dataset(
 				pad_len2 = len(str(total))
 				log.info(
 					f'\n\nNumber of sentences with >1 occurrence ({split}): {len(counts)}\n'
-					f'{f"Pr. duplications {split}":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})\n\n'
+					f'{f"Pr. duplications {split}":<{pad_len}}: {v/total:.04f} ({v:>{pad_len2}}/{total})\n'
 				)
 		
 		if any(new_metadata):
@@ -259,8 +261,10 @@ def create_seq2seq_dataset(
 		
 		log.info('\n\n')
 
-def get_random_sentence(
-	dataset: Dataset, 
+def generate_random_examples(
+	dataset: Dataset,
+	data_field: str = 'text',
+	n: int = 1,
 	conditions_fun: Callable = None,
 	conditions_fun_args: Tuple = None,
 	conditions_fun_kwargs: Dict = None,
@@ -283,39 +287,45 @@ def get_random_sentence(
 	conditions_fun_args = () if conditions_fun_args is None else conditions_fun_args
 	conditions_fun_kwargs = {} if conditions_fun_kwargs is None else conditions_fun_kwargs
 	
-	e = ''
-	nrows = len(dataset)-1
-	while not e:
-		# pick a random example/page
-		r  = int(random.random() * nrows)
-		ex = dataset[r]['text']
+	skipped = 0
+	for _ in range(n):
+		e = ''
+		nrows = len(dataset)-1
+		while not e:
+			# pick a random example/page
+			r  = int(random.random() * nrows)
+			ex = dataset[r][data_field]
+			
+			# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
+			ex = [str(s).strip() for s in split_sentences(dataset[r][data_field]).sents]
+			
+			# get a random sentence first and then check
+			# because most sentences will meet our criteria
+			# this way we don't parse all of them. 
+			# this should speed things up considerably
+			r2 = int(random.random() * (len(ex)-1))
+			s  = ex[r2]
+			
+			# replace special space characters
+			for c in SPACE_CHARS:
+				s = s.replace(c, ' ')
+			
+			# spaCy doesn't handle extra spaces well
+			while '  ' in s:
+				s = s.replace('  ', ' ')
+			
+			with timeout(error_message=f'"{s}" took too long to process!'):
+				try:
+					if (s := conditions_fun(s, *conditions_fun_args, **conditions_fun_kwargs)):
+						e = s
+					else:
+						skipped += 1
+				except KeyboardInterrupt:
+					sys.exit(f'User terminated program on example "{s}".')
 		
-		# adding the strip here because spaCy can't deal with leading spaces or trailing spaces well
-		ex = [str(s).strip() for s in split_sentences(dataset[r]['text']).sents]
-		
-		# get a random sentence first and then check
-		# because most sentences will meet our criteria
-		# this way we don't parse all of them. 
-		# this should speed things up considerably
-		r2 = int(random.random() * (len(ex)-1))
-		s  = ex[r2]
-		
-		# replace special space characters
-		for c in SPACE_CHARS:
-			s = s.replace(c, ' ')
-		
-		# spaCy doesn't handle extra spaces well
-		while '  ' in s:
-			s = s.replace('  ', ' ')
-		
-		with timeout(error_message=f'"{s}" took too long to process!'):
-			try:
-				if (s := conditions_fun(s, *conditions_fun_args, **conditions_fun_kwargs)):
-					e = s
-			except KeyboardInterrupt:
-				sys.exit(f'User terminated program on example "{s}".')
-		
-	return e
+		yield e
+	else:
+		log.info(f'\n\nSkipped {skipped} sentences\n')
 
 def create_datasets_from_config(
 	config: Dict[str,List] = None,
@@ -343,6 +353,8 @@ def create_datasets_from_config(
 	for dataset in config['sources']:
 		dataset_args 	= config['sources'][dataset].get('dataset_args', [])
 		dataset_kwargs 	= config['sources'][dataset].get('dataset_kwargs', {})
+		data_split 		= config['sources'][dataset].get('data_split', 'train')
+		data_field		= config['sources'][dataset].get('data_field', 'text')
 		
 		for name in only:
 			log.info(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
@@ -380,6 +392,8 @@ def create_datasets_from_config(
 			
 			create_seq2seq_dataset(
 				dataset=dataset,
+				data_split=data_split,
+				data_field=data_field,
 				dataset_args=dataset_args,
 				dataset_kwargs=dataset_kwargs,
 				name=name,

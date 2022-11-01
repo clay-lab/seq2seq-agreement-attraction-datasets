@@ -1799,7 +1799,98 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'parcel': {
 		'any':		{'past': 'parceled'},
 	},
-	
+	'stenciled': {
+		'singular': {'present': 'stencils'},
+		'plural': 	{'present': 'stencil'},
+		'any':		{'infinitive': 'stencil'},
+	},
+	'stencils': {
+		'any': 		{'past': 'stenciled'},
+	},
+	'stencil': {
+		'any':		{'past': 'stenciled'},
+	},
+	'halts': {
+		'plural': 	{'present': 'halt'},
+		'any':		{'infinitive': 'halt'},
+	},
+	'halted': {
+		'plural': 	{'present': 'halt'},
+		'any':		{'infinitive': 'halt'},
+	},
+	'gelded': {
+		'any':		{'past': 'gelded'},
+	},
+	'gelds': {
+		'any':		{'past': 'gelded'},
+	},
+	'geld': {
+		'any':		{'past': 'gelded'},
+	},
+	'crossovered': {
+		'any':		{'past': 'crossovered'},
+	},
+	'crossovers': {
+		'any':		{'past': 'crossovered'},
+	},
+	'crossover': {
+		'any':		{'past': 'crossovered'},
+	},
+	'haltered': {
+		'singular': {'present': 'halters'},
+		'plural': 	{'present': 'halter'},
+		'any':		{
+			'past': 'haltered',
+			'infinitive': 'halter',
+		},
+	},
+	'halters': {
+		'singular': {'present': 'halters'},
+		'plural': 	{'present': 'halter'},
+		'any':		{
+			'past': 'haltered',
+			'infinitive': 'halter',
+		},
+	},
+	'halter': {
+		'singular': {'present': 'halters'},
+		'plural': 	{'present': 'halter'},
+		'any':		{
+			'past':	'haltered',
+			'infinitive': 'halter',
+		},
+	},
+	'wet': {
+		'any':		{'past': 'wet'},
+	},
+	'wets': {
+		'any':		{'past': 'wet'},
+	},
+	'upsprang': {
+		'singular': {'present': 'upsprings'},
+		'plural': 	{'present': 'upspring'},
+		'any':		{
+			'past': 'upsprang',
+			'infinitive': 'upspring',
+		},
+	},
+	'upsprings': {
+		'any':		{'past': 'upsprang'},
+	},
+	'upspring': {
+		'any':		{'past': 'upsprang'},
+	},
+	'counterargued': {
+		'singular': {'present': 'counterargues'},
+		'plural': 	{'present': 'counterargue'},
+		'any':		{'infinitive': 'counterargue'},
+	},
+	'counterargues': {
+		'any':		{'past': 'counterargued'},
+	},
+	'counterargue': {
+		'any':		{'past': 'counterargued'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -1917,6 +2008,10 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'simulcasted': 'simulcast',
 	'remastered': 'remaster',
 	'backstabbed': 'backstab',
+	'podiumed': 'podium',
+	'inbounded': 'inbound',
+	'dormed': 'dorm',
+	'cordoned': 'cordon',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2284,6 +2379,11 @@ NUMBERS_FOR_ADJECTIVES_USED_AS_NOUNS: Dict[str,str] = {
 	'tributary': 'Sing',
 	'unemployed': 'Plur',
 	'infected': 'Plur',
+	'programming': 'Sing',
+	# "dead" is usually Plur, though not always. 
+	# it's better to have this as the default, though
+	'dead': 'Plur',
+	'faithful': 'Plur',
 }
 
 INCORRECT_MORPHS_PRESENT_TENSE: Dict[str,Dict[str,str]] = {
@@ -2407,6 +2507,7 @@ EXCLUDE_DEPS: Set[str] = {
 	'nmod',
 	'nummod',
 	'quantmod',
+	'compound', # these are part of the same noun phrase
 }
 
 # list of valid distractor structures

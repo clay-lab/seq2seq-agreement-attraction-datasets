@@ -217,6 +217,8 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'culminans', # species name
 	'geklebt', # german
 	'baute', # german
+	'luridus',
+	'og',
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -443,6 +445,16 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'happees',
 	'happee',
 	'plaed', # play
+	'descent', # descend
+	'descents',
+	'descented', 
+	'pawne', # pawn
+	'pawnes',
+	'pas', # pass, was
+	'haulted', # halt
+	'haults',
+	'hault',
+	'spe', # spent
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -490,6 +502,12 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'mean',
 	'happee', # happen
 	'plae', # play
+	'og',
+	'luridu',
+	'descent', # descend
+	'pawne', # pawned
+	'haulte', # halted
+	'spe', # spent
 }
 
 SALTS_WORDS: Set[str] = {
@@ -788,6 +806,7 @@ BAD_OBJECTS: Set[str] = {
 	'been', # ungrammatical sentence
 	'currently', # ungrammatical sentence
 	'serial', # ungrammatical sentence
+	'nearly', # measure word
 }
 
 MAX_TRIES_TO_FIND_SUBJECT: int = 10
@@ -800,6 +819,13 @@ def en_string_conditions(s: str) -> Union[bool,str]:
 	# these characters lead to weird behavior
 	# by spaCy
 	if any(c in s for c in EN_STOP_STRINGS):
+		return False
+	
+	# no period in the middle of a sentence.
+	# this will remove sentences with abbreviations in the
+	# middle, but it will make sure we don't get junk like
+	# multiple sentences too
+	if re.search(r'\.', s[:-1]):
 		return False
 	
 	# must be ascii when punctuation is removed
@@ -893,6 +919,16 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 				return False
 		elif s.main_subject.tag_ in SUBJ_EXCL_TAGS:
 			return False
+		
+		# objects must be nouns, if they exist
+		for v in vs:
+			o = v.object
+			if o:
+				if not isinstance(o,list):
+					o = [o]
+				
+				if any(t.pos_ not in NOUN_POS_TAGS for t in o):
+					return False
 		
 		# if the main subject
 		# can be converted to a floating

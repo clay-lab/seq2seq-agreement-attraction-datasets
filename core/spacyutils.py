@@ -1374,8 +1374,10 @@ class EDoc():
 		ss = []
 		for v in vs:
 			s = v.subject
-			if s and self._can_be_inverted_subject(s):
+			if s and self._can_be_inverted_subject(s, v):
 				ss.append(s)
+			elif s and not self._can_be_inverted_subject(s, v):
+				return False
 			else:
 				next_v = v
 				limit = 0
@@ -1394,7 +1396,7 @@ class EDoc():
 						)
 						return False
 				
-				if self._can_be_inverted_subject(next_v.subject):
+				if self._can_be_inverted_subject(next_v.subject, next_v):
 					ss.append(next_v.subject)
 				else:
 					return False
@@ -1879,53 +1881,64 @@ class EDoc():
 		whitespaces_modified = []
 		
 		for v in all_vs:
-			# handle contractions
-			starts_with_apostrophe = v.text.startswith("'")
-			if (v.text in HOMOPHONOUS_VERBS and HOMOPHONOUS_VERBS[v.text]['condition'](v)):
-				if any(kwargs.keys()):
-					log.warning(
-						f'{v.text} is homophonous to another verb. ' 
-						f'Kwargs {kwargs} will be not be used for '
-						 'reinflection to attempt to get the right behavior '
-						 'though they will be added to the morphology.'
-					)
-				
-				m_number = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
-				m_tense  = 'Pres' if TENSE_MAP.get(tense) == PRESENT else 'Past'
-				
-				d_number = 'singular' if number == 'Sing' else 'plural'
-				d_tense = 'present' if tense == PRESENT else 'past'
-				
-				morph_kwargs = {'Number': m_number, 'Tense': m_tense, **kwargs}
-				morph_kwargs = {k: v for k, v in morph_kwargs.items() if v is not None}
+			if not TENSE_MAP.get(v.get_morph('Tense')) == TENSE_MAP[tense]:
+				# handle contractions
+				starts_with_apostrophe = v.text.startswith("'")
+				if (v.text in HOMOPHONOUS_VERBS and HOMOPHONOUS_VERBS[v.text]['condition'](v)):
+					if any(kwargs.keys()):
+						log.warning(
+							f'{v.text} is homophonous to another verb. ' 
+							f'Kwargs {kwargs} will be not be used for '
+							 'reinflection to attempt to get the right behavior '
+							 'though they will be added to the morphology.'
+						)
 					
-				if HOMOPHONOUS_VERBS[v.text].get(d_number, {}).get(d_tense, {}):
-					v.text = HOMOPHONOUS_VERBS[v.text][d_number][d_tense]
-					v.set_morph(**morph_kwargs)
-				elif HOMOPHONOUS_VERBS[v.text].get('any', {}).get(d_tense, {}):
-					v.text = HOMOPHONOUS_VERBS[v.text]['any'][d_tense]
-					v.set_morph(**morph_kwargs)
+					m_number = 'Sing' if NUMBER_MAP.get(number) == SG else 'Plur'
+					m_tense  = 'Pres' if TENSE_MAP.get(tense) == PRESENT else 'Past'
+					
+					d_number = 'singular' if number == 'Sing' else 'plural'
+					d_tense = 'present' if tense == PRESENT else 'past'
+					
+					morph_kwargs = {'Number': m_number, 'Tense': m_tense, **kwargs}
+					morph_kwargs = {k: v for k, v in morph_kwargs.items() if v is not None}
+					
+					if HOMOPHONOUS_VERBS[v.text].get(d_number, {}).get(d_tense, {}):
+						v.text = HOMOPHONOUS_VERBS[v.text][d_number][d_tense]
+						v.set_morph(**morph_kwargs)
+					elif HOMOPHONOUS_VERBS[v.text].get('any', {}).get(d_tense, {}):
+						v.text = HOMOPHONOUS_VERBS[v.text]['any'][d_tense]
+						v.set_morph(**morph_kwargs)
+					else:
+						v.reinflect(number, tense, **kwargs)
 				else:
 					v.reinflect(number, tense, **kwargs)
-			else:
-				v.reinflect(number, tense, **kwargs)
-			
-			# if we've removed an apostrophe, we need 
-			# to add a space after the preceding word
-			if starts_with_apostrophe and not v.text.startswith("'"):
-				before_word = self[v.i-1]
-				before_word.whitespace_ = ' '
-				whitespaces_modified.append(before_word)
-			
+				
+				# if we've removed an apostrophe, we need 
+				# to add a space after the preceding word
+				if starts_with_apostrophe and not v.text.startswith("'"):
+					before_word = self[v.i-1]
+					before_word.whitespace_ = ' '
+					whitespaces_modified.append(before_word)
+				
 		return self.copy_with_replace(tokens=all_vs + whitespaces_modified)
 	
 	def make_main_verb_past_tense(self) -> 'EDoc':
 		'''Convert the main verb to past tense.'''
+		vs = self.main_clause_verbs
+		
+		if all(v.get_morph('Tense') == 'Past' for v in vs):
+			return self
+		
 		n = self.main_subject_number
 		return self.reinflect_main_verb(number=n, tense=PAST)
 	
 	def make_main_verb_present_tense(self) -> 'EDoc':
 		'''Convert the main verb to present tense.'''
+		vs = self.main_clause_verbs
+		
+		if all(v.get_morph('Tense') == 'Pres' for v in vs):
+			return self
+		
 		n = self.main_subject_number
 		return self.reinflect_main_verb(number=n, tense=PRESENT)
 	
@@ -2126,14 +2139,14 @@ class EDoc():
 			
 			# if we have a chain of auxes, we need to step up through them
 			# and see if the final verb has a subject
+			next_v = v
 			if not s and v.is_aux:
-				next_v = v
 				while next_v.head.is_aux:
 					next_v = next_v.head
 				
 				s = [t for t in next_v.head.children if t.dep_ in SUBJ_DEPS]
 			
-			if not (s and self._can_be_inverted_subject(s)):
+			if not (s and self._can_be_inverted_subject(s, next_v)):
 				v_has_subject = False
 				next_v = v
 				while not next_v.subject:
@@ -2160,6 +2173,7 @@ class EDoc():
 						person = int(person)
 					
 					if number is None or person is None:
+						s = v.subject
 						if isinstance(s,list):
 							number = self._get_list_noun_number(s) if number is None else number
 							person = 3 if person is None else person
@@ -2326,7 +2340,7 @@ class EDoc():
 		
 		return final, final.i
 	
-	def _can_be_inverted_subject(self, s: Union[EToken,List[EToken]]) -> bool:
+	def _can_be_inverted_subject(self, s: Union[EToken,List[EToken]], v: EToken) -> bool:
 		'''Can the passed subject be inverted with an aux?'''
 		if not isinstance(s,list):
 			s = [s]
@@ -2354,6 +2368,13 @@ class EDoc():
 			# 	 'it has a clausal subject with a non-gerund verb '
 			# 	f'("{clausal_subject_text}")!'
 			# )
+			return False
+		
+		# we can only do inversion for subjects that precede the verb
+		# note that we only call this from the question-making method
+		# and it already filters out stuff dependents for there-support
+		# meaning that this will be okay even in those cases.
+		if any(v.i < t.i for t in s):
 			return False
 		
 		return True
