@@ -152,7 +152,7 @@ def create_seq2seq_dataset(
 								conditions_fun_kwargs=conditions_fun_kwargs,
 							)
 			
-			for ex in tqdm(ex_generator, postfix=f'{split=}', miniters=miniters):				
+			for ex in tqdm(ex_generator, postfix=f'{split=}'):
 				try:
 					# get the metadata first so that we don't set 
 					# the dataset[i] to the bad example
@@ -171,7 +171,7 @@ def create_seq2seq_dataset(
 					log.warning('\n\n')
 					ex = ''
 					pass
-	
+		
 		if any(new_dataset):
 			os.makedirs(os.path.join('data', name), exist_ok=True)
 			log.info(f'Writing out dataset {name} ({split}).')
@@ -378,7 +378,7 @@ def create_datasets_from_config(
 				module = conditions_fun.rsplit('.', 1)[0]
 				exec(f'import {module}')
 				conditions_fun = eval(conditions_fun)
-		
+			
 			for split in splits_funs:
 				if isinstance(splits_funs[split], str):
 					module = splits_funs[split].rsplit('.', 1)[0]
