@@ -152,7 +152,7 @@ def create_seq2seq_dataset(
 								conditions_fun_kwargs=conditions_fun_kwargs,
 							)
 			
-			for ex in tqdm(ex_generator, postfix=f'{split=}'):
+			for i, ex in tqdm(enumerate(ex_generator), postfix=f'{split=}'):
 				try:
 					# get the metadata first so that we don't set 
 					# the dataset[i] to the bad example
