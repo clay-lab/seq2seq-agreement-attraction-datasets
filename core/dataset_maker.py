@@ -176,7 +176,7 @@ def create_seq2seq_dataset(
 			os.makedirs(os.path.join('data', name), exist_ok=True)
 			log.info(f'Writing out dataset {name} ({split}).')
 			with gzip.open(file_name, 'wt', encoding='utf-8') as out_file:
-				for ex in tqdm(new_dataset, miniters=miniters):
+				for ex in tqdm(new_dataset):
 					json.dump(ex, out_file, ensure_ascii=False)
 					out_file.write('\n')
 		
@@ -184,7 +184,7 @@ def create_seq2seq_dataset(
 			os.makedirs(os.path.join('data', name), exist_ok=True)
 			log.info(f'Writing out metadata for {name} ({split}).')
 			with gzip.open(metadata_name, 'wt', encoding='utf-8') as out_file:
-				for m in tqdm(new_metadata, miniters=miniters):
+				for m in tqdm(new_metadata):
 					json.dump(m, out_file, ensure_ascii=False)
 					out_file.write('\n')
 		
