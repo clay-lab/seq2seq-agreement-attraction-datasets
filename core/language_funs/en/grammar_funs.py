@@ -935,6 +935,7 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			if obj.text in ALL_PARTITIVES:
 				o.append(s._get_partitive_head_noun(obj))
 		
+		o  = flatten(o)
 		o  = [t for i, t in enumerate(o) if not t.i in [t2.i for t2 in o[:i-1]]]
 		
 		if any(t.pos_ not in NOUN_POS_TAGS for t in su + o):
