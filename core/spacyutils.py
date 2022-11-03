@@ -328,7 +328,7 @@ class EToken():
 		o = [t for t in self.children if t.dep_ in OBJ_DEPS]
 		s = self.subject
 		if not isinstance(s,list):
-			s = [s]
+			s = [s] if s is not None else []
 		
 		o = [t for t in o if not any(t.i == t2.i for t2 in s)]
 		if len(o) == 1:

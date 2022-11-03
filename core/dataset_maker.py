@@ -325,7 +325,7 @@ def generate_random_examples(
 		
 		yield e
 	else:
-		log.info(f'\n\nSkipped {skipped} sentences\n')
+		log.info(f'\n\nSkipped {skipped} sentences that did not meet conditions\n')
 
 def create_datasets_from_config(
 	config: Dict[str,List] = None,

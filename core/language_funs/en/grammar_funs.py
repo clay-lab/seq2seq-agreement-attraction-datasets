@@ -8,7 +8,7 @@ import traceback
 from typing import Dict, Set, Union
 
 from ..language_funs import string_conditions
-from ...spacyutils import nlp, EDoc
+from ...spacyutils import nlp, EDoc, flatten
 from ...constants import *
 
 log = logging.getLogger(__name__)
@@ -904,53 +904,76 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		if any(v.lemma_ in BAD_VERB_LEMMAS for v in vs):
 			return False
 		
-		# if there is no subject, we don't want it
+		# if there is no main subject, we don't want it
 		if not s.has_main_subject:
 			return False
 		
-		if isinstance(s.main_subject,list):
-			if not any(t.pos_ in NOUN_POS_TAGS for t in s.main_subject):
-				return False
-		elif not s.main_subject.pos_ in NOUN_POS_TAGS:
+		# if isinstance(s.main_subject,list):
+		# 	if not any(t.pos_ in NOUN_POS_TAGS for t in s.main_subject):
+		# 		return False
+		# elif not s.main_subject.pos_ in NOUN_POS_TAGS:
+		# 	return False
+		
+		# if isinstance(s.main_subject,list):
+		# 	if any(t.tag_ in SUBJ_EXCL_TAGS for t in s.main_subject):
+		# 		return False
+		# elif s.main_subject.tag_ in SUBJ_EXCL_TAGS:
+		# 	return False
+		
+		# subjects and objects must be nouns, if they exist
+		su = flatten([v.subject for v in vs if v.subject is not None])
+		o  = flatten([v.object for v in vs if v.object is not None])
+		
+		for subj in su[:]:
+			if subj.text in ALL_PARTITIVES:
+				su.append(s._get_partitive_head_noun(su))
+		
+		su = flatten(su)
+		su = [t for i, t in enumerate(su) if not t.i in [t2.i for t2 in su[:i-1]]]
+		
+		for obj in o[:]:
+			if obj.text in ALL_PARTITIVES:
+				o.append(s._get_partitive_head_noun(o))
+		
+		o  = [t for i, t in enumerate(o) if not t.i in [t2.i for t2 in o[:i-1]]]
+		
+		if any(t.pos_ not in NOUN_POS_TAGS for t in su + o):
 			return False
 		
-		if isinstance(s.main_subject,list):
-			if any(t.tag_ in SUBJ_EXCL_TAGS for t in s.main_subject):
-				return False
-		elif s.main_subject.tag_ in SUBJ_EXCL_TAGS:
+		if any(t.tag_ in SUBJ_EXCL_TAGS for t in su):
 			return False
 		
-		# objects must be nouns, if they exist
-		for v in vs:
-			o = v.object
-			if o:
-				if not isinstance(o,list):
-					o = [o]
-				
-				if any(t.pos_ not in NOUN_POS_TAGS for t in o):
-					return False
+		if any(t.text.lower() == 'the' for t in su + o):
+			return False
+			
+		for t in su + o:
+			try:
+				float(t.text.replace(',', ''))
+				return False
+			except ValueError:
+				pass
 		
 		# if the main subject
 		# can be converted to a floating
 		# point number, exclude it
 		# this leads to all kinds of weird behavior
-		try:
-			if isinstance(s.main_subject,list):
-				float(s.main_subject[0].text.replace(',', ''))
-			else:
-				float(s.main_subject.text.replace(',', ''))
+		# try:
+		# 	if isinstance(s.main_subject,list):
+		# 		float(s.main_subject[0].text.replace(',', ''))
+		# 	else:
+		# 		float(s.main_subject.text.replace(',', ''))
 			
-			return False
-		except ValueError:
-			pass
+		# 	return False
+		# except ValueError:
+		# 	pass
 		
 		# surprisingly frequent typo of 'they' -> 'the'
 		# and missing subjects after 'the'
-		if isinstance(s.main_subject,list):
-			if s.main_subject[0].text.lower() == 'the':
-				return False
-		elif s.main_subject.text.lower() == 'the':
-				return False
+		# if isinstance(s.main_subject,list):
+		# 	if s.main_subject[0].text.lower() == 'the':
+		# 		return False
+		# elif s.main_subject.text.lower() == 'the':
+		# 		return False
 		
 		# if any of the main verbs cannot be inflected, we don't want it
 		if any(not v.can_be_inflected for v in vs):
