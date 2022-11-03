@@ -926,14 +926,14 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		
 		for subj in su[:]:
 			if subj.text in ALL_PARTITIVES:
-				su.append(s._get_partitive_head_noun(su))
+				su.append(s._get_partitive_head_noun(subj))
 		
 		su = flatten(su)
 		su = [t for i, t in enumerate(su) if not t.i in [t2.i for t2 in su[:i-1]]]
 		
 		for obj in o[:]:
 			if obj.text in ALL_PARTITIVES:
-				o.append(s._get_partitive_head_noun(o))
+				o.append(s._get_partitive_head_noun(obj))
 		
 		o  = [t for i, t in enumerate(o) if not t.i in [t2.i for t2 in o[:i-1]]]
 		
@@ -945,7 +945,7 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		
 		if any(t.text.lower() == 'the' for t in su + o):
 			return False
-			
+		
 		for t in su + o:
 			try:
 				float(t.text.replace(',', ''))
