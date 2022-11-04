@@ -31,6 +31,7 @@ EN_STOP_STRINGS: Set[str] = {
 	'instalment', # typo
 	'DThat', # typo
 	' thevar ', # typo
+	'thenproceeded',
 }
 
 # no things that only occur as prefixes
@@ -455,6 +456,17 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'haults',
 	'hault',
 	'spe', # spent
+	'traveses', # traverse
+	'travese',
+	'travesed',
+	'drow', # draw
+	'drows', 
+	'starr', # star
+	'starrs',
+	'asume', # assume
+	'asumes',
+	'asumed',
+	'ar', # are
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -508,6 +520,12 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'pawne', # pawned
 	'haulte', # halted
 	'spe', # spent
+	'travese', # traverse
+	'thenproceede', # then proceeded
+	'drow', # draw
+	'starr', # star
+	'asume', # assume
+	'ar', # are
 }
 
 SALTS_WORDS: Set[str] = {
@@ -809,6 +827,49 @@ BAD_OBJECTS: Set[str] = {
 	'nearly', # measure word
 }
 
+POSTNOMINAL_ADJS: Set[str] = {
+	'General', # attorney general
+	'general',
+	'public', # notary public
+	'Public',
+	'martial', # court martial
+	'Martial',
+	'Elect', # president elect
+	'elect',
+	'Major', # sergeant major
+	'major',
+	'total', # sum total
+	'Total',
+	'simple', # fee simple
+	'Simple',
+	'apparent', # heir apparent
+	'Apparent',
+	'politic', # body politic
+	'Politic',
+	'errant', # knight errant
+	'Errant',
+	'laureate', # poet laureate
+	'Laureate',
+	'Emeritus', # professor emeritus
+	'emeritus',
+	'Emerita', # professor emerita
+	'emerita',
+	'Emeriti', # professors emeriti
+	'emeriti',
+	'grata', # persona(e) non grata(e)
+	'Grata'
+	'gratae',
+	'Gratae',
+	'Vitae', # curriculum vitae
+	'vitae',
+	'noir', # film noir
+	'Noir',
+	'Royal', # battle royal(e)
+	'royal',
+	'Royale',
+	'royale',
+}
+
 MAX_TRIES_TO_FIND_SUBJECT: int = 10
 
 def en_string_conditions(s: str) -> Union[bool,str]:
@@ -863,6 +924,14 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 	# now we have to parse
 	try:
 		s = nlp(s)
+		
+		# bad deps contains generic dependencies
+		# spaCy assigns to things when it doesn't know
+		# what's going on. we want to exclude any sentence
+		# with these, because it often means the sentence
+		# is ungrammatical
+		if any(t.dep_ in BAD_DEPS for t in s):
+			return False
 		
 		# if the root is not a verb, we don't want it
 		if not s.root_is_verb:
@@ -953,6 +1022,17 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 				return False
 			except ValueError:
 				pass
+		
+		# filter out stuff like "attorney(s) general", which parse "general" as the subject
+		# even when the preceding noun is plural. this also catches some other stuff,
+		# like "Major General", where general actually is the head, but that's fine
+		if any(
+			t.i != 0 and 
+			t.text in POSTNOMINAL_ADJS and 
+			s[t.i-1].pos_ in NOUN_POS_TAGS and 
+			not s[t.i-1].text in POSTNOMINAL_ADJS for t in su
+		):
+			return False
 		
 		# if the main subject
 		# can be converted to a floating

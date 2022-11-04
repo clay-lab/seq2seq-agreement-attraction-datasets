@@ -1891,6 +1891,17 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'counterargue': {
 		'any':		{'past': 'counterargued'},
 	},
+	'medaled': {
+		'singular': {'present': 'medals'},
+		'plural': 	{'present': 'medal'},
+		'any':		{'infinitive': 'medal'},
+	},
+	'medals': {
+		'any':		{'past': 'medaled'},
+	},
+	'medal': {
+		'any':		{'past': 'medaled'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2012,6 +2023,11 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'inbounded': 'inbound',
 	'dormed': 'dorm',
 	'cordoned': 'cordon',
+	'unemployed': 'unemploy',
+	'bookended': 'bookend',
+	'excurred': 'excur',
+	'coinvented': 'coinvent',
+	'kickstarted': 'kickstart',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2489,6 +2505,15 @@ STRUCTURE_MAP: Dict[str,str] = {
 	'nummod':		'NumP',
 }
 
+# these are generic deps spaCy gives to things
+# when it can't figure out what is going on.
+# we want to exclude any sentence when a token
+# has one of these
+BAD_DEPS: Set[str] = {
+	'dep',
+	'mark',
+}
+
 # dependencies to exclude when determining agreement attraction
 EXCLUDE_DEPS: Set[str] = {
 	'nsubj',
@@ -2508,6 +2533,7 @@ EXCLUDE_DEPS: Set[str] = {
 	'nummod',
 	'quantmod',
 	'compound', # these are part of the same noun phrase
+	'case', # ???
 }
 
 # list of valid distractor structures
