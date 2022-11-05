@@ -1902,6 +1902,31 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'medal': {
 		'any':		{'past': 'medaled'},
 	},
+	'drags': {
+		'plural': 	{'present': 'drag'},
+		'any':		{
+			'past': 'dragged',
+			'infinitive': 'drag',
+		},
+	},
+	'instilled': {
+		'singular': {'present': 'instills'},
+	},
+	'instills': {
+		'singular': {'present': 'instills'},
+	},
+	'instill': {
+		'singular': {'present': 'instills'},
+	},
+	'installs': {
+		'singular': {'present': 'installs'},
+	},
+	'rebroadcast': {
+		'any':		{'past': 'rebroadcast'},
+	},
+	'rebroadcasts': {
+		'any':		{'past': 'rebroadcast'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2028,6 +2053,11 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'excurred': 'excur',
 	'coinvented': 'coinvent',
 	'kickstarted': 'kickstart',
+	'cohosted': 'cohost',
+	'bootstrapped': 'bootstrap',
+	'reingested': 'reingest',
+	'retightened': 'retighten',
+	'reattached': 'reattach',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
