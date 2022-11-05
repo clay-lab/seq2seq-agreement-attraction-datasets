@@ -38,7 +38,7 @@ EN_STOP_STRINGS: Set[str] = {
 # if they are separated from the verb by
 # a space. spaCy does weird things with
 # these that we don't want. this will also
-# exclude co as an abbrevation without a trailing
+# exclude co as an abbreviation without a trailing
 # period, but that's acceptable
 EN_EXCLUDE_REGEXES: Set[str] = {
 	r'(^|\s)(re|pre|co|dis|un|mis|mal)\s',
@@ -220,6 +220,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'baute', # german
 	'luridus',
 	'og',
+	'naped', # adj
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -467,6 +468,18 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'asumes',
 	'asumed',
 	'ar', # are
+	'incloud', # include
+	'inclouded',
+	'inclouds',
+	'resode', # reside
+	'resoded',
+	'resodes',
+	'conductd', # conducted
+	'showcast', # showcase
+	'showcasts',
+	'showcastd',
+	'world', # worked
+	'strived', # should be strove
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -526,6 +539,11 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'starr', # star
 	'asume', # assume
 	'ar', # are
+	'incloud', # include
+	'resode', # reside
+	'conductd', # conducted
+	'showcast', # showcase
+	'world', # worked
 }
 
 SALTS_WORDS: Set[str] = {
@@ -998,14 +1016,14 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 				su.append(s._get_partitive_head_noun(subj))
 		
 		su = flatten(su)
-		su = [t for i, t in enumerate(su) if not t.i in [t2.i for t2 in su[:i-1]]]
+		su = [t for i, t in enumerate(su) if not t.i in [t2.i for t2 in su[:i]]]
 		
 		for obj in o[:]:
 			if obj.text in ALL_PARTITIVES:
 				o.append(s._get_partitive_head_noun(obj))
 		
 		o  = flatten(o)
-		o  = [t for i, t in enumerate(o) if not t.i in [t2.i for t2 in o[:i-1]]]
+		o  = [t for i, t in enumerate(o) if not t.i in [t2.i for t2 in o[:i]]]
 		
 		if any(t.pos_ not in NOUN_POS_TAGS for t in su + o):
 			return False
