@@ -1927,6 +1927,62 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'rebroadcasts': {
 		'any':		{'past': 'rebroadcast'},
 	},
+	'debittered': {
+		'any':		{'past': 'debittered'},
+	},
+	'debitters': {
+		'any':		{'past': 'debittered'},
+	},
+	'debitter': {
+		'any':		{'past': 'debittered'},
+	},
+	'telecast': {
+		'any':		{'past': 'telecast'},
+	},
+	'telecasts': {
+		'plural': 	{'present': 'telecast'},
+		'any':	{
+			'past': 'telecast',
+			'infinitive': 'telecast',
+		},
+	},
+	'dishonored': {
+		'singular': {'present': 'dishonors'},
+		'plural': 	{'present': 'dishonor'},
+		'any': 		{'infinitive': 'dishonor'},
+	},
+	'dishonors': {
+		'any':		{'past': 'dishonored'},
+	},
+	'dishonor': {
+		'any':		{'past': 'dishonored'},
+	},
+	'gishgalloped': {
+		'any':		{'past': 'gishgalloped'},
+	},
+	'gishgallops': {
+		'any':		{'past': 'gishgalloped'},
+	},
+	'gishgallop': {
+		'any':		{'past': 'gishgalloped'},
+	},
+	'embiggened': {
+		'any':		{'past': 'embiggened'},
+	},
+	'embiggens': {
+		'any':		{'past': 'embiggened'},
+	},
+	'embiggen': {
+		'any':		{'past': 'embiggened'},
+	},
+	'bade': {
+		'singular': {'present': 'bids'},
+		'plural': 	{'present': 'bid'},
+		'any':	{
+			'past': 'bade',
+			'infinitive': 'bid',
+		},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2058,6 +2114,9 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'reingested': 'reingest',
 	'retightened': 'retighten',
 	'reattached': 'reattach',
+	'debittered': 'debitter',
+	'coedited': 'coedit',
+	'gishgalloped': 'gishgallop',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {

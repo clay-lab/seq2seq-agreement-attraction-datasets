@@ -221,6 +221,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'luridus',
 	'og',
 	'naped', # adj
+	'sah', # German
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -480,6 +481,14 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'showcastd',
 	'world', # worked
 	'strived', # should be strove
+	'revivals', # revives
+	'revival',
+	'revivaled',
+	'revivalled',
+	'repreents', # represent
+	'repreent',
+	'repreented', 
+	'attachs', # attaches
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -544,6 +553,9 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'conductd', # conducted
 	'showcast', # showcase
 	'world', # worked
+	'revival', # revives
+	'asses', # due to wrong agreement on "assess"
+	'repreent', # represent
 }
 
 SALTS_WORDS: Set[str] = {
@@ -843,6 +855,7 @@ BAD_OBJECTS: Set[str] = {
 	'currently', # ungrammatical sentence
 	'serial', # ungrammatical sentence
 	'nearly', # measure word
+	'Menschen', # German
 }
 
 POSTNOMINAL_ADJS: Set[str] = {
