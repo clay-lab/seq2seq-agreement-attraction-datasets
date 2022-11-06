@@ -314,7 +314,7 @@ def generate_random_examples(
 			while '  ' in s:
 				s = s.replace('  ', ' ')
 			
-			with timeout(error_message=f'"{s}" took too long to process!'):
+			with timeout(seconds=30, error_message=f'"{s}" took too long to process!'):
 				try:
 					if (s := conditions_fun(s, *conditions_fun_args, **conditions_fun_kwargs)):
 						e = s
