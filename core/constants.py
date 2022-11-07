@@ -1983,6 +1983,42 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 			'infinitive': 'bid',
 		},
 	},
+	'gnawed': {
+		'any':		{'past': 'gnawed'},
+	},
+	'gnaws': {
+		'any':		{'past': 'gnawed'},
+	},
+	'gnaw': {
+		'any':		{'past': 'gnawed'},
+	},
+	'savored': {
+		'singular': {'present': 'savors'},
+		'plural': 	{'present': 'savor'},
+		'any':		{'infinitive': 'savor'},
+	},
+	'savors': {
+		'any':		{'past': 'savored'},
+	},
+	'savor': {
+		'any':		{'past': 'savored'},
+	},
+	'reacquired': {
+		'singular': {'present': 'reacquires'},
+		'plural':	{'present': 'reacquire'},
+		'any':		{'infinitive': 'reacquire'},
+	},
+	'succored': {
+		'singular': {'present': 'succors'},
+		'plural':	{'present': 'succor'},
+		'any':		{'infinitive': 'succor'},
+	},
+	'succors': {
+		'any':		{'past': 'succored'},
+	},
+	'succor': {
+		'any':		{'past': 'succored'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2117,6 +2153,10 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'debittered': 'debitter',
 	'coedited': 'coedit',
 	'gishgalloped': 'gishgallop',
+	'multiplexes': 'multiplex',
+	'multiplexed': 'multiplex',
+	'reappointed': 'reappoint',
+	'storyboarded': 'storyboard',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2155,6 +2195,33 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 						(to.dep_ == 'ccomp')
 				]
 		)
+	},
+	'bound': {
+		'singular': 	{'present': 'bounds'},
+		'plural': 		{'present': 'bound'},
+		'any':			{
+			'past': 'bounded',
+			'infinitive': 'bound'
+		},
+		'condition': lambda t: t.is_intransitive
+	},
+	'bounds': {
+		'singular': 	{'present': 'bounds'},
+		'plural': 		{'present': 'bound'},
+		'any':			{
+			'past': 'bounded',
+			'infinitive': 'bound'
+		},
+		'condition': lambda t: t.is_intransitive
+	},
+	'bounded': {
+		'singular': 	{'present': 'bounds'},
+		'plural': 		{'present': 'bound'},
+		'any':			{
+			'past': 'bounded',
+			'infinitive': 'bound'
+		},
+		'condition': lambda t: t.is_intransitive
 	},
 	'secreted': {
 		'singular': {'present': 'secrets'},

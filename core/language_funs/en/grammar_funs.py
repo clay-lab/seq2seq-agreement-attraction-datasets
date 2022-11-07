@@ -222,6 +222,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'og',
 	'naped', # adj
 	'sah', # German
+	'includins', # bad sentence
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -489,6 +490,28 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'repreent',
 	'repreented', 
 	'attachs', # attaches
+	'symbolyses', # symboliz/se
+	'symbolyse',
+	'symbolysed',
+	'flashfoward', # flashforward
+	'flashfowards',
+	'flashfowarded', 
+	'demured', # demur
+	'demures',
+	'demure',
+	'perate', # operate
+	'perates',
+	'perated',
+	'featue', # featured
+	'featues',
+	'featued',
+	'iconsist', # consist
+	'iconsists',
+	'iconsisted',
+	'rodes', # rides/rode
+	'includins', # includes
+	'attachs', # attach
+	'attachd',
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -556,6 +579,17 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'revival', # revives
 	'asses', # due to wrong agreement on "assess"
 	'repreent', # represent
+	'symbolyse', # symbolis/ze
+	'flashfoward', # flashforward
+	'perate', # operate
+	'featue', # feature
+	'iconsist', # consist
+	'rode', # typo of rode as rodes
+	'includin', # typo of including, in a bad sentence
+}
+
+BAD_VERB_MORPHS: Dict[str,Dict[str,str]] = {
+	'become': {'Tense': 'Past'},
 }
 
 SALTS_WORDS: Set[str] = {
@@ -1004,6 +1038,13 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		if any(v.lemma_ in BAD_VERB_LEMMAS for v in vs):
 			return False
 		
+		if any(
+			v.get_morph(m) == BAD_VERB_MORPHS.get(v.text, {}).get(m) 
+			for v in vs 
+				for m in BAD_VERB_MORPHS.get(v.text, {})
+		):
+			return False
+		
 		# if there is no main subject, we don't want it
 		if not s.has_main_subject:
 			return False
@@ -1211,7 +1252,7 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 						subj.extend(p_head)
 					else:
 						subj.append(p_head)
-				
+			
 			# remove any duplicates
 			deduped_subjs = [subj[0]]
 			for t in subj:
@@ -1226,6 +1267,16 @@ def no_dist_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 				s_n = subj[0].get_morph('Number')
 			
 			v_n = v.get_morph('Number')
+			
+			# shouldn't need to do this here
+			# it's taken care of in the definition of EToken
+			# # main clause verbs are inflected
+			# # if the number is none, and the text
+			# # is equal to the lemma and it is present
+			# # tense, the verb is plural. this deals
+			# # with typos: "He later become..."
+			# if v_n is None and v.text == v.lemma_ and v.get_morph('Tense') == 'Pres':
+			# 	v_n = 'Plur'
 			
 			# ungrammatical sentence
 			if s_n is not None and v_n is not None and s_n != v_n:

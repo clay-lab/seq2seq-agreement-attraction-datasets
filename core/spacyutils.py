@@ -365,18 +365,26 @@ class EToken():
 			s = [s]
 		
 		if (
-			all(t.dep_ == 'expl' for t in s) and 			# there
-			any(t.dep_ == 'xcomp' for t in self.children) 	# to
+			all(t.dep_ == 'expl' for t in s) and 			 # there
+			(
+				any(t.dep_ == 'xcomp' for t in self.children) or # to
+				(self.is_aux and any(t.dep_ == 'xcomp' for t in self.head.children))
+			)
 		):
+			ref_token = (
+				self 
+				if not (self.is_aux and any(t.dep_ == 'xcomp' for t in self.head.children)) 
+				else self.head
+			)
 			# there used/seems to be/have been [subj]
-			if any(t.lemma_ == 'be' for t in self.children): # be
+			if any(t.lemma_ == 'be' for t in ref_token.children): # be
 				s.extend([
 					t for t in [
-						t for t in self.children if t.lemma_ == 'be'
+						t for t in ref_token.children if t.lemma_ == 'be'
 					][0].children
 						if t.dep_ in SUBJ_DEPS
 				])
-			elif any(t.is_verb for t in self.children):
+			elif any(t.is_verb for t in ref_token.children):
 				# unaccusatives with there-inversion embedded under raising
 				# in these cases, the actual inverted subject gets
 				# misparsed as the object. this should not catch anything
@@ -384,19 +392,23 @@ class EToken():
 				# without be can only happen with unaccusatives to begin with
 				s.extend([
 					t for t in [
-						t for t in self.children if t.is_verb
+						t for t in ref_token.children if t.is_verb
 					][0].children
 						if t.dep_ in OBJ_DEPS
 				])
 		elif (
 			all(t.dep_ == 'expl' for t in s) and 
-			not self.lemma_ == 'be'
+			(
+				not self.lemma_ == 'be' or
+				(self.is_aux and not any(t.lemma_ == 'be' for t in self.head.children))
+			)
 		):  # misparsed "there" with unaccusatives without raising
+			ref_token = self if not (self.is_aux and not any(t.lemma_ == 'be' for t in self.head.children)) else self.head
 			s.extend([
-				t for t in self.children if t.dep_ in OBJ_DEPS	
+				t for t in ref_token.children if t.dep_ in OBJ_DEPS	
 			])
 		
-		# attrs only really count as subjects
+		# attrs only really count as subjectss
 		# if they have a correlate with a real
 		# subject. so if everything is attr,
 		# then we don't really have a subject
