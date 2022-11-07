@@ -223,6 +223,8 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'naped', # adj
 	'sah', # German
 	'includins', # bad sentence
+	'actites', # species name
+	'ascendens', # species name
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -512,6 +514,22 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'includins', # includes
 	'attachs', # attach
 	'attachd',
+	'photographer', # photographed
+	'demonstarted', # demonstrate
+	'demonstarte',
+	'demonstartes',
+	'knowns', # is known as
+	'employes', # employs
+	'employees', # employs
+	'employeed', # employed
+	'whiiiines', # lol
+	'whiiiine', 
+	'whiiiined',
+	'ss', # is
+	'extendins', # extends
+	'extendin',
+	'extendind',
+	'as', # is
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -586,10 +604,22 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'iconsist', # consist
 	'rode', # typo of rode as rodes
 	'includin', # typo of including, in a bad sentence
+	'photographer', # photographed
+	'demonstarte', # demonstrate
+	'known', # bad sentence
+	'ascenden', # species name
+	'whiiiine', # lol
+	's', # is
+	'extendin', # bad sentence
+	'a', # is
 }
 
 BAD_VERB_MORPHS: Dict[str,Dict[str,str]] = {
 	'become': {'Tense': 'Past'},
+}
+
+VERBS_NON_TENSED: Set[str] = {
+	'beware',
 }
 
 SALTS_WORDS: Set[str] = {
@@ -1015,7 +1045,11 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 		# or sentence fragments
 		if not vs:
 			return False
-			
+		
+		# verbs must be at least two characters (avoid many typos)
+		if any(len(v.lemma_) < 2 or len(v.text) < 2 for v in vs):
+			return False
+		
 		# disallow conjoined verbs if option set
 		if len(s.main_clause_verbs) > 1 and not conjoined:
 			return False
@@ -1043,6 +1077,9 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			for v in vs 
 				for m in BAD_VERB_MORPHS.get(v.text, {})
 		):
+			return False
+		
+		if any(v.text in VERBS_NON_TENSED for v in vs):
 			return False
 		
 		# if there is no main subject, we don't want it

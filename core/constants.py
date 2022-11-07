@@ -2019,6 +2019,17 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'succor': {
 		'any':		{'past': 'succored'},
 	},
+	'arced': {
+		'singular': {'present': 'arcs'},
+		'plural':	{'present': 'arc'},
+		'any':		{'infinitive': 'arc'},
+	},
+	'arcs': {
+		'any':		{'past': 'arced'},
+	},
+	'arc': {
+		'any':		{'past': 'arced'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2157,6 +2168,9 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'multiplexed': 'multiplex',
 	'reappointed': 'reappoint',
 	'storyboarded': 'storyboard',
+	'gutted': 'gut',
+	'sheetrocked': 'sheetrock',
+	'decysted': 'decyst',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2290,6 +2304,18 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 					any(word.text == 'out' for word in t.children)
 			)
 	},
+	'weave': {
+		'any':		{'past': 'weaved'},
+		'condition': lambda t: t.is_intransitive
+	},
+	'weaves': {
+		'any':		{'past': 'weaved'},
+		'condition': lambda t: t.is_intransitive
+	},
+	'weaved': {
+		'any':		{'past': 'weaved'},
+		'condition': lambda t: t.is_intransitive
+	}
 }
 
 ORDINALS: Set[str] = {
