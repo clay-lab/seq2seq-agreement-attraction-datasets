@@ -225,6 +225,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'includins', # bad sentence
 	'actites', # species name
 	'ascendens', # species name
+	'rubens', # species name
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -530,6 +531,14 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'extendin',
 	'extendind',
 	'as', # is
+	'gold', # hold
+	'golds',
+	'zoeken', # dutch
+	'dziesma', # latvian
+	'thas', # was
+	'derivates', # derive
+	'derivated',
+	'derivate',
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -612,6 +621,12 @@ BAD_VERB_LEMMAS: Set[str] = {
 	's', # is
 	'extendin', # bad sentence
 	'a', # is
+	'ruben', # species name
+	'gold', # hold
+	'zoeken', # dutch
+	'dziesma', # latvian
+	'tha', # was
+	'derivate', # derive
 }
 
 BAD_VERB_MORPHS: Dict[str,Dict[str,str]] = {
@@ -620,6 +635,12 @@ BAD_VERB_MORPHS: Dict[str,Dict[str,str]] = {
 
 VERBS_NON_TENSED: Set[str] = {
 	'beware',
+}
+
+EXCLUDE_VERBS_CONDITIONS: Dict[str,Callable] = {
+	'lie': lambda t: t.is_transitive,
+	'lies': lambda t: t.is_transitive,
+	'lay': lambda t: t.get_morph('Tense') == 'Past' and v.is_transitive,
 }
 
 SALTS_WORDS: Set[str] = {
@@ -1081,6 +1102,9 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 			return False
 		
 		if any(v.text in VERBS_NON_TENSED for v in vs):
+			return False
+		
+		if any(EXCLUDE_VERBS_CONDITIONS.get(v.text, lambda x: False)(v) for v in vs):
 			return False
 		
 		# if there is no main subject, we don't want it

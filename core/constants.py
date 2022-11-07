@@ -2030,6 +2030,11 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'arc': {
 		'any':		{'past': 'arced'},
 	},
+	'sinuated': {
+		'singular': {'present': 'sinuates'},
+		'plural': 	{'present': 'sinuate'},
+		'any':		{'infinitive': 'sinuate'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2171,6 +2176,10 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'gutted': 'gut',
 	'sheetrocked': 'sheetrock',
 	'decysted': 'decyst',
+	'betrothed': 'betroth',
+	'redrew': 'redraw',
+	'outstretched': 'outstretch',
+	'reprogrammed': 'reprogram',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2191,7 +2200,7 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 					to for to in t.children
 					# handle 'lie that' and 'lie about' as usual,
 					# even though they are intransitive
-					if 	(to.dep_ == 'prep' and to.text == 'about') or
+					if 	(to.dep_ == 'prep' and to.text in ['about','to']) or
 						(to.dep_ == 'ccomp')
 				]
 		)
@@ -2205,7 +2214,7 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 					to for to in t.children
 					# handle 'lie that' and 'lie about' as usual,
 					# even though they are intransitive
-					if 	(to.dep_ == 'prep' and to.text == 'about') or
+					if 	(to.dep_ == 'prep' and to.text in ['about','to']) or
 						(to.dep_ == 'ccomp')
 				]
 		)
