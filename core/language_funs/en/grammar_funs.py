@@ -920,6 +920,7 @@ BAD_OBJECTS: Set[str] = {
 	'serial', # ungrammatical sentence
 	'nearly', # measure word
 	'Menschen', # German
+	'may', # typo of many
 }
 
 POSTNOMINAL_ADJS: Set[str] = {
