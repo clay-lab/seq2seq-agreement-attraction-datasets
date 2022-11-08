@@ -83,13 +83,16 @@ class EToken():
 			self.morph 			= token.morph
 			self.lemma_			= WRONG_LEMMAS.get(token.text, token.lemma_)
 			self.dep_ 			= token.dep_
-			self.head 			= EToken(token.head) if not self.dep_ == 'ROOT' else self
+			self._head 			= token.head
 			self.is_sent_start 	= token.is_sent_start
 			self.ent_iob_		= token.ent_iob_
 			self.i 				= token.i
 		elif token is None:
 			for k in d:
-				setattr(self, k, d[k])
+				if k == 'head':
+					setattr(self, '_head', d[k])
+				else:
+					setattr(self, k, d[k])
 		
 		self._format_token()
 
@@ -144,6 +147,19 @@ class EToken():
 	def __repr__(self) -> str:
 		'''Returns the text of the token.'''
 		return self.__str__()
+	
+	@property
+	def head(self) -> 'EToken':
+		'''
+		We do this as a property to save memory:
+		this way we don't actually cast the head of the token
+		to EToken until we need it.
+		'''
+		return EToken(self._head) if not self.dep_ == 'ROOT' else self
+	
+	@head.setter
+	def head(self, t: Union[Token,'EToken']) -> None:
+		self._head = t
 	
 	@classmethod
 	def from_definition(
@@ -218,7 +234,7 @@ class EToken():
 			yield EToken(t)
 	
 	@property
-	def is_aux(self):
+	def is_aux(self) -> bool:
 		'''Is the token an AUX?'''
 		# be, even if it is a main verb, is always
 		# grammatically an aux
@@ -230,7 +246,7 @@ class EToken():
 		return self.pos_ == 'VERB'
 	
 	@property
-	def is_number(self):
+	def is_number(self) -> bool:
 		'''
 		Is the word a string representation
 		of a number (for English)?
@@ -255,27 +271,27 @@ class EToken():
 		return self.pos_ != 'PROPN' and not self.text == 'I'
 	
 	@property
-	def is_expl(self):
+	def is_expl(self) -> bool:
 		'''Is the token an expletive?'''
 		return self.pos_ == 'expl'
 	
 	@property
-	def is_pronoun(self):
+	def is_pronoun(self) -> bool:
 		'''Is the token a pronoun?'''
 		return self.pos_ == 'PRON'
 	
 	@property
-	def is_noun(self):
+	def is_noun(self) -> bool:
 		'''Is the token a noun?'''
 		return self.pos_ == 'NOUN'
 	
 	@property
-	def is_determiner(self):
+	def is_determiner(self) -> bool:
 		'''Is the token a determiner?'''
 		return self.pos_ == 'DET'
 	
 	@property
-	def can_be_numbered(self):
+	def can_be_numbered(self) -> bool:
 		'''Can the (NOUN) token be renumbered?'''
 		return self.is_noun or self.is_pronoun or self.is_determiner
 	
@@ -437,17 +453,17 @@ class EToken():
 		return True if self.object else False
 
 	@property
-	def is_transitive(self):
+	def is_transitive(self) -> bool:
 		'''Is the token transitive?'''
 		return True if self.has_subject and self.has_object else False
 	
 	@property
-	def is_intransitive(self):
+	def is_intransitive(self) -> bool:
 		'''Is the token intransitive?'''
 		return not self.is_transitive	
 	
 	@property
-	def _morph_to_dict(self) -> Dict:
+	def _morph_to_dict(self) -> Dict[str,str]:
 		'''Get the morphological information as a dictionary.'''
 		m = str(self.morph)
 		if m:
