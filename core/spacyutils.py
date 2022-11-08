@@ -1332,12 +1332,12 @@ class EDoc():
 	def main_clause_verbs(self) -> List[EToken]:
 		'''Get all the verbs in the main clause of the sentence.'''
 		v = self.main_verb
-		vs = [v] + self._get_conjuncts(v)
+		vs = [v] + [t for t in self._get_conjuncts(v) if t.is_aux or t.is_verb]
 		if self.main_verb.is_aux:
 			vs = vs + self._get_conjuncts(self.root)
 		
 		for v in vs:
-			vs.extend(self._get_conjuncts(v))
+			vs.extend([t for t in self._get_conjuncts(v) if t.is_aux or t.is_verb])
 		
 		for i, v in enumerate(vs):
 			if any(t for t in v.children if t.dep_ in ['aux', 'auxpass']):
