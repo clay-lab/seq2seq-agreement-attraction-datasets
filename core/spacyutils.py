@@ -121,6 +121,9 @@ class EToken():
 				self.set_morph(Number='Sing')
 			else:
 				self.set_morph(Number='Plur')
+		
+		if self.text in INCORRECT_POS:
+			self.pos_ = INCORRECT_POS[self.text]
 	
 	def __len__(self) -> int:
 		'''Returns the length in characters of the token text.'''

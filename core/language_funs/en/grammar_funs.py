@@ -32,6 +32,7 @@ EN_STOP_STRINGS: Set[str] = {
 	'DThat', # typo
 	' thevar ', # typo
 	'thenproceeded',
+	' lies around to ' # missing word
 }
 
 # no things that only occur as prefixes
@@ -539,6 +540,21 @@ COMMON_VERB_TYPOS: Set[str] = {
 	'derivates', # derive
 	'derivated',
 	'derivate',
+	'referres', # refers
+	'referr',
+	'descrived', # describe
+	'descrives',
+	'descrive',
+	'recurrs', # recur
+ 	'recurr',
+ 	'breath', # breathe
+ 	'breaths',
+ 	'develope', # develop
+ 	'developes',
+ 	'compere', # compare
+ 	'comperes',
+ 	'compered',
+ 	'stead', # stayed
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -627,6 +643,15 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'dziesma', # latvian
 	'tha', # was
 	'derivate', # derive
+	'referre', # refer
+	'descrive', # describe
+	'recurr', # recur
+	'breath', # breathe
+	'develope', # develop
+	'compere', # compare
+	'stead', # stayed
+	'pinnate', # adjectives
+	'bipinnate',
 }
 
 BAD_VERB_MORPHS: Dict[str,Dict[str,str]] = {
@@ -638,9 +663,15 @@ VERBS_NON_TENSED: Set[str] = {
 }
 
 EXCLUDE_VERBS_CONDITIONS: Dict[str,Callable] = {
-	'lie': lambda t: t.is_transitive,
-	'lies': lambda t: t.is_transitive,
-	'lay': lambda t: t.get_morph('Tense') == 'Past' and v.is_transitive,
+	'lie': 		lambda t: t.is_transitive,
+	'lies': 	lambda t: t.is_transitive,
+	'lay': 		lambda t: t.get_morph('Tense') == 'Past' and t.is_transitive,
+	'fell': 	lambda t: t.get_morph('Tense') == 'Past' and t.is_transitive,
+	'bound': 	lambda t: t.get_morph('Tense') == 'Past' and t.is_intransitive,
+	'totalled': lambda t: t.is_intransitive,
+	'totaled': 	lambda t: t.is_intransitive,
+	'total': 	lambda t: t.is_intransitive,
+	'totals':	lambda t: t.is_intransitive,
 }
 
 SALTS_WORDS: Set[str] = {

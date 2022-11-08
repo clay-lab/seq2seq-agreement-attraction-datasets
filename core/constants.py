@@ -2035,6 +2035,50 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 		'plural': 	{'present': 'sinuate'},
 		'any':		{'infinitive': 'sinuate'},
 	},
+	'drafted': { # pattern.en thinks this is 'banked'???
+		'any':		{'past': 'drafted'},
+	},
+	'drafts': {
+		'any':		{'past': 'drafted'},
+	},
+	'drafted': {
+		'any':		{'past': 'drafted'},
+	},
+	'banked': { # wires got crossed somewhere; pattern.en thinks these are "draft"
+		'singular': {'present': 'banks'},
+		'plural': 	{'present': 'bank'},
+		'any':		{'infinitive': 'bank'},
+	},
+	'stymied': {
+		'plural': 	{'present': 'stymie'},
+		'any':		{'infinitive': 'stymie'},
+	},
+	'stymies': {
+		'plural': 	{'present': 'stymie'},
+		'any':		{'infinitive': 'stymie'},
+	},
+	'stymie': {
+		'any':		{'past': 'stymied'},
+	},
+	'earnt': {
+		'singular': {'present': 'earns'},
+		'plural': 	{'present': 'earn'},
+		'any':		{
+			'past':	'earnt',
+			'infinitive': 'earn',
+		},
+	},
+	'marshaled': {
+		'singular': {'present': 'marshals'},
+		'plural': 	{'present': 'marshal'},
+		'any':		{'infinitive': 'marshal'},
+	},
+	'marshals': {
+		'any':		{'past': 'marshaled'},
+	},
+	'marshal': {
+		'any':		{'past': 'marshaled'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2180,6 +2224,9 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'redrew': 'redraw',
 	'outstretched': 'outstretch',
 	'reprogrammed': 'reprogram',
+	'rearrested': 'rearrest',
+	'earnt': 'earn',
+	'oathed': 'oath',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2200,7 +2247,7 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 					to for to in t.children
 					# handle 'lie that' and 'lie about' as usual,
 					# even though they are intransitive
-					if 	(to.dep_ == 'prep' and to.text in ['about','to']) or
+					if 	(to.dep_ == 'prep' and to.text in ['about']) or
 						(to.dep_ == 'ccomp')
 				]
 		)
@@ -2214,7 +2261,11 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 					to for to in t.children
 					# handle 'lie that' and 'lie about' as usual,
 					# even though they are intransitive
-					if 	(to.dep_ == 'prep' and to.text in ['about','to']) or
+					# this will miss "lie to", which can either be location "lie"
+					# "lie to the west", or untruth "lie" (lie to him)
+					# nothing that can be done about that,
+					# but this sense is way more common in wikipedia
+					if 	(to.dep_ == 'prep' and to.text in ['about']) or
 						(to.dep_ == 'ccomp')
 				]
 		)
@@ -2324,7 +2375,7 @@ HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] =
 	'weaved': {
 		'any':		{'past': 'weaved'},
 		'condition': lambda t: t.is_intransitive
-	}
+	},
 }
 
 ORDINALS: Set[str] = {
@@ -2560,7 +2611,12 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'Shiurim': {'Number': 'Plur'},
 	'Heteroptera': {'Number': 'Plur'},
 	'heteroptera': {'Number': 'Plur'},
+	'Surtees': {'Number': 'Sing'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
+}
+
+INCORRECT_POS: Dict[str,str] = {
+	'Surtees': 'PROPN',
 }
 
 # when adjectives are used as nouns, 
