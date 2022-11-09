@@ -89,13 +89,10 @@ class EToken():
 			self.i 				= token.i
 		elif token is None:
 			for k in d:
-				if k == 'head':
-					setattr(self, '_head', d[k])
-				else:
-					setattr(self, k, d[k])
+				setattr(self, k, d[k])
 		
 		self._format_token()
-
+	
 	def _format_token(self) -> None:
 		# spaCy doesn't respect this property when
 		# we create a Doc manually using the constructor.
@@ -153,7 +150,9 @@ class EToken():
 		'''
 		We do this as a property to save memory:
 		this way we don't actually cast the head of the token
-		to EToken until we need it.
+		to EToken until we need it. The problem is that
+		not doing it this way would recursively cast every
+		EToken to a head redundantly up the tree.
 		'''
 		return EToken(self._head) if not self.dep_ == 'ROOT' else self
 	
@@ -949,15 +948,15 @@ class EDoc():
 	
 	@property
 	def main_verb(self) -> EToken:
-		'''Convenience method for get_root().'''
+		'''Gets the tensed main verb.'''
 		if self.root_is_verb:
-			# in passives, the root is the participle, but we want the aux
+			v = self.root
+			# in questions and/or passives, the root is the non-inflected verb, but we want the aux
 			# this also happens with stacked auxiliaries (i.e., would be, would have been, etc.)
-			auxpass = [t for t in self.root.children if t.dep_ in ['auxpass', 'aux']]
-			if auxpass:
-				return auxpass[0]
-			else:
-				return self.root
+			while any(t for t in v.children if t.dep_ in ['auxpass', 'aux']):
+				v = [t for t in v.children if t.dep_ in ['auxpass', 'aux']][0]
+			
+			return v
 		else:
 			return None
 	
@@ -2233,7 +2232,7 @@ class EDoc():
 				# if the verb is an aux already, we
 				# need to set the dependencies of the
 				# added aux accordingly
-				if v.is_aux:
+				if v.is_aux and not v.lemma_ == 'get':
 					# if the verb is the head, then
 					# set the head of aux to itself and
 					# it is the root node
@@ -2291,7 +2290,7 @@ class EDoc():
 			
 			# if the verb was already an aux, we need to remove
 			# the aux in the original position
-			if v.is_aux:
+			if v.is_aux and not v.lemma_ == 'get':
 				question =  question._copy_with_remove(indices=v_original_index+added, move_deps_to=aux.i)
 				added 	 -= 1
 			else:
@@ -2413,7 +2412,7 @@ class EDoc():
 	@staticmethod
 	def _get_aux(v: EToken) -> EToken:
 		'''Get the appropriate auxiliary for forming a question.'''
-		if v.is_aux:
+		if v.is_aux and not v.lemma_ == 'get':
 			return v
 		else:
 			return EToken.from_definition(**{

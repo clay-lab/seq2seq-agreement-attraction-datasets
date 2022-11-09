@@ -555,6 +555,19 @@ COMMON_VERB_TYPOS: Set[str] = {
  	'comperes',
  	'compered',
  	'stead', # stayed
+ 	'erminate', # terminate
+ 	'erminates',
+ 	'erminated',
+ 	'produse', # produce
+ 	'produses',
+ 	'prodused',
+ 	'facilates', # facilitate
+ 	'facilate',
+ 	'facilated',
+ 	'csays', # say
+ 	'csay',
+ 	'csaid',
+ 	'borns', # born
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -652,6 +665,12 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'stead', # stayed
 	'pinnate', # adjectives
 	'bipinnate',
+	'erminate', # terminate
+	'spatulate', # adjective
+	'produse', # produce
+	'ciliate', # adjective
+	'facilate', # facilitate
+	'csay', # say
 }
 
 BAD_VERB_MORPHS: Dict[str,Dict[str,str]] = {
@@ -672,6 +691,10 @@ EXCLUDE_VERBS_CONDITIONS: Dict[str,Callable] = {
 	'totaled': 	lambda t: t.is_intransitive,
 	'total': 	lambda t: t.is_intransitive,
 	'totals':	lambda t: t.is_intransitive,
+	'knighted':	lambda t: t.is_intransitive,
+	'knights':	lambda t: t.is_intransitive,
+	'knight':	lambda t: t.is_intransitive,
+	'born':		lambda t: not any(c.lemma_ in ['be', 'get'] for c in t.children),
 }
 
 SALTS_WORDS: Set[str] = {
@@ -1402,7 +1425,7 @@ def question_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 	vs = s.main_clause_verbs
 	
 	# we want do-support
-	if any(v.is_aux for v in vs):
+	if any(v.is_aux and not v.lemma_ == 'get' for v in vs):
 		return False
 		
 	# no negative sentences

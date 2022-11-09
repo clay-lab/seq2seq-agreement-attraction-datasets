@@ -1405,11 +1405,11 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'dream': {
 		'any':		{'past': 'dreamed'},
 	},
-	'ciliated': {
-		'singular': {'present': 'ciliates'},
-		'plural':	{'present': 'ciliate'},
-		'any':		{'infinitive': 'ciliate'},
-	},
+	# 'ciliated': {
+	# 	'singular': {'present': 'ciliates'},
+	# 	'plural':	{'present': 'ciliate'},
+	# 	'any':		{'infinitive': 'ciliate'},
+	# },
 	'chickened': {
 		'any':		{'past': 'chickened'},
 	},
@@ -2079,6 +2079,29 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'marshal': {
 		'any':		{'past': 'marshaled'},
 	},
+	'podcast': {
+		'any':		{'past': 'podcast'},
+	},
+	'podcasts': {
+		'any':		{'past': 'podcast'},
+	},
+	'webcast': {
+		'any':		{'past': 'webcast'},
+	},
+	'webcasts': {
+		'any':		{'past': 'webcast'},
+	},
+	'pummeled': {
+		'singular': {'present': 'pummels'},
+		'plural': 	{'present': 'pummel'},
+		'any':		{'infinitive': 'pummel'},
+	},
+	'pummels': {
+		'any':		{'past': 'pummeled'},
+	},
+	'pummel': {
+		'any':		{'past': 'pummeled'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2227,6 +2250,7 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'rearrested': 'rearrest',
 	'earnt': 'earn',
 	'oathed': 'oath',
+	'outcoached': 'outcoach',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
@@ -2612,6 +2636,8 @@ INCORRECT_MORPHS: Dict[str,Dict[str,str]] = {
 	'Heteroptera': {'Number': 'Plur'},
 	'heteroptera': {'Number': 'Plur'},
 	'Surtees': {'Number': 'Sing'},
+	'King': {'Number': 'Sing'},
+	'An': {'Number': 'Sing'},
 	**{ordinal: {'Number': 'Sing'} for ordinal in ORDINALS},
 }
 
