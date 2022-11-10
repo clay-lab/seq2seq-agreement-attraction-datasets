@@ -490,6 +490,9 @@ def create_scripts(
 	
 	# create the scripts for each language and pair of languages
 	for lang in id_langs + langs:
+		os.makedirs(os.path.join('scripts', 'finetune', lang[0]), exist_ok=True)
+		os.makedirs(os.path.join('scripts', 'eval', lang[0]), exist_ok=True)
+		
 		for model in ALL_MODELS:
 			lang_ft_script = script.replace('[MODEL_NAME_OR_PATH]', model)
 			lang_ft_script = lang_ft_script.replace('[MODEL]', model.split('/')[-1])
