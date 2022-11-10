@@ -519,6 +519,7 @@ class EToken():
 			self.text = SINGULARIZE_MAP.get(self.text.lower(), singularize(self.text.lower()))
 			self.text = (self.text[0].upper() if self.is_sent_start else self.text[0]) + self.text[1:]
 			self.set_morph(Number='Sing')
+			self.tag_ = 'NN'
 	
 	def pluralize(self) -> None:
 		'''Make a (NOUN) token plural.'''
@@ -526,6 +527,7 @@ class EToken():
 			self.text = PLURALIZE_MAP.get(self.text.lower(), pluralize(self.text.lower()))
 			self.text = (self.text[0].upper() if self.is_sent_start else self.text[0]) + self.text[1:]
 			self.set_morph(Number='Plur')
+			self.tag_ = 'NNS'
 	
 	def reinflect(
 		self, 
@@ -593,6 +595,16 @@ class EToken():
 		m_kwargs = {**m_kwargs, **kwargs}
 		
 		self.set_morph(**m_kwargs)
+		
+		if TENSE_MAP.get(tense) == PAST:
+			self.tag_ = 'VBD'
+		elif TENSE_MAP.get(tense) == INFINITIVE:
+			self.tag_ = 'VB'
+		elif TENSE_MAP.get(tense) == PRESENT:
+			if NUMBER_MAP.get(number) == SG:
+				self.tag_ = 'VBZ'
+			elif NUMBER_MAP.get(number) == PL:
+				self.tag_ = 'VBP'
 	
 	def make_past_tense(self, number: str) -> None:
 		'''Make the (VERB) token past tense.'''

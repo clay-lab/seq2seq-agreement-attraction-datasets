@@ -32,7 +32,8 @@ EN_STOP_STRINGS: Set[str] = {
 	'DThat', # typo
 	' thevar ', # typo
 	'thenproceeded',
-	' lies around to ' # missing word
+	' lies around to ', # missing word
+	' a speed of during ', # missing word
 }
 
 # no things that only occur as prefixes
@@ -227,6 +228,7 @@ MISPARSED_AS_VERBS: Set[str] = {
 	'actites', # species name
 	'ascendens', # species name
 	'rubens', # species name
+	'capnodes', # species name
 }
 
 COMMON_VERB_TYPOS: Set[str] = {
@@ -568,6 +570,25 @@ COMMON_VERB_TYPOS: Set[str] = {
  	'csay',
  	'csaid',
  	'borns', # born
+ 	'interepretes', # interpret
+ 	'interepreted',
+ 	'interepret',
+ 	'operatedon', # operate on
+ 	'operateson',
+ 	'operateon',
+ 	'reclocate', # relocate
+ 	'reclocated',
+ 	'reclocates',
+ 	'discus', # discuss
+ 	'discuses'
+ 	'discused',
+ 	'futures', # features
+ 	'future',
+ 	'futured',
+ 	'utility', # utiliz/se
+ 	'utilities',
+ 	'utilitied', 
+ 	'wais', # was
 }
 
 BAD_VERB_LEMMAS: Set[str] = {
@@ -671,6 +692,15 @@ BAD_VERB_LEMMAS: Set[str] = {
 	'ciliate', # adjective
 	'facilate', # facilitate
 	'csay', # say
+	'intereprete', # interpret
+	'operatedon', # operated on
+	'operateson',
+	'operateon',
+	'reclocate', # relocate
+	'discuse', # discuss
+	'future', # feature
+	'utilitie', # utilis/ze
+	'wai', # was
 }
 
 BAD_VERB_MORPHS: Dict[str,Dict[str,str]] = {

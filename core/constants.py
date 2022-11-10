@@ -196,7 +196,10 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'founded': {
 		'singular': {'present': 'founds'},
 		'plural': 	{'present': 'found'},
-		'any': 		{'past': 'founded'},
+		'any': 		{
+			'past': 'founded',
+			'infinitive': 'found',
+		},
 	},
 	'founds': {
 		'singular': {'present': 'founds'},
@@ -2102,6 +2105,37 @@ CONJUGATE_MAP: Dict[str,Dict[str,Dict[str,str]]] = {
 	'pummel': {
 		'any':		{'past': 'pummeled'},
 	},
+	'recapped': {
+		'any':		{'past': 'recapped'},
+	},
+	'recaps':	{
+		'any':		{'past': 'recapped'},
+	},
+	'recap': {
+		'any':		{'past': 'recapped'},
+	},
+	'reseed': {
+		'singular': {'present': 'reseeds'},
+		'plural': 	{'present': 'reseed'},
+		'any':		{
+			'past': 'reseeded',
+			'infinitive': 'reseed',
+		},
+	},
+	'headbutted': {
+		'singular': {'present': 'headbutts'},
+		'plural':	{'present': 'headbutt'},
+		'any':		{'infinitive': 'headbutt'},
+	},
+	'harshened': {
+		'any':		{'past': 'harshened'},
+	},
+	'harshens': {
+		'any':		{'past': 'harshened'},
+	},
+	'harshen': {
+		'any':		{'past': 'harshened'},
+	},
 }
 
 WRONG_LEMMAS: Dict[str,str] = {
@@ -2251,6 +2285,9 @@ WRONG_LEMMAS: Dict[str,str] = {
 	'earnt': 'earn',
 	'oathed': 'oath',
 	'outcoached': 'outcoach',
+	'restrung': 'restring',
+	'recommented': 'recomment',
+	'longlisted': 'longlist',
 }
 
 HOMOPHONOUS_VERBS: Dict[str,Dict[str,Dict[str,Dict[str,Union[str,Callable]]]]] = {
