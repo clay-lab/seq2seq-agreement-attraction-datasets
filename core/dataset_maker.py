@@ -503,7 +503,10 @@ def create_scripts(
 			file_name 		= '_'.join(lang) if lang[0] != lang[1] else lang[0]
 			
 			if os.path.isfile(os.path.join('data', train_lang, f'{train_lang}_train.json.gz')):
-				print(f'Creating scripts for {" -> ".join(lang)} ({model})')
+				if train_lang != test_lang:
+					log.info(f'Creating scripts for {" -> ".join(lang)} ({model})')
+				else:
+					log.info(f'Creating scripts for {train_lang} ({model})')
 				# if the langs are not the same, we do not need to create a separate tuning script, only a separate eval script
 				if (
 					lang[0] == lang[1] and 
@@ -511,8 +514,8 @@ def create_scripts(
 				):
 					lang_ft_script = lang_ft_script.replace('[TRAIN_LANG]', train_lang)
 					lang_ft_script = lang_ft_script.replace('[DEV_LANG]', dev_lang)
-					if not os.path.exists(os.path.join('scripts', 'finetune', f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
-						with open(os.path.join('scripts', 'finetune', f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
+					if not os.path.exists(os.path.join('scripts', 'finetune', train_lang, f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
+						with open(os.path.join('scripts', 'finetune', train_lang, f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
 							out_file.write(lang_ft_script)
 				
 				# if os.path.isfile(os.path.join('data', test_lang, f'{test_lang}_test.json.gz')):
@@ -522,8 +525,8 @@ def create_scripts(
 				):
 					lang_ev_script = lang_ev_script.replace('[TRAIN_LANG]', train_lang)
 					lang_ev_script = lang_ev_script.replace('[TEST_LANG]', test_lang)
-					if not os.path.exists(os.path.join('scripts', 'eval', f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
-						with open(os.path.join('scripts', 'eval', f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
+					if not os.path.exists(os.path.join('scripts', 'eval', train_lang, f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
+						with open(os.path.join('scripts', 'eval', train_lang, f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
 							out_file.write(lang_ev_script)
 
 def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
