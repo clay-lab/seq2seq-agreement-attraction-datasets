@@ -1312,8 +1312,8 @@ def basic_conditions(s: str, conjoined: bool = True) -> Union[bool,EDoc]:
 def has_interveners_and_number_agreement_conditions(s: str) -> Union[bool,EDoc]:
 	'''Returns sentences with number agreement and interveners.'''
 	
-	if en_string_conditions(s):
-		log.info(f'\n\n{s}\n\n')
+	# if en_string_conditions(s):
+	#	log.info(f'\n\n{s}\n\n')
 	
 	s = basic_conditions(s)
 	if s:
