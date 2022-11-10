@@ -435,7 +435,7 @@ def create_scripts(
 	script = '\n'.join([
 		'#!/bin/bash',
 		'',
-		'#SBATCH --job-name=[MODEL]-base-finetune-tense-[TRAIN_LANG]',
+		'#SBATCH --job-name=[MODEL]-finetune-tense-[TRAIN_LANG]',
 		'#SBATCH --output=joblogs/%x_%j.txt',
 		'#SBATCH --nodes=1',
 		'#SBATCH --cpus-per-task=1',

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=t5-efficient-base-base-finetune-tense-en_wiki-nodist-noconj-pres-and-past
+#SBATCH --job-name=t5-efficient-base-finetune-tense-en_wiki-nodist-noconj-pres-and-past
 #SBATCH --output=joblogs/%x_%j.txt
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
