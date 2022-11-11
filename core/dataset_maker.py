@@ -51,7 +51,7 @@ DONT_PRINT: Set[str] = {
 }
 
 ALL_MODELS: Set[str] = {
-	f't5-{size}' 
+	f'google/t5-{size}' 
 	for size in [
 		'efficient-tiny', 
 		'efficient-mini', 
