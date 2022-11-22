@@ -147,8 +147,8 @@
 		["en_wiki-nodist-noconj-pres-and-past", "en_FVN_02-pres"],
 		["en_wiki-nointe-noconj-pres-and-past", "en_FVN_02-pres"],
 		
-		["en_wiki-nodist-ques-and-past", "en_VN_98-dist-ques"],
-		["en_wiki-nodist-noconj-ques-and-past", "en_VN_98-dist-ques"],
-		["en_wiki-nointe-noconj-ques-and-past", "en_VN_98-dist-ques"]
+		["en_wiki-nodist-ques-and-past", "en_VN_98-ques"],
+		["en_wiki-nodist-noconj-ques-and-past", "en_VN_98-ques"],
+		["en_wiki-nointe-noconj-ques-and-past", "en_VN_98-ques"]
 	]
 }
