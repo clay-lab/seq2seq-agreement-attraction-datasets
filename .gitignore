@@ -3,5 +3,7 @@ joblogs/
 data/*/
 scripts/*/*.txt
 scripts/*/backup*
+scripts/finetune/
+scripts/eval/
 
 debugutils.py

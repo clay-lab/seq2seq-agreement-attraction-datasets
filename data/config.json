@@ -128,16 +128,27 @@
 						"eval": "core.language_funs.en.grammar_funs.simple"
 					},
 					"metadata_fun": "core.language_funs.en.metadata_funs.get_salts_metadata"
-				}
+				},
+				"en_wiki-nointe-noconj-pres-and-past": {},
+				"en_wiki-nointe-noconj-ques-and-past": {}
 			}
 		}
 	},
 	"pairs": [
 		["en_wiki-nodist-pres-and-past", "en_RC_PP-dist-pres"],
 		["en_wiki-nodist-noconj-pres-and-past", "en_RC_PP-dist-pres"],
+		["en_wiki-nointe-noconj-pres-and-past", "en_RC_PP-dist-pres"],
+		
 		["en_wiki-nodist-pres-and-past", "en_RC_PP_gen-dist-pres"],
 		["en_wiki-nodist-noconj-pres-and-past", "en_RC_PP_gen-dist-pres"],
+		["en_wiki-nointe-noconj-pres-and-past", "en_RC_PP_gen-dist-pres"],
+		
+		["en_wiki-nodist-pres-and-past", "en_FVN_02-pres"],
+		["en_wiki-nodist-noconj-pres-and-past", "en_FVN_02-pres"],
+		["en_wiki-nointe-noconj-pres-and-past", "en_FVN_02-pres"],
+		
 		["en_wiki-nodist-ques-and-past", "en_VN_98-dist-ques"],
-		["en_wiki-nodist-noconj-ques-and-past", "en_VN_98-dist-ques"]
+		["en_wiki-nodist-noconj-ques-and-past", "en_VN_98-dist-ques"],
+		["en_wiki-nointe-noconj-ques-and-past", "en_VN_98-dist-ques"]
 	]
 }
