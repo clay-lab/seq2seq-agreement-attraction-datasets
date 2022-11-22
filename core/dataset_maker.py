@@ -50,16 +50,35 @@ DONT_PRINT: Set[str] = {
 	'tgt_history',
 }
 
-ALL_MODELS: Set[str] = {
-	f't5-{size}' 
-	for size in [
-		'efficient-tiny', 
-		'efficient-mini', 
-		'efficient-small', 
-		'efficient-base',
+ALL_MODELS: Set[str] = set(
+	[f'google/t5-{size}' 
+		for size in [
+			'efficient-tiny', 
+			'efficient-mini', 
+			'efficient-small', 
+			'efficient-base',
+		]
+		# + ['efficient-large', 'efficient-xl', 'efficient-xxl']
+	] + 
+	[f'google/t5-efficient-base-{ablation}'
+		for ablation in [
+			f'dl{i}' for i in range(2,9,2)
+		] +
+		[
+			f'el{i}' for i in range(2,9,2)
+		] +
+		[
+			f'nl{i}' for i in (2**i for i in range(1,4,1))
+		]
+	] +
+	[f'google/t5-efficient-mini-{ablation}'
+		for ablation in [
+			f'nl{i}' for i in [6, 8, 12, 24]
+		]
 	]
-	# + ['large', 'xl', 'xxl']
-}
+)
+
+N_EPOCHS: int = 30
 
 def create_seq2seq_dataset(
 	dataset: str,
@@ -463,7 +482,7 @@ def create_scripts(
 		'	--per_device_eval_batch_size=16 \\',
 		'	--overwrite_output_dir \\',
 		'	--predict_with_generate \\',
-		'	--num_train_epochs 10.0'
+		f'	--num_train_epochs {N_EPOCHS}.0'
 	]) + '\n'
 	
 	eval_script = script.replace('finetune', 'eval')
@@ -490,20 +509,20 @@ def create_scripts(
 	
 	# create the scripts for each language and pair of languages
 	for lang in id_langs + langs:
-		os.makedirs(os.path.join('scripts', 'finetune', lang[0]), exist_ok=True)
-		os.makedirs(os.path.join('scripts', 'eval', lang[0]), exist_ok=True)
+		train_lang 		= lang[0]
+		dev_lang 		= lang[0]
+		test_lang 		= lang[1]
+		
+		file_name 		= '_'.join(lang) if lang[0] != lang[1] else lang[0]
+		
+		os.makedirs(os.path.join('scripts', 'finetune', f'{train_lang}-{N_EPOCHS}epochs'), exist_ok=True)
+		os.makedirs(os.path.join('scripts', 'eval', f'{train_lang}-{N_EPOCHS}epochs'), exist_ok=True)
 		
 		for model in ALL_MODELS:
 			lang_ft_script = script.replace('[MODEL_NAME_OR_PATH]', model)
 			lang_ft_script = lang_ft_script.replace('[MODEL]', model.split('/')[-1])
 			lang_ev_script = eval_script.replace('[MODEL_NAME_OR_PATH]', model)
 			lang_ev_script = lang_ev_script.replace('[MODEL]', model.split('/')[-1])
-			
-			train_lang 		= lang[0]
-			dev_lang 		= lang[0]
-			test_lang 		= lang[1]
-			
-			file_name 		= '_'.join(lang) if lang[0] != lang[1] else lang[0]
 			
 			if os.path.isfile(os.path.join('data', train_lang, f'{train_lang}_train.json.gz')):
 				if train_lang != test_lang:
@@ -517,8 +536,8 @@ def create_scripts(
 				):
 					lang_ft_script = lang_ft_script.replace('[TRAIN_LANG]', train_lang)
 					lang_ft_script = lang_ft_script.replace('[DEV_LANG]', dev_lang)
-					if not os.path.exists(os.path.join('scripts', 'finetune', train_lang, f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
-						with open(os.path.join('scripts', 'finetune', train_lang, f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
+					if not os.path.exists(os.path.join('scripts', 'finetune', f'{train_lang}-{N_EPOCHS}epochs', f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
+						with open(os.path.join('scripts', 'finetune', f'{train_lang}-{N_EPOCHS}epochs', f'finetune_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
 							out_file.write(lang_ft_script)
 				
 				# if os.path.isfile(os.path.join('data', test_lang, f'{test_lang}_test.json.gz')):
@@ -528,8 +547,8 @@ def create_scripts(
 				):
 					lang_ev_script = lang_ev_script.replace('[TRAIN_LANG]', train_lang)
 					lang_ev_script = lang_ev_script.replace('[TEST_LANG]', test_lang)
-					if not os.path.exists(os.path.join('scripts', 'eval', train_lang, f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
-						with open(os.path.join('scripts', 'eval', train_lang, f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
+					if not os.path.exists(os.path.join('scripts', 'eval', f'{train_lang}-{N_EPOCHS}epochs', f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh')) or overwrite:
+						with open(os.path.join('scripts', 'eval', f'{train_lang}-{N_EPOCHS}epochs', f'eval_{model.split("/")[-1]}_{file_name}_bs128.sh'), 'wt') as out_file:
 							out_file.write(lang_ev_script)
 
 def load_config(path: 'str or Pathlike' = None) -> Dict[str,List]:
