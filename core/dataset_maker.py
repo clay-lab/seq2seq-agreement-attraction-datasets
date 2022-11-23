@@ -476,7 +476,7 @@ def create_scripts(
 		'	--task translation_src_to_tgt \\',
 		'	--train_file data/[TRAIN_LANG]/[TRAIN_LANG]_train.json.gz \\',
 		'	--validation_file data/[DEV_LANG]/[DEV_LANG]_dev.json.gz \\',
-		'	--output_dir outputs/[TRAIN_LANG]/[MODEL]-finetuning-[TRAIN_LANG]-bs128/ \\',
+		f'	--output_dir outputs/[TRAIN_LANG]-{N_EPOCHS}epochs/[MODEL]-finetuning-[TRAIN_LANG]-bs128/ \\',
 		'	--per_device_train_batch_size=4 \\',
 		'	--gradient_accumulation_steps=32 \\',
 		'	--per_device_eval_batch_size=16 \\',
