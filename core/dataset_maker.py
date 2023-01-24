@@ -69,6 +69,9 @@ ALL_MODELS: Set[str] = set(
 		] +
 		[
 			f'nl{i}' for i in (2**i for i in range(1,4,1))
+		] +
+		[
+			f'nh{i}' for i in range(8, 33, 8)
 		]
 	] +
 	[f'google/t5-efficient-mini-{ablation}'
@@ -374,27 +377,31 @@ def create_datasets_from_config(
 	elif isinstance(only,str):
 		only = [only]
 	
-	for dataset in config['sources']:
-		dataset_args 	= config['sources'][dataset].get('dataset_args', [])
-		dataset_kwargs 	= config['sources'][dataset].get('dataset_kwargs', {})
-		data_split 		= config['sources'][dataset].get('data_split', 'train')
-		data_field		= config['sources'][dataset].get('data_field', 'text')
+	for source in config['sources']:
+		dataset 		= config['sources'][source]['dataset']
+		dataset_args 	= config['sources'][source].get('dataset_args', [])
+		dataset_kwargs 	= config['sources'][source].get('dataset_kwargs', {})
+		data_split 		= config['sources'][source].get('data_split', 'train')
+		data_field		= config['sources'][source].get('data_field', 'text')
 		
 		for name in only:
-			log.info(f'Creating datasets for {name} using {dataset} (args={dataset_args}, kwargs={dataset_kwargs})')
+			if not name in config['sources'][source]['names']:
+				continue
+			
+			log.info(f'Creating datasets for {name} using {source} (args={dataset_args}, kwargs={dataset_kwargs})')
 			
 			# unpack the config
-			conditions_fun		= config['sources'][dataset]['names'][name].get('conditions_fun', lambda s: nlp(s))
-			conditions_fun_args = config['sources'][dataset]['names'][name].get('conditions_fun_args', ())
-			conditions_fun_kwargs = config['sources'][dataset]['names'][name].get('conditions_fun_kwargs', {})
-			splits 				= config['sources'][dataset]['names'][name].get('splits', {})
-			splits_funs 		= config['sources'][dataset]['names'][name].get('splits_funs', {})
-			splits_funs_args 	= config['sources'][dataset]['names'][name].get('splits_funs_args', [])
-			splits_funs_kwargs 	= config['sources'][dataset]['names'][name].get('splits_funs_kwargs', {})
-			metadata_fun 		= config['sources'][dataset]['names'][name].get('metadata_fun')
-			metadata_fun_args 	= config['sources'][dataset]['names'][name].get('metadata_fun_args', [])
-			metadata_fun_kwargs = config['sources'][dataset]['names'][name].get('metadata_fun_kwargs', {})
-			# dump_freq 			= config['sources'][dataset]['names'][name].get('dump_freq', DUMP_FREQ)
+			conditions_fun		= config['sources'][source]['names'][name].get('conditions_fun', lambda s: nlp(s))
+			conditions_fun_args = config['sources'][source]['names'][name].get('conditions_fun_args', ())
+			conditions_fun_kwargs = config['sources'][source]['names'][name].get('conditions_fun_kwargs', {})
+			splits 				= config['sources'][source]['names'][name].get('splits', {})
+			splits_funs 		= config['sources'][source]['names'][name].get('splits_funs', {})
+			splits_funs_args 	= config['sources'][source]['names'][name].get('splits_funs_args', [])
+			splits_funs_kwargs 	= config['sources'][source]['names'][name].get('splits_funs_kwargs', {})
+			metadata_fun 		= config['sources'][source]['names'][name].get('metadata_fun')
+			metadata_fun_args 	= config['sources'][source]['names'][name].get('metadata_fun_args', [])
+			metadata_fun_kwargs = config['sources'][source]['names'][name].get('metadata_fun_kwargs', {})
+			# dump_freq 			= config['sources'][source]['names'][name].get('dump_freq', DUMP_FREQ)
 			
 			# if we're loading from a file, we have to store these as strings,
 			# so we need to import the actual objects

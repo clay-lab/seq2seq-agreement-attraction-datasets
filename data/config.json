@@ -1,6 +1,7 @@
 {
 	"sources": {
 		"wikipedia": {
+			"dataset": "wikipedia",
 			"dataset_args": ["20200501.en"],
 			"names": {
 				"en_wiki-nodist-pres-and-past": {
@@ -134,7 +135,8 @@
 			}
 		},
 		"simple_wikipedia": {
-			"dataset_args": ["20220301.simple"],
+			"dataset": "wikipedia",
+			"dataset_args": ["20200501.simple"],
 			"names": {
 				"en_simplewiki": {
 					"splits": {
