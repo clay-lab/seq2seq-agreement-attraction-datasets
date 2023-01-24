@@ -132,6 +132,24 @@
 				"en_wiki-nointe-noconj-pres-and-past": {},
 				"en_wiki-nointe-noconj-ques-and-past": {}
 			}
+		},
+		"simple_wikipedia": {
+			"dataset_args": ["20220301.simple"],
+			"names": {
+				"en_simplewiki": {
+					"splits": {
+						"train": 10000
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_source_metadata"
+				},
+				"en_simplewiki-interveners": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.has_interveners_and_number_agreement_conditions",
+					"splits": {
+						"train": 10000
+					},
+					"metadata_fun": "core.language_funs.en.metadata_funs.get_source_metadata"
+				}
+			}
 		}
 	},
 	"pairs": [
