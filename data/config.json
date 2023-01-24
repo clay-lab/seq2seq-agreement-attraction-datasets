@@ -139,6 +139,7 @@
 			"dataset_args": ["20200501.simple"],
 			"names": {
 				"en_simplewiki": {
+					"conditions_fun": "core.language_funs.en.grammar_funs.basic_conditions",
 					"splits": {
 						"train": 10000
 					},
