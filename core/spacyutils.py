@@ -2000,7 +2000,7 @@ class EDoc():
 		'''Convert the main verb to plural form.'''
 		vs = self.main_clause_verbs
 		
-		if all(v.get_morph('Tense') == 'Pres' for v in vs):
+		if all(v.get_morph('Tense') == 'Past' for v in vs):
 			return self
 		
 		return self.reinflect_main_verb(number='Plur', tense=PRES, conjoined=conjoined)
