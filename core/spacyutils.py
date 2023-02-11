@@ -1923,7 +1923,10 @@ class EDoc():
 		whitespaces_modified = []
 		
 		for v in all_vs:
-			if not TENSE_MAP.get(v.get_morph('Tense')) == TENSE_MAP[tense]:
+			if not (
+				(TENSE_MAP.get(v.get_morph('Tense')) == TENSE_MAP[tense]) and
+				(NUMBER_MAP.get(v.get_morph('Number')) == NUMBER_MAP[number])
+			):
 				# handle contractions
 				starts_with_apostrophe = v.text.startswith("'")
 				if (v.text in HOMOPHONOUS_VERBS and HOMOPHONOUS_VERBS[v.text]['condition'](v)):
