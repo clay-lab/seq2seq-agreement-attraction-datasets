@@ -1984,6 +1984,24 @@ class EDoc():
 		n = self.main_subject_number
 		return self.reinflect_main_verb(number=n, tense=PRESENT)
 	
+	def singularize_main_verb(self, conjoined: bool = False) -> 'EDoc':
+		'''Convert the main verb to singular form.'''
+		vs = self.main_clause_verbs
+		
+		if all(v.get_morph('Tense') == 'Past' for v in vs):
+			return self
+		
+		return self.reinflect_main_verb(number='Sing', tense=PRES, conjoined=conjoined)
+	
+	def pluralize_main_verb(self, conjoined: bool = False) -> 'EDoc':
+		'''Convert the main verb to plural form.'''
+		vs = self.main_clause_verbs
+		
+		if all(v.get_morph('Tense') == 'Pres' for v in vs):
+			return self
+		
+		return self.reinflect_main_verb(number='Plur', tense=PRES, conjoined=conjoined)
+	
 	def renumber_main_subject(self, number: str) -> 'EDoc':
 		'''Renumber the main subject, along with its determiner and verb.'''
 		if self.has_conjoined_main_subject and NUMBER_MAP.get(number) == SG:
