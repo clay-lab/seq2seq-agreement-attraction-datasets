@@ -1984,7 +1984,7 @@ class EDoc():
 		n = self.main_subject_number
 		return self.reinflect_main_verb(number=n, tense=PRESENT)
 	
-	def singularize_main_verb(self, conjoined: bool = False) -> 'EDoc':
+	def singularize_main_verb(self, conjoined: bool = True) -> 'EDoc':
 		'''Convert the main verb to singular form.'''
 		vs = self.main_clause_verbs
 		
@@ -1993,7 +1993,7 @@ class EDoc():
 		
 		return self.reinflect_main_verb(number='Sing', tense=PRES, conjoined=conjoined)
 	
-	def pluralize_main_verb(self, conjoined: bool = False) -> 'EDoc':
+	def pluralize_main_verb(self, conjoined: bool = True) -> 'EDoc':
 		'''Convert the main verb to plural form.'''
 		vs = self.main_clause_verbs
 		
