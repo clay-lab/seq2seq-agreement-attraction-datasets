@@ -1998,7 +1998,7 @@ class EDoc():
 		):
 			return self
 		
-		return self.reinflect_main_verb(number='Sing', tense=PRESENT, conjoined=conjoined)
+		return self.reinflect_main_verb(number='Sing', tense=self.main_verb.get_morph('Tense'), conjoined=conjoined)
 	
 	def pluralize_main_verb(self, conjoined: bool = True) -> 'EDoc':
 		'''Convert the main verb to plural form.'''
@@ -2011,7 +2011,7 @@ class EDoc():
 		):
 			return self
 		
-		return self.reinflect_main_verb(number='Plur', tense=PRESENT, conjoined=conjoined)
+		return self.reinflect_main_verb(number='Plur', tense=self.main_verb.get_morph('Tense'), conjoined=conjoined)
 	
 	def renumber_main_subject(self, number: str) -> 'EDoc':
 		'''Renumber the main subject, along with its determiner and verb.'''
