@@ -135,7 +135,7 @@ class EToken():
 	
 	def __bytes__(self) -> bytes:
 		'''Returns the bytes of the token text.'''
-		return self.__unicode__.encode('utf8')
+		return self.__unicode__().encode('utf8')
 	
 	def __str__(self) -> str:
 		'''Returns the text of the token.'''
@@ -1991,7 +1991,11 @@ class EDoc():
 		'''Convert the main verb to singular form.'''
 		vs = self.main_clause_verbs
 		
-		if all(v.get_morph('Tense') == 'Past' for v in vs):
+		# only 'be' can be numbered in the past tense
+		if (
+			all(v.get_morph('Tense') == 'Past' for v in vs) and
+			not any(v.lemma_ == 'be' for v in vs)
+		):
 			return self
 		
 		return self.reinflect_main_verb(number='Sing', tense=PRESENT, conjoined=conjoined)
@@ -2000,7 +2004,11 @@ class EDoc():
 		'''Convert the main verb to plural form.'''
 		vs = self.main_clause_verbs
 		
-		if all(v.get_morph('Tense') == 'Past' for v in vs):
+		# only 'be' can be numbered in the past tense
+		if (
+			all(v.get_morph('Tense') == 'Past' for v in vs) and
+			not any(v.lemma_ == 'be' for v in vs)
+		):
 			return self
 		
 		return self.reinflect_main_verb(number='Plur', tense=PRESENT, conjoined=conjoined)
