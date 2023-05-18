@@ -1132,7 +1132,10 @@ class EDoc():
 					interveners[i+1].tag_ != t.tag_ and
 					interveners[i+1].pos_ != t.pos_
 				) and 
-				t.pos_ in ['NOUN', 'PROPN'] and
+				(
+					t.pos_ in ['NOUN', 'PROPN'] or 
+					(t.pos_ == 'PRON' and not t.text in RELATIVE_PRONOUNS)
+				) and
 				not t.dep_ in ['compound', 'nmod'] and 
 				not (
 					(

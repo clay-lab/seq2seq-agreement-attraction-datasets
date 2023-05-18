@@ -2890,3 +2890,17 @@ INFLECTED_AUXES: Set[str] = {
 	'get',
 	'do',
 }
+
+RELATIVE_PRONOUNS: Set[str] = {
+	'that',
+	'which',
+	'who',
+	'what',
+	'whoever',
+	'where',
+	'when',
+	'whose',
+	'whom',
+	'whomever',
+	'why',
+}
